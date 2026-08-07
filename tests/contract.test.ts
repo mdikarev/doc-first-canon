@@ -1,7 +1,16 @@
 // tests/contract.test.ts
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { parseContractMarkdown } from "../src/contract/parse.js";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const brokenYamlFixture = readFileSync(
+  join(__dirname, "fixtures/broken-yaml/docs/canon/CANON_CONTRACT.md"),
+  "utf8",
+);
 
 const good = `# Canon Contract
 ## Machine contract
@@ -34,6 +43,10 @@ describe("parseContractMarkdown", () => {
 
   it("fails on missing yaml fence", () => {
     assert.throws(() => parseContractMarkdown("# no yaml"), /machine block/i);
+  });
+
+  it("throws on broken yaml fixture", () => {
+    assert.throws(() => parseContractMarkdown(brokenYamlFixture));
   });
 
   it("fails on incompatible schema_version", () => {

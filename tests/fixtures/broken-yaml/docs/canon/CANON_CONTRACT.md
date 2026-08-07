@@ -3,7 +3,7 @@
 ## Machine contract
 
 ```yaml
-schema_version: 1
+schema_version: [
 cli_compat: ">=0.1.0"
 skills_stamp: "0.1.0"
 sections:
@@ -16,4 +16,6 @@ templates:
   - id: INDEX
     path: templates/INDEX.md
 policies:
-  max_lines: [unclosed
+  max_lines: 400
+  ignore: []
+```
