@@ -17,4 +17,23 @@ describe("doc-canon cli stub", () => {
     assert.match(r.stdout, /Usage:/);
     assert.match(r.stdout, /validate/);
   });
+
+  it("documents init and upgrade-skills options", () => {
+    const init = spawnSync("npx", ["tsx", "src/cli.ts", "init", "--help"], {
+      cwd: root,
+      encoding: "utf8",
+    });
+    assert.equal(init.status, 0);
+    assert.match(init.stdout, /--root <path>/);
+    assert.match(init.stdout, /--force-skills/);
+    assert.match(init.stdout, /--yes/);
+
+    const upgrade = spawnSync(
+      "npx",
+      ["tsx", "src/cli.ts", "upgrade-skills", "--help"],
+      { cwd: root, encoding: "utf8" },
+    );
+    assert.equal(upgrade.status, 0);
+    assert.match(upgrade.stdout, /--root <path>/);
+  });
 });
