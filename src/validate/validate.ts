@@ -18,6 +18,7 @@ import {
 } from "./headings.js";
 import { validateIndexAgreement } from "./index-agreement.js";
 import { findBrokenCanonLinks } from "./links.js";
+import type { FindingKind } from "../report/types.js";
 
 export interface ValidateResult {
   ok: boolean;
@@ -26,6 +27,19 @@ export interface ValidateResult {
 }
 
 const DOTTED_NUMERIC_STAMP = /^\d+(?:\.\d+)*$/;
+const BROKEN_LINK_ERROR = /\blinks to missing\b/i;
+const MARKDOWN_PATH = /(?:^|\s)([^\s,;:()]+\.md)(?=$|\s|[,;:()])/gi;
+
+export function validationErrorKind(error: string): FindingKind {
+  return BROKEN_LINK_ERROR.test(error) ? "consistency" : "structure";
+}
+
+export function validationErrorPaths(error: string): string[] {
+  const paths = [...error.matchAll(MARKDOWN_PATH)].map((match) =>
+    match[1]!.replaceAll("\\", "/"),
+  );
+  return [...new Set(paths)];
+}
 
 export function cmpStamp(a: string, b: string): number {
   const left = a.split(".").map((part) => Number(part) || 0);

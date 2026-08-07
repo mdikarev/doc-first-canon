@@ -18,7 +18,21 @@ program
     const { validateCanon } = await import("./commands/validate.js");
     process.exitCode = await validateCanon(opts.root);
   });
-program.command("check").description("Validate + inventory + structural report");
-program.command("report").description("Print last report.json");
+program
+  .command("check")
+  .description("Validate + inventory + structural report")
+  .option("--root <path>", "target repo root", ".")
+  .action(async (opts: { root: string }) => {
+    const { checkCanon } = await import("./commands/check.js");
+    process.exitCode = await checkCanon(opts.root);
+  });
+program
+  .command("report")
+  .description("Print last report.json")
+  .option("--root <path>", "target repo root", ".")
+  .action(async (opts: { root: string }) => {
+    const { printReport } = await import("./commands/report.js");
+    process.exitCode = printReport(opts.root);
+  });
 
 await program.parseAsync();
