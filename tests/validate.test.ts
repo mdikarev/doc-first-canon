@@ -1,5 +1,15 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
+import {
+  cpSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  unlinkSync,
+  writeFileSync,
+  mkdirSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
@@ -8,6 +18,12 @@ import { validateCanon } from "../src/validate/validate.js";
 const testsDir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(testsDir, "..");
 const fixture = (name: string): string => join(testsDir, "fixtures", name);
+
+function temporaryHappyCanon(): { root: string; cleanup: () => void } {
+  const root = mkdtempSync(join(tmpdir(), "doc-canon-"));
+  cpSync(fixture("happy-canon"), root, { recursive: true });
+  return { root, cleanup: () => rmSync(root, { recursive: true, force: true }) };
+}
 
 describe("validateCanon", () => {
   it("accepts a complete canon", () => {
@@ -34,6 +50,71 @@ describe("validateCanon", () => {
     const result = validateCanon(fixture("index-mismatch"));
     assert.equal(result.ok, false);
     assert.match(result.errors.join("\n"), /INDEX.*OVERVIEW\.md/i);
+  });
+
+  it("rejects section paths that escape the canon root", () => {
+    const { root, cleanup } = temporaryHappyCanon();
+    try {
+      const contractFile = join(root, "docs", "canon", "CANON_CONTRACT.md");
+      writeFileSync(
+        contractFile,
+        readFileSync(contractFile, "utf8").replace(
+          "path: OVERVIEW.md",
+          "path: ../outside.md",
+        ),
+      );
+      writeFileSync(join(root, "docs", "outside.md"), "# Outside\n");
+
+      const result = validateCanon(root);
+
+      assert.equal(result.ok, false);
+      assert.match(result.errors.join("\n"), /section.*\.\.\/outside\.md.*outside.*canon/i);
+    } finally {
+      cleanup();
+    }
+  });
+
+  it("rejects a section path that is not a file", () => {
+    const { root, cleanup } = temporaryHappyCanon();
+    try {
+      const sectionFile = join(root, "docs", "canon", "OVERVIEW.md");
+      unlinkSync(sectionFile);
+      mkdirSync(sectionFile);
+
+      const result = validateCanon(root);
+
+      assert.equal(result.ok, false);
+      assert.match(result.errors.join("\n"), /OVERVIEW\.md.*not a file/i);
+    } finally {
+      cleanup();
+    }
+  });
+
+  it("warns only above the exact max_lines boundary", () => {
+    const { root, cleanup } = temporaryHappyCanon();
+    try {
+      const canonRoot = join(root, "docs", "canon");
+      const contractFile = join(canonRoot, "CANON_CONTRACT.md");
+      const sectionFile = join(canonRoot, "OVERVIEW.md");
+      const exactBoundary = readFileSync(
+        join(canonRoot, "templates", "OVERVIEW.md"),
+        "utf8",
+      );
+      writeFileSync(
+        contractFile,
+        readFileSync(contractFile, "utf8").replace("max_lines: 400", "max_lines: 9"),
+      );
+      writeFileSync(sectionFile, exactBoundary);
+
+      const exact = validateCanon(root);
+      assert.doesNotMatch(exact.warnings.join("\n"), /OVERVIEW\.md.*max_lines/i);
+
+      writeFileSync(sectionFile, `${exactBoundary}extra line\n`);
+      const above = validateCanon(root);
+      assert.match(above.warnings.join("\n"), /OVERVIEW\.md.*max_lines 9/i);
+    } finally {
+      cleanup();
+    }
   });
 });
 

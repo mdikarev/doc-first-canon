@@ -64,3 +64,20 @@ exit code: 0
 - Scope remains structural; no check, inventory, or report merge behavior was added.
 - `npm run build`, focused tests, full tests, lints, and `git diff --check` are clean.
 - The only environment noise is npm's pre-existing `Unknown env config "devdir"` warning.
+
+## Important/High review fixes
+
+- Section and template paths are resolved with `path.resolve` and rejected when their relative path escapes `docs/canon`; escaped paths are never read.
+- Existing section, template, contract, and index paths must be regular files. File inspection and reads now report validation errors instead of escaping `validateCanon` as exceptions.
+- `max_lines` ignores the empty segment created by a trailing newline, so exactly-at-limit files do not warn.
+- Added focused tests for section path traversal, a directory used as a section path, and exact/above `max_lines` boundaries.
+
+Verification:
+
+```text
+npm test
+tests: 23, pass: 23, fail: 0
+
+npm run build
+exit code: 0
+```
