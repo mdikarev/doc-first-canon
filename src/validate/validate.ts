@@ -25,6 +25,8 @@ export interface ValidateResult {
   warnings: string[];
 }
 
+const DOTTED_NUMERIC_STAMP = /^\d+(?:\.\d+)*$/;
+
 export function cmpStamp(a: string, b: string): number {
   const left = a.split(".").map((part) => Number(part) || 0);
   const right = b.split(".").map((part) => Number(part) || 0);
@@ -64,6 +66,28 @@ function resolveCanonFile(
       `${kind} path ${relativePath} resolves outside the canon root`,
     );
     return undefined;
+  }
+  if (fs.existsSync(file)) {
+    try {
+      const realCanonRoot = fs.realpathSync(canonRoot);
+      const realFile = fs.realpathSync(file);
+      const realRelative = path.relative(realCanonRoot, realFile);
+      if (
+        realRelative === ".." ||
+        realRelative.startsWith(`..${path.sep}`) ||
+        path.isAbsolute(realRelative)
+      ) {
+        errors.push(
+          `${kind} path ${relativePath} resolves outside the canon root`,
+        );
+        return undefined;
+      }
+    } catch (error) {
+      errors.push(
+        `Could not resolve ${kind.toLowerCase()} path ${relativePath}: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      return undefined;
+    }
   }
   return file;
 }
@@ -146,7 +170,11 @@ export function validateCanon(root: string): ValidateResult {
     const contract = readContract(resolvedRoot, errors);
     if (!contract) return { ok: false, errors, warnings };
 
-    if (cmpStamp(contract.skills_stamp, MIN_SKILLS_STAMP) < 0) {
+    if (!DOTTED_NUMERIC_STAMP.test(contract.skills_stamp)) {
+      errors.push(
+        `skills_stamp ${contract.skills_stamp} must use dotted-numeric format`,
+      );
+    } else if (cmpStamp(contract.skills_stamp, MIN_SKILLS_STAMP) < 0) {
       errors.push(
         `skills_stamp ${contract.skills_stamp} is older than ${MIN_SKILLS_STAMP}; upgrade skills via doc-canon upgrade-skills (CLI ${PACKAGE_VERSION}, current stamp ${SKILLS_STAMP})`,
       );

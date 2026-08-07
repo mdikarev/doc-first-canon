@@ -46,6 +46,32 @@ npm run build
 exit code: 0
 ```
 
+## Remaining High review fixes
+
+- Existing section and template candidates now use `realpathSync` for both the candidate and `docs/canon`; symlinks resolving outside the real canon root are rejected before file inspection or reads.
+- `skills_stamp` must match dotted-numeric format before version comparison, so malformed values such as `1.x` produce a validation error.
+- Added focused regression tests for an escaping section symlink (with an unsupported-platform skip) and a malformed skills stamp.
+
+TDD RED:
+
+```text
+npx tsx --test tests/validate.test.ts
+tests: 10, pass: 8, fail: 2
+```
+
+Verification:
+
+```text
+npx tsx --test tests/validate.test.ts
+tests: 10, pass: 10, fail: 0
+
+npm test
+tests: 25, pass: 25, fail: 0
+
+npm run build
+exit code: 0
+```
+
 ## Implemented
 
 - Contract existence, parse, and schema error reporting.

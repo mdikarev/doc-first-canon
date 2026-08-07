@@ -5,6 +5,7 @@ import {
   mkdtempSync,
   readFileSync,
   rmSync,
+  symlinkSync,
   unlinkSync,
   writeFileSync,
   mkdirSync,
@@ -69,6 +70,57 @@ describe("validateCanon", () => {
 
       assert.equal(result.ok, false);
       assert.match(result.errors.join("\n"), /section.*\.\.\/outside\.md.*outside.*canon/i);
+    } finally {
+      cleanup();
+    }
+  });
+
+  it("rejects section symlinks that escape the canon root", (context) => {
+    const { root, cleanup } = temporaryHappyCanon();
+    try {
+      const sectionFile = join(root, "docs", "canon", "OVERVIEW.md");
+      const outsideFile = join(root, "outside.md");
+      writeFileSync(outsideFile, readFileSync(sectionFile, "utf8"));
+      unlinkSync(sectionFile);
+      try {
+        symlinkSync(outsideFile, sectionFile);
+      } catch (error) {
+        const code =
+          error && typeof error === "object" && "code" in error
+            ? String(error.code)
+            : "";
+        if (["EPERM", "EACCES", "ENOTSUP"].includes(code)) {
+          context.skip(`symlink creation unsupported: ${code}`);
+          return;
+        }
+        throw error;
+      }
+
+      const result = validateCanon(root);
+
+      assert.equal(result.ok, false);
+      assert.match(result.errors.join("\n"), /section.*OVERVIEW\.md.*outside.*canon/i);
+    } finally {
+      cleanup();
+    }
+  });
+
+  it("rejects malformed skills_stamp values", () => {
+    const { root, cleanup } = temporaryHappyCanon();
+    try {
+      const contractFile = join(root, "docs", "canon", "CANON_CONTRACT.md");
+      writeFileSync(
+        contractFile,
+        readFileSync(contractFile, "utf8").replace(
+          'skills_stamp: "0.1.0"',
+          'skills_stamp: "1.x"',
+        ),
+      );
+
+      const result = validateCanon(root);
+
+      assert.equal(result.ok, false);
+      assert.match(result.errors.join("\n"), /skills_stamp.*1\.x.*dotted.*numeric/i);
     } finally {
       cleanup();
     }
