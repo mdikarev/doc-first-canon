@@ -72,8 +72,14 @@ function assertTemplate(value: unknown, index: number): TemplateDef {
 }
 
 function assertPolicies(value: unknown): Policies {
-  const policies = isRecord(value) ? value : {};
+  if (value === undefined) {
+    return { max_lines: 400, ignore: [] };
+  }
+  if (!isRecord(value)) {
+    throw new Error("policies must be an object");
+  }
 
+  const policies = value;
   const maxLines =
     policies.max_lines === undefined ? 400 : policies.max_lines;
   if (typeof maxLines !== "number" || !Number.isFinite(maxLines)) {
