@@ -12,7 +12,7 @@ Development agents need durable project context. Ad-hoc docs drift from code, co
 
 1. Keep project documentation for agents accurate, consistent, and non-contradictory.
 2. Treat documentation as the source of truth for agent context; when docs and code disagree, the user decides which is stale.
-3. Edit documentation automatically (skills); never edit application code — emit detailed tasks for coding agents instead.
+3. Edit documentation automatically (skills); never edit application code — emit detailed tasks for coding agents instead. Managed agent config (Cursor skills/rules, `AGENTS.md` managed block) is written by the CLI/`upgrade-skills` and is not application code.
 4. Make document structure stable across different LLMs via in-repo templates and a per-project contract.
 5. Ship Cursor first; keep CLI/contract IDE-agnostic so Claude Code can be added later without breaking the core.
 6. Ensure all agents in a target repo treat `docs/canon/` as the context source of truth for design and development (via managed pointer rules / AGENTS block).
@@ -131,7 +131,7 @@ Templates enforce the same heading structure across LLMs. Creating a canon file 
 - `## How to use this canon`
 - `## Reading order`
 - `## Sections` (table: id \| path \| role \| required)
-- `## Discrepancies`
+- `## Discrepancies` (pointer only: link to `DISCREPANCIES.md` + short how-to; **no** live Open list)
 
 **`OVERVIEW.md`**
 - `# Overview`
@@ -245,20 +245,28 @@ Each open/resolved entry uses:
 - Disagreement with code is not auto-resolved in favor of either side.
 - User must confirm whether **docs** or **code** are stale.
 - **Primary UX:** agent chat dialogue with evidence; CLI can detect/report and accept flags when no agent is present.
-- If **docs** are stale → skill updates the canon, then `validate`.
-- If **code** is stale → skill does **not** modify application code; it appends/updates a task in `DISCREPANCIES.md` with: what to study, what diverges, evidence paths, and instruction that the coding agent must clarify non-obvious cases with the user.
+- If **docs** are stale → skill updates the canon, then `validate`; only after that succeeds may the entry record `decision: docs_stale`.
+- If **code** is stale → skill does **not** modify application code; it appends/updates a task in `DISCREPANCIES.md` with: what to study, what diverges, evidence paths, and instruction that the coding agent must clarify non-obvious cases with the user. Only after that task write succeeds may the entry record `decision: code_stale`.
 - Coding agents still **must consult the canon** (pointer rule); they implement code changes from discrepancies / normal work, not via canon-skills.
 - `DISCREPANCIES.md` is mandatory and part of the canon.
+
+### What belongs in `DISCREPANCIES.md`
+
+**In scope:** docs↔code findings of kind `conflict` or `drift`, after resolve dialogue (or explicit “record this conflict”).
+
+**Out of scope:** `structure` and `consistency` findings. Those are fixed via `validate`, contract repair (`canon-contract`), or structural `canon-write` — not the discrepancy queue.
 
 ### Discrepancy lifecycle
 
 | Stage | Who | Rule |
 |-------|-----|------|
-| Finding in report (`open`) | CLI (`check`) or `canon-audit` | Detected; not yet a user decision |
-| `DISCREPANCIES` **Open** (`decision: pending` or decided) | Audit skill after resolve dialogue (or explicit “record this conflict”) | Waiting on or recording docs vs code |
-| Open + `docs_stale` | User decision | Skill edits canon → `validate` |
-| Open + `code_stale` | User decision | Task + `coding_agent_prompt` only; no app-code edits by canon system |
-| **Resolved** | Same session after successful fix, **or** next `canon-audit` / `check` | Move Open → Resolved when the conflict condition no longer reproduces (docs fixed + validate ok, or code aligned and audit no longer sees the drift). No separate mandatory “close” click if the next check clears it |
+| Finding in report (`open`) | CLI (`check`) or `canon-audit` | Detected; not yet a user decision. Structure/consistency stay in the report only. |
+| `DISCREPANCIES` **Open** (`decision: pending`) | Audit skill after resolve dialogue (or explicit “record this conflict”) for conflict/drift | Waiting on user docs vs code choice; `decision` stays `pending` until apply succeeds |
+| Apply + `docs_stale` | User choice then skill | Skill edits canon → `validate` → **then** set `decision: docs_stale` on the Open entry |
+| Apply + `code_stale` | User choice then skill | Write/update task + `coding_agent_prompt` → **then** set `decision: code_stale`; no app-code edits by canon system |
+| **Resolved** | Skills only (`canon-audit` / `canon-write`) | Move Open → Resolved in the **same session** after successful fix, **or** on a later skill audit when the conflict/drift no longer reproduces (docs fixed + validate ok, or code aligned and audit no longer sees the drift). `doc-canon check` never edits `DISCREPANCIES.md`. |
+
+**`decision` timing:** write `docs_stale` / `code_stale` only after successful apply (canon edit + validate, or discrepancy task write). Interrupted sessions leave `pending`.
 
 **IDs:** `D-NNN` assigned monotonically from the max existing id in the file; never reuse.  
 **Dedup:** before creating a new Open entry, search open entries with overlapping `canon_paths` / `code_paths`; update evidence instead of cloning.  
@@ -284,6 +292,7 @@ Written to `.doc-canon/inventory.json` (may be gitignored). Semantic audit must 
 2. Refresh/read inventory via `check` (or equivalent).
 3. Skill compares canon to inventory and selective file reads. Every finding must cite inventory paths and/or canon quotes.
 4. Skill **merges** semantic findings into `.doc-canon/report.json` (`source: skill`). CLI structural findings use `source: cli`.
+5. Skill findings that a later audit no longer confirms are marked `status: stale` (not silently deleted). Closing or cleaning them is the skill’s job on audit; moving a linked discrepancy to Resolved follows the lifecycle above.
 
 **MVP checks:**
 
@@ -319,12 +328,14 @@ Deep language-specific AST analyzers remain Future.
 
 ### 3. Check + semantic audit
 
-- `doc-canon check` = validate + refresh inventory + write/update **structural** findings in `.doc-canon/report.json`.
-- `canon-audit` runs semantic pass (above), merge findings, then resolve dialogue. No silent auto-resolve.
+- `doc-canon check` = validate + refresh inventory + write/update **structural** (`source: cli`) findings in `.doc-canon/report.json`.
+- **Report merge:** `check` updates/replaces CLI findings only; it **must preserve** findings with `source: skill`. Marking unconfirmed skill findings `stale` is the skill’s job on audit (MVP).
+- `check` does **not** edit `DISCREPANCIES.md` or other canon prose.
+- `canon-audit` runs semantic pass (above), merge findings, then resolve dialogue for conflict/drift. No silent auto-resolve.
 
 ### 4. Resolve
 
-User chooses docs vs code (chat or CLI flags). Outcomes per Truth model and Discrepancy lifecycle.
+User chooses docs vs code (chat or CLI flags). Outcomes per Truth model and Discrepancy lifecycle. `decision` is persisted only after successful apply.
 
 ### 5. Structure evolution
 
@@ -352,7 +363,7 @@ MVP trigger is **manual**: user or agent session invokes `canon-write` / `canon-
 | `doc-canon init` | Scaffold canon + contract + templates + skills + pointer rule + AGENTS block |
 | `doc-canon upgrade-skills` | Refresh managed skills/rules/AGENTS block from current package |
 | `doc-canon validate` | Schema + structure + required headings; exit ≠0 on failure; need not write report |
-| `doc-canon check` | validate + inventory refresh + structural findings → `.doc-canon/report.json` |
+| `doc-canon check` | validate + inventory refresh + merge structural (`source: cli`) findings into `.doc-canon/report.json` (preserve `source: skill`); does not edit canon prose |
 | `doc-canon report` | Print last machine-readable report (read-only) |
 
 ### Cursor skills (MVP)
@@ -379,7 +390,9 @@ On `init` / `upgrade-skills`, CLI creates or updates:
 
 ### Report artifact
 
-`.doc-canon/report.json` findings include: `id`, `kind` (`structure` \| `consistency` \| `drift` \| `conflict`), `paths`, `summary`, `status`, `source` (`cli` \| `skill`), optional `discrepancy_id`.
+`.doc-canon/report.json` findings include: `id`, `kind` (`structure` \| `consistency` \| `drift` \| `conflict`), `paths`, `summary`, `status` (`open` \| `stale` \| …), `source` (`cli` \| `skill`), optional `discrepancy_id`.
+
+**Merge invariant:** writers must not wipe the other source’s findings. CLI `check` owns `source: cli`; skills own `source: skill` (including marking unconfirmed skill findings `stale`).
 
 ## Error handling
 
@@ -398,14 +411,14 @@ On `init` / `upgrade-skills`, CLI creates or updates:
 
 - CLI fixture repos: happy `init`/`validate`/`check`; broken YAML; incompatible schema_version; missing section; missing required headings; index≠contract; unknown template id; inventory respects ignore; upgrade-skills does not wipe canon content.
 - Template fixtures for mandatory set + `SECTION` / `ENTITY` / `MODULE` / `DOMAIN_TOPIC`.
-- Skill flows documented as acceptance scenarios: bootstrap empty; bootstrap non-empty extract-then-freeze; resolve docs vs code; Resolved on next check after fix; add new template kind; pointer rule / AGENTS block present after init. Automated skill tests are out of MVP scope.
+- Skill flows documented as acceptance scenarios: bootstrap empty; bootstrap non-empty extract-then-freeze; resolve docs vs code; Resolved on later skill audit after fix (not via CLI `check`); add new template kind; pointer rule / AGENTS block present after init; `check` preserves skill findings in report. Automated skill tests are out of MVP scope.
 
 ## Success criteria
 
 1. After bootstrap, a project has a valid canon, local contract, installed skills, and pointer rule/AGENTS block directing agents to `docs/canon/`.
 2. Different LLMs produce the same required document shapes via in-repo templates (extra headings allowed).
 3. `validate` catches broken contracts, incompatible schema, and missing required headings; `check` produces inventory + structural report.
-4. Semantic audit is grounded in inventory evidence; conflicts require user decision; docs are skill-edited; code work is tasked via `DISCREPANCIES.md`; Resolved happens after fix or on the next clearing check.
+4. Semantic audit is grounded in inventory evidence; conflict/drift require user decision and land in `DISCREPANCIES.md`; structure/consistency stay out of that queue; docs are skill-edited; code work is tasked via discrepancies; Resolved in markdown is skill-only; `decision` is written only after successful apply.
 5. Extending one project’s structure never changes another project’s defaults.
 6. Legacy docs outside canon are import-only after freeze; everyday sync is human-invoked.
 
