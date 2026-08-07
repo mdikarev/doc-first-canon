@@ -13,9 +13,11 @@
   "engines": { "node": ">=20" },
   "dependencies": {
     "commander": "^13.1.0",
+    "micromatch": "^4.0.8",
     "yaml": "^2.7.0"
   },
   "devDependencies": {
+    "@types/micromatch": "^4.0.10",
     "@types/node": "^22.13.0",
     "tsx": "^4.19.0",
     "typescript": "^5.7.0"
