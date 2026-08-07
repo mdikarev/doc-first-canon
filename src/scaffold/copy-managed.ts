@@ -25,15 +25,23 @@ export function upsertAgentsBlock(root: string): void {
     : "";
   const start = existing.indexOf(START_MARKER);
   const end = existing.indexOf(END_MARKER);
+  const startCount = existing.split(START_MARKER).length - 1;
+  const endCount = existing.split(END_MARKER).length - 1;
 
   let next: string;
-  if (start >= 0 && end >= start) {
+  if (startCount === 0 && endCount === 0) {
+    next = `${existing.trimEnd()}${existing.trim() ? "\n\n" : ""}${managedBlock}\n`;
+  } else if (startCount === 1 && endCount === 1 && start < end) {
     next =
       existing.slice(0, start) +
       managedBlock +
       existing.slice(end + END_MARKER.length);
   } else {
-    next = `${existing.trimEnd()}${existing.trim() ? "\n\n" : ""}${managedBlock}\n`;
+    throw new Error(
+      "AGENTS.md has malformed doc-canon markers: expected exactly one " +
+        "doc-canon:start and one doc-canon:end marker, with start before end. " +
+        "Fix the markers and retry.",
+    );
   }
   fs.writeFileSync(agentsPath, next);
 }

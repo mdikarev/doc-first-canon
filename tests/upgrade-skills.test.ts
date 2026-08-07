@@ -75,3 +75,35 @@ it("refreshes managed assets and stamp without replacing canon prose", async () 
     rmSync(root, { recursive: true, force: true });
   }
 });
+
+for (const [name, malformedAgents] of [
+  [
+    "unmatched start marker",
+    "Project instructions.\n\n<!-- doc-canon:start -->\nUser content.\n",
+  ],
+  [
+    "reversed markers",
+    "Project instructions.\n\n<!-- doc-canon:end -->\nUser content.\n<!-- doc-canon:start -->\n",
+  ],
+  [
+    "duplicate start markers",
+    "Project instructions.\n\n<!-- doc-canon:start -->\nUser content.\n<!-- doc-canon:start -->\n<!-- doc-canon:end -->\n",
+  ],
+] as const) {
+  it(`rejects ${name} without changing AGENTS.md`, async () => {
+    const root = mkdtempSync(join(tmpdir(), "doc-canon-upgrade-markers-"));
+    try {
+      assert.equal(await initCanon(root, { yes: true }), 0);
+      const agentsPath = join(root, "AGENTS.md");
+      writeFileSync(agentsPath, malformedAgents);
+
+      await assert.rejects(
+        upgradeSkills(root),
+        /AGENTS\.md.*exactly one.*doc-canon:start.*doc-canon:end.*start.*before.*end/i,
+      );
+      assert.equal(readFileSync(agentsPath, "utf8"), malformedAgents);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+}
