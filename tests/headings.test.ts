@@ -37,4 +37,20 @@ describe("headings", () => {
       { level: 3, text: "Sub" },
     ]);
   });
+
+  it("strips optional closing ATX hash markers from heading text", () => {
+    const md = `# Overview #\n## Scope ##\n### In scope ###\n`;
+    assert.deepEqual(extractMarkdownHeadings(md), [
+      { level: 1, text: "Overview" },
+      { level: 2, text: "Scope" },
+      { level: 3, text: "In scope" },
+    ]);
+  });
+
+  it("matches required headings when doc and template differ in closing ATX markers", () => {
+    const template = `# Overview\n## Scope ##\n`;
+    const doc = `# Overview\n## Scope\n`;
+    const missing = assertRequiredHeadings(doc, requiredHeadingsFromTemplate(template));
+    assert.deepEqual(missing, []);
+  });
 });

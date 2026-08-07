@@ -4,13 +4,18 @@ export interface MarkdownHeading {
 }
 
 const HEADING_RE = /^(#{1,6})\s+(.+?)\s*$/;
+const CLOSING_ATX_RE = /\s+#+\s*$/;
+
+function normalizeHeadingText(raw: string): string {
+  return raw.trim().replace(CLOSING_ATX_RE, "");
+}
 
 export function extractMarkdownHeadings(md: string): MarkdownHeading[] {
   const headings: MarkdownHeading[] = [];
   for (const line of md.split("\n")) {
     const match = HEADING_RE.exec(line);
     if (!match) continue;
-    headings.push({ level: match[1].length, text: match[2].trim() });
+    headings.push({ level: match[1].length, text: normalizeHeadingText(match[2]) });
   }
   return headings;
 }
