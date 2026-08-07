@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 export function resolveRoot(cwd: string, rootFlag?: string): string {
   const root = path.resolve(cwd, rootFlag ?? ".");
@@ -17,4 +18,8 @@ export function contractPath(root: string): string {
 
 export function docCanonDir(root: string): string {
   return path.join(root, ".doc-canon");
+}
+
+export function embeddedRoot(): string {
+  return fileURLToPath(new URL("../embedded/", import.meta.url));
 }
