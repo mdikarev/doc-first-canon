@@ -1,0 +1,23 @@
+{
+  "name": "doc-canon",
+  "version": "0.1.0",
+  "description": "Deterministic canon CLI for agent documentation",
+  "type": "module",
+  "bin": { "doc-canon": "./bin/doc-canon.js" },
+  "files": ["dist", "embedded", "bin"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "tsx --test tests/**/*.test.ts",
+    "prepare": "npm run build"
+  },
+  "engines": { "node": ">=20" },
+  "dependencies": {
+    "commander": "^13.1.0",
+    "yaml": "^2.7.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  }
+}
