@@ -15,6 +15,31 @@ npm link   # optional: put doc-canon on PATH for local development
 
 After install, `doc-canon` is available via `npx doc-canon` or the linked binary.
 
+## Quick start flows
+
+Short recipes. Full walkthroughs: [`docs/guides/usage-flows.md`](docs/guides/usage-flows.md).
+
+### Empty project
+
+1. Install and ensure `doc-canon` is on `PATH`
+2. `doc-canon init --yes` (or interactive `doc-canon init`)
+3. In Cursor, run skill `canon-bootstrap` (purpose/scope interview, fill canon)
+4. `doc-canon validate` (must pass)
+
+### Existing project
+
+1. `doc-canon init` at the repo root (does not overwrite existing canon document content)
+2. Run `canon-bootstrap` — extract-then-freeze; legacy docs are import sources only; application code is not edited
+3. Confirm any proposed extra sections / contract changes when prompted
+4. `doc-canon validate`
+
+### Day-to-day
+
+1. After meaningful code or canon edits, run `canon-write` to sync affected sections
+2. `doc-canon check` — inventory + `.doc-canon/report.json`
+3. On docs↔code drift, run `canon-audit` (`docs_stale` or `code_stale`)
+4. Optionally `doc-canon report` to print the last report
+
 ## Usage
 
 All commands accept `--root <path>` (default: current directory) to target a repo root.
