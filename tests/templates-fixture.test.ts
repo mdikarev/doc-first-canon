@@ -37,10 +37,10 @@ const TEMPLATE_HEADINGS: Record<(typeof TEMPLATE_IDS)[number], string[]> = {
   GLOSSARY: ["Glossary", "How to use", "Terms", "Naming conventions", "Related canon"],
   DISCREPANCIES: ["Discrepancies", "How to use", "Open", "Resolved", "Template for new entries"],
   CANON_CONTRACT: ["Canon Contract", "Purpose", "How agents must use this file", "Machine contract", "Change policy"],
-  SECTION: ["<Title>", "Purpose", "Scope", "Current state", "Rules & invariants", "Key details", "Open questions", "Related canon"],
-  ENTITY: ["<Entity>", "Purpose", "Scope", "Current state", "Identity & fields", "Lifecycle", "Invariants", "Relations", "Open questions", "Related canon"],
-  MODULE: ["<Module>", "Purpose", "Scope", "Current state", "Responsibilities", "Interfaces", "Dependencies", "Invariants", "Open questions", "Related canon"],
-  DOMAIN_TOPIC: ["<Topic>", "Purpose", "Scope", "Current state", "Concepts", "Rules & invariants", "Key details", "Open questions", "Related canon"],
+  SECTION: ["Purpose", "Scope", "Current state", "Rules & invariants", "Key details", "Open questions", "Related canon"],
+  ENTITY: ["Purpose", "Scope", "Current state", "Identity & fields", "Lifecycle", "Invariants", "Relations", "Open questions", "Related canon"],
+  MODULE: ["Purpose", "Scope", "Current state", "Responsibilities", "Interfaces", "Dependencies", "Invariants", "Open questions", "Related canon"],
+  DOMAIN_TOPIC: ["Purpose", "Scope", "Current state", "Concepts", "Rules & invariants", "Key details", "Open questions", "Related canon"],
 };
 
 const MANDATORY_SECTIONS = [

@@ -29,8 +29,15 @@ program
   .description("Refresh managed skills/rules/AGENTS block")
   .option("--root <path>", "target repo root", ".")
   .action(async (opts: { root: string }) => {
-    const { upgradeSkills } = await import("./commands/upgrade-skills.js");
-    process.exitCode = await upgradeSkills(opts.root);
+    try {
+      const { upgradeSkills } = await import("./commands/upgrade-skills.js");
+      process.exitCode = await upgradeSkills(opts.root);
+    } catch (error) {
+      console.error(
+        `error: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      process.exitCode = 1;
+    }
   });
 program
   .command("validate")

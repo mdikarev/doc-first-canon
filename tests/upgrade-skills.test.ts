@@ -1,17 +1,50 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import {
+  existsSync,
   mkdtempSync,
   readFileSync,
   rmSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { it } from "node:test";
+import { fileURLToPath } from "node:url";
 import { initCanon } from "../src/commands/init.js";
 import { upgradeSkills } from "../src/commands/upgrade-skills.js";
 import { embeddedRoot } from "../src/paths.js";
 import { SKILLS_STAMP } from "../src/version.js";
+
+const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+
+it("rejects a missing contract before creating managed assets", async () => {
+  const root = mkdtempSync(join(tmpdir(), "doc-canon-upgrade-missing-contract-"));
+  try {
+    await assert.rejects(upgradeSkills(root), /CANON_CONTRACT\.md.*does not exist/i);
+    assert.equal(existsSync(join(root, ".cursor", "skills")), false);
+    assert.equal(existsSync(join(root, ".cursor", "rules")), false);
+    assert.equal(existsSync(join(root, "AGENTS.md")), false);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+it("prints expected upgrade failures without a stack trace", () => {
+  const root = mkdtempSync(join(tmpdir(), "doc-canon-upgrade-cli-failure-"));
+  try {
+    const result = spawnSync(
+      "npx",
+      ["tsx", "src/cli.ts", "upgrade-skills", "--root", root],
+      { cwd: repoRoot, encoding: "utf8" },
+    );
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /error:.*CANON_CONTRACT\.md.*does not exist/i);
+    assert.doesNotMatch(result.stderr, /\n\s+at /);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
 
 it("refreshes managed assets and stamp without replacing canon prose", async () => {
   const root = mkdtempSync(join(tmpdir(), "doc-canon-upgrade-"));
@@ -95,6 +128,14 @@ for (const [name, malformedAgents] of [
     try {
       assert.equal(await initCanon(root, { yes: true }), 0);
       const agentsPath = join(root, "AGENTS.md");
+      const skillPath = join(
+        root,
+        ".cursor",
+        "skills",
+        "canon-write",
+        "SKILL.md",
+      );
+      writeFileSync(skillPath, "user-visible stale skill\n");
       writeFileSync(agentsPath, malformedAgents);
 
       await assert.rejects(
@@ -102,6 +143,7 @@ for (const [name, malformedAgents] of [
         /AGENTS\.md.*exactly one.*doc-canon:start.*doc-canon:end.*start.*before.*end/i,
       );
       assert.equal(readFileSync(agentsPath, "utf8"), malformedAgents);
+      assert.equal(readFileSync(skillPath, "utf8"), "user-visible stale skill\n");
     } finally {
       rmSync(root, { recursive: true, force: true });
     }

@@ -28,6 +28,8 @@ export interface ValidateResult {
 
 const DOTTED_NUMERIC_STAMP = /^\d+(?:\.\d+)*$/;
 const BROKEN_LINK_ERROR = /\blinks to missing\b/i;
+// TODO: Return structured validation issues ({ message, kind, paths }) from
+// each validator and remove English-message classification/parsing.
 const MARKDOWN_PATH = /(?:^|\s)([^\s,;:()]+\.md)(?=$|\s|[,;:()])/gi;
 
 export function validationErrorKind(error: string): FindingKind {

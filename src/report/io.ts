@@ -11,7 +11,16 @@ import type { Report } from "./types.js";
 export function readReport(root: string): Report | null {
   const reportPath = path.join(docCanonDir(root), "report.json");
   if (!existsSync(reportPath)) return null;
-  return JSON.parse(readFileSync(reportPath, "utf8")) as Report;
+  try {
+    return JSON.parse(readFileSync(reportPath, "utf8")) as Report;
+  } catch (error) {
+    console.warn(
+      `warning: Invalid ${reportPath}; ignoring it: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+    );
+    return null;
+  }
 }
 
 export function writeReport(root: string, report: Report): void {

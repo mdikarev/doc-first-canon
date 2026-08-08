@@ -5,6 +5,7 @@ export interface MarkdownHeading {
 
 const HEADING_RE = /^(#{1,6})\s+(.+?)\s*$/;
 const CLOSING_ATX_RE = /\s+#+\s*$/;
+const PLACEHOLDER_HEADING_RE = /^<.+>$/;
 
 function normalizeHeadingText(raw: string): string {
   return raw.trim().replace(CLOSING_ATX_RE, "");
@@ -22,7 +23,9 @@ export function extractMarkdownHeadings(md: string): MarkdownHeading[] {
 
 export function requiredHeadingsFromTemplate(templateMd: string): string[] {
   return extractMarkdownHeadings(templateMd)
-    .filter((h) => h.level <= 3)
+    .filter(
+      (h) => h.level <= 3 && !PLACEHOLDER_HEADING_RE.test(h.text),
+    )
     .map((h) => h.text);
 }
 

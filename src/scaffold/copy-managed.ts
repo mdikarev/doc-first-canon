@@ -5,6 +5,23 @@ import { embeddedRoot } from "../paths.js";
 const START_MARKER = "<!-- doc-canon:start -->";
 const END_MARKER = "<!-- doc-canon:end -->";
 
+export function assertAgentsMarkersWellFormed(existing: string): void {
+  const start = existing.indexOf(START_MARKER);
+  const end = existing.indexOf(END_MARKER);
+  const startCount = existing.split(START_MARKER).length - 1;
+  const endCount = existing.split(END_MARKER).length - 1;
+  const hasNoMarkers = startCount === 0 && endCount === 0;
+  const hasValidManagedBlock =
+    startCount === 1 && endCount === 1 && start < end;
+  if (!hasNoMarkers && !hasValidManagedBlock) {
+    throw new Error(
+      "AGENTS.md has malformed doc-canon markers: expected exactly one " +
+        "doc-canon:start and one doc-canon:end marker, with start before end. " +
+        "Fix the markers and retry.",
+    );
+  }
+}
+
 function copyDirectoryFiles(source: string, target: string): void {
   fs.mkdirSync(target, { recursive: true });
   for (const entry of fs.readdirSync(source, { withFileTypes: true })) {
@@ -23,25 +40,19 @@ export function upsertAgentsBlock(root: string): void {
   const existing = fs.existsSync(agentsPath)
     ? fs.readFileSync(agentsPath, "utf8")
     : "";
+  assertAgentsMarkersWellFormed(existing);
   const start = existing.indexOf(START_MARKER);
   const end = existing.indexOf(END_MARKER);
   const startCount = existing.split(START_MARKER).length - 1;
-  const endCount = existing.split(END_MARKER).length - 1;
 
   let next: string;
-  if (startCount === 0 && endCount === 0) {
+  if (startCount === 0) {
     next = `${existing.trimEnd()}${existing.trim() ? "\n\n" : ""}${managedBlock}\n`;
-  } else if (startCount === 1 && endCount === 1 && start < end) {
+  } else {
     next =
       existing.slice(0, start) +
       managedBlock +
       existing.slice(end + END_MARKER.length);
-  } else {
-    throw new Error(
-      "AGENTS.md has malformed doc-canon markers: expected exactly one " +
-        "doc-canon:start and one doc-canon:end marker, with start before end. " +
-        "Fix the markers and retry.",
-    );
   }
   fs.writeFileSync(agentsPath, next);
 }

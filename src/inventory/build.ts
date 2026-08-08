@@ -109,13 +109,16 @@ export function buildInventory(
 
   if (glossaryTerms !== undefined) {
     const textFiles = entries.filter((entry) => entry.kind === "file");
+    const searchableFiles = textFiles.flatMap((entry) => {
+      const text = searchableText(
+        path.join(absoluteRoot, ...entry.path.split("/")),
+      );
+      return text === undefined ? [] : [{ path: entry.path, text: text.toLowerCase() }];
+    });
     inventory.text_hits = glossaryTerms.map((term) => {
       const needle = term.toLowerCase();
-      const paths = textFiles
-        .filter((entry) => {
-          const text = searchableText(path.join(absoluteRoot, ...entry.path.split("/")));
-          return text?.toLowerCase().includes(needle) ?? false;
-        })
+      const paths = searchableFiles
+        .filter((entry) => entry.text.includes(needle))
         .map((entry) => entry.path);
       return { term, paths };
     });

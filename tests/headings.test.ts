@@ -29,6 +29,19 @@ describe("headings", () => {
     assert.deepEqual(missing, ["Out of scope"]);
   });
 
+  it("skips placeholder headings while requiring real entity sections", () => {
+    const template = `# <Entity>\n## Purpose\n## <Optional section>\n### Invariants\n`;
+    const validDoc = `# Payment\n## Purpose\n### Invariants\n`;
+    const required = requiredHeadingsFromTemplate(template);
+
+    assert.deepEqual(required, ["Purpose", "Invariants"]);
+    assert.deepEqual(assertRequiredHeadings(validDoc, required), []);
+    assert.deepEqual(
+      assertRequiredHeadings(`# Payment\n### Invariants\n`, required),
+      ["Purpose"],
+    );
+  });
+
   it("extractMarkdownHeadings returns level and text", () => {
     const md = `# Title\n\n## Section\n\n### Sub\n`;
     assert.deepEqual(extractMarkdownHeadings(md), [

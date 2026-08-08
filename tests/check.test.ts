@@ -3,9 +3,11 @@ import { spawnSync } from "node:child_process";
 import {
   cpSync,
   existsSync,
+  mkdirSync,
   mkdtempSync,
   readFileSync,
   rmSync,
+  writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
@@ -75,6 +77,63 @@ describe("checkCanon", () => {
       cleanup();
     }
   });
+
+  it("keeps CLI finding IDs stable across identical checks", async () => {
+    const { root, cleanup } = temporaryHappyCanon();
+    try {
+      rmSync(join(root, "docs", "canon", "OVERVIEW.md"));
+
+      assert.equal(await checkCanon(root), 1);
+      const first = readReport(root);
+      assert.ok(first);
+      assert.ok(first.findings.length > 0);
+
+      assert.equal(await checkCanon(root), 1);
+      const second = readReport(root);
+      assert.ok(second);
+      assert.deepEqual(
+        second.findings.map(({ id }) => id),
+        first.findings.map(({ id }) => id),
+      );
+    } finally {
+      cleanup();
+    }
+  });
+
+  it("recovers from a corrupt report and rewrites it", async () => {
+    const { root, cleanup } = temporaryHappyCanon();
+    try {
+      const reportPath = join(root, ".doc-canon", "report.json");
+      mkdirSync(dirname(reportPath), { recursive: true });
+      writeFileSync(reportPath, "{ corrupt");
+
+      assert.equal(await checkCanon(root), 0);
+      assert.deepEqual(readReport(root)?.findings, []);
+    } finally {
+      cleanup();
+    }
+  });
+
+  it("adds glossary term hits to the inventory", async () => {
+    const { root, cleanup } = temporaryHappyCanon();
+    try {
+      writeFileSync(join(root, "application.txt"), "This uses Canon.");
+
+      assert.equal(await checkCanon(root), 0);
+
+      const inventory = JSON.parse(
+        readFileSync(join(root, ".doc-canon", "inventory.json"), "utf8"),
+      ) as { text_hits?: { term: string; paths: string[] }[] };
+      assert.ok(inventory.text_hits?.length);
+      assert.ok(
+        inventory.text_hits
+          ?.find(({ term }) => term === "Canon")
+          ?.paths.includes("application.txt"),
+      );
+    } finally {
+      cleanup();
+    }
+  });
 });
 
 describe("doc-canon check and report", () => {
@@ -110,6 +169,34 @@ describe("doc-canon check and report", () => {
       );
       assert.equal(result.status, 1);
       assert.match(result.stderr, /report\.json/i);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it("report exits 1 with a friendly error when report.json is corrupt", () => {
+    const root = mkdtempSync(join(tmpdir(), "doc-canon-report-command-"));
+    try {
+      const reportDirectory = join(root, ".doc-canon");
+      writeFileSync(join(root, "placeholder"), "");
+      const checked = spawnSync(
+        "npx",
+        ["tsx", "src/cli.ts", "check", "--root", root],
+        { cwd: repoRoot, encoding: "utf8" },
+      );
+      assert.equal(checked.status, 1);
+      rmSync(reportDirectory, { recursive: true, force: true });
+      mkdirSync(reportDirectory, { recursive: true });
+      writeFileSync(join(reportDirectory, "report.json"), "{ corrupt");
+
+      const result = spawnSync(
+        "npx",
+        ["tsx", "src/cli.ts", "report", "--root", root],
+        { cwd: repoRoot, encoding: "utf8" },
+      );
+      assert.equal(result.status, 1);
+      assert.match(result.stderr, /report\.json.*invalid|invalid.*report\.json/i);
+      assert.doesNotMatch(result.stderr, /\n\s+at /);
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
