@@ -1,0 +1,14 @@
+---
+description: Use the project canon as agent context
+alwaysApply: true
+---
+
+# doc-canon context rule
+
+For design and development, the context source of truth is `docs/canon/`. Start with `docs/canon/INDEX.md`, then read the relevant indexed sections.
+
+Before architectural or behavioral changes, consult the relevant canon sections. Coding agents may implement application changes, but must lean on the canon.
+
+On docs↔code divergence, do not silently pick a side. Present the evidence and escalate through the canon skills and `docs/canon/DISCREPANCIES.md`. Canon skills never modify application code.
+
+This rule sets context priority; it does not replace other domain rules in the repository.
