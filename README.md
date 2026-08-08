@@ -131,6 +131,31 @@ npm link   # опционально: добавить doc-canon в PATH для �
 
 После установки `doc-canon` доступен через `npx doc-canon` или через linked binary.
 
+## Быстрый старт по флоу
+
+Короткие рецепты. Подробные walkthrough: [`docs/guides/usage-flows.md`](docs/guides/usage-flows.md).
+
+### Пустой проект
+
+1. Установите и убедитесь, что `doc-canon` есть в `PATH`
+2. `doc-canon init --yes` (или интерактивный `doc-canon init`)
+3. В Cursor запустите skill `canon-bootstrap` (интервью purpose/scope, заполнение канона)
+4. `doc-canon validate` (должно пройти)
+
+### Существующий проект
+
+1. `doc-canon init` в корне репозитория (не перезаписывает уже существующее содержимое канона)
+2. Запустите `canon-bootstrap` — extract-then-freeze; legacy docs только как import sources; код приложения не редактируется
+3. Подтвердите предложенные extra sections / изменения контракта, если спросят
+4. `doc-canon validate`
+
+### Повседневный цикл
+
+1. После заметных правок кода или канона запустите `canon-write`, чтобы синхронизировать затронутые секции
+2. `doc-canon check` — inventory + `.doc-canon/report.json`
+3. При drift docs↔code запустите `canon-audit` (`docs_stale` или `code_stale`)
+4. Опционально `doc-canon report`, чтобы напечатать последний отчёт
+
 ## Использование
 
 Все команды принимают `--root <path>` (по умолчанию: текущая директория) для указания корня репозитория.
