@@ -4,6 +4,20 @@
 
 Deterministic CLI for agent documentation canon: scaffold, validate, and report on structured docs under `docs/canon` with managed skills and rules.
 
+## Why
+
+Ad-hoc agent docs drift from code, contradict each other, and diverge in shape when different LLMs edit them. Teams need a durable **canon**: what docs exist, how they are shaped, how they stay current, and how docs↔code conflicts are resolved with a human in the loop.
+
+## Goals
+
+1. Keep agent-facing project docs accurate, consistent, and non-contradictory.
+2. Treat `docs/canon/` as the source of truth for agent context; when docs and code disagree, the user decides which is stale.
+3. Let skills edit documentation automatically; never patch application code — emit tasks for coding agents instead.
+4. Keep document structure stable across LLMs via in-repo templates and a per-project contract.
+5. Ship Cursor first; keep the CLI IDE-agnostic so other agents can plug in later.
+
+MVP does not include IDE UIs, automatic code patches, or CI/git hooks as the everyday sync trigger. Details: [`docs/canon/OVERVIEW.md`](docs/canon/OVERVIEW.md).
+
 ## Install
 
 From this repository (or after publish):
@@ -119,6 +133,20 @@ node bin/doc-canon.js --help
 [English](#doc-canon) · [Русский](#doc-canon-ru)
 
 Детерминированный CLI для канона агентской документации: создание каркаса, валидация и отчёты по структурированным документам в `docs/canon` с управляемыми skills и rules.
+
+## Зачем
+
+Ad-hoc документация для агентов устаревает относительно кода, противоречит сама себе и расходится по форме, когда её правят разные LLM. Командам нужен устойчивый **канон**: какие документы есть, какой у них shape, как они остаются актуальными и как конфликты docs↔code разрешаются с человеком в контуре.
+
+## Цели
+
+1. Держать проектную документацию для агентов точной, согласованной и без внутренних противоречий.
+2. Считать `docs/canon/` источником истины для агентского контекста; при расхождении docs и кода пользователь решает, что устарело.
+3. Дать skills автоматически править документацию; никогда не патчить код приложения — вместо этого писать задачи для coding-агентов.
+4. Держать структуру документов стабильной между разными LLM через шаблоны в репозитории и per-project контракт.
+5. Сначала Cursor; CLI оставить IDE-agnostic, чтобы позже подключать других агентов.
+
+В MVP нет IDE UI, автоматических патчей кода и CI/git hooks как повседневного триггера синхронизации. Подробности: [`docs/canon/OVERVIEW.md`](docs/canon/OVERVIEW.md).
 
 ## Установка
 
