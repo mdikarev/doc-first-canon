@@ -23,9 +23,9 @@ function upgradedContractMarkdown(root: string): string {
   }
   const updatedYaml = yaml.replace(
     /^skills_stamp:\s*.*$/m,
-    `skills_stamp: "${SKILLS_STAMP}"`,
+    () => `skills_stamp: "${SKILLS_STAMP}"`,
   );
-  return markdown.replace(yaml, updatedYaml);
+  return markdown.replace(yaml, () => updatedYaml);
 }
 
 function assertUpgradePreconditions(root: string): string {

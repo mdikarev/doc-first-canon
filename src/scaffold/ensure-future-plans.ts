@@ -3,6 +3,7 @@ import path from "node:path";
 import YAML from "yaml";
 import { extractYamlBlock } from "../contract/parse.js";
 import { canonDir, embeddedRoot } from "../paths.js";
+import { sectionPathsFromIndex } from "../validate/index-agreement.js";
 
 export type EnsureFuturePlansResult = {
   contractMarkdown: string;
@@ -90,7 +91,7 @@ function ensureContractYaml(contractMarkdown: string): {
 
   const updatedYaml = YAML.stringify(contract);
   return {
-    markdown: contractMarkdown.replace(yamlText, updatedYaml),
+    markdown: contractMarkdown.replace(yamlText, () => updatedYaml),
     changed: true,
   };
 }
@@ -117,7 +118,9 @@ function ensureIndexTableRow(root: string): boolean {
   if (!fs.existsSync(indexPath)) return false;
 
   const markdown = fs.readFileSync(indexPath, "utf8");
-  if (/\|\s*future_plans\/INDEX\.md\s*\|/.test(markdown)) return false;
+  if (sectionPathsFromIndex(markdown).includes(FUTURE_PLANS_INDEX_PATH)) {
+    return false;
+  }
 
   const sectionsMatch = SECTIONS_HEADING_RE.exec(markdown);
   if (!sectionsMatch) {
@@ -140,7 +143,7 @@ function ensureIndexTableRow(root: string): boolean {
   const updatedBody = bodyLines.join("\n");
   const updatedMarkdown =
     markdown.slice(0, sectionsMatch.index) +
-    sectionsMatch[0].replace(body, updatedBody) +
+    sectionsMatch[0].replace(body, () => updatedBody) +
     markdown.slice(sectionsMatch.index + sectionsMatch[0].length);
 
   fs.writeFileSync(indexPath, updatedMarkdown);

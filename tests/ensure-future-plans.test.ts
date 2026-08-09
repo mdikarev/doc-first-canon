@@ -96,6 +96,88 @@ it("is idempotent when the future_plans skeleton already exists", async () => {
   }
 });
 
+it("preserves literal $& in contract policies.ignore when rewriting the yaml block", async () => {
+  const root = mkdtempSync(join(tmpdir(), "doc-canon-ensure-fp-dollar-"));
+  try {
+    assert.equal(await initCanon(root, { yes: true }), 0);
+
+    const canon = join(root, "docs", "canon");
+    const contractPath = join(canon, "CANON_CONTRACT.md");
+    const contract = readFileSync(contractPath, "utf8")
+      .replace("  ignore: []", () => '  ignore: ["**/$&cache/**"]')
+      .replace(
+        "  - id: future-plans-index\n    path: future_plans/INDEX.md\n    role: section\n    required: true\n    template: FUTURE_PLANS_INDEX",
+        "  - id: future-plans-index\n    path: future_plans/INDEX.md\n    role: section\n    required: false\n    template: FUTURE_PLANS_INDEX",
+      );
+    writeFileSync(contractPath, contract);
+
+    // Sanity check the fixture actually contains a literal, unescaped $&.
+    assert.match(contract, /\*\*\/\$&cache\/\*\*/);
+
+    const result = ensureFuturePlansSkeleton(root, contract);
+    assert.equal(result.contractChanged, true);
+
+    const parsed = parseContractMarkdown(result.contractMarkdown);
+    assert.deepEqual(parsed.policies.ignore, ["**/$&cache/**"]);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+it("appends the Sections row even when an unrelated table elsewhere mentions the future_plans path", async () => {
+  const root = mkdtempSync(join(tmpdir(), "doc-canon-ensure-fp-scoped-"));
+  try {
+    assert.equal(await initCanon(root, { yes: true }), 0);
+
+    const canon = join(root, "docs", "canon");
+    const indexPath = join(canon, "INDEX.md");
+    let index = readFileSync(indexPath, "utf8").replace(
+      /\| future-plans-index \| future_plans\/INDEX\.md \| section \| true \|\n/,
+      "",
+    );
+    // An unrelated pipe table outside the Sections heading that happens to
+    // mention the same path text must not be mistaken for the real row.
+    index += `\n## Unrelated\n| note | path |\n| --- | --- |\n| see also | future_plans/INDEX.md |\n`;
+    writeFileSync(indexPath, index);
+
+    const contractPath = join(canon, "CANON_CONTRACT.md");
+    const result = ensureFuturePlansSkeleton(root, readFileSync(contractPath, "utf8"));
+    writeFileSync(contractPath, result.contractMarkdown);
+
+    assert.equal(result.indexTableChanged, true);
+    const updatedIndex = readFileSync(indexPath, "utf8");
+    const sectionsBody =
+      /^##\s+Sections\s*$(.*?)(?=^##\s|(?![\s\S]))/ims.exec(updatedIndex)?.[1] ?? "";
+    assert.match(sectionsBody, /future_plans\/INDEX\.md/);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+it("does not duplicate the Sections row when it is present as a markdown link cell", async () => {
+  const root = mkdtempSync(join(tmpdir(), "doc-canon-ensure-fp-linkcell-"));
+  try {
+    assert.equal(await initCanon(root, { yes: true }), 0);
+
+    const canon = join(root, "docs", "canon");
+    const indexPath = join(canon, "INDEX.md");
+    const index = readFileSync(indexPath, "utf8").replace(
+      "| future-plans-index | future_plans/INDEX.md | section | true |",
+      "| future-plans-index | [future_plans/INDEX.md](future_plans/INDEX.md) | section | true |",
+    );
+    writeFileSync(indexPath, index);
+    const before = readFileSync(indexPath, "utf8");
+
+    const contractPath = join(canon, "CANON_CONTRACT.md");
+    const result = ensureFuturePlansSkeleton(root, readFileSync(contractPath, "utf8"));
+
+    assert.equal(result.indexTableChanged, false);
+    assert.equal(readFileSync(indexPath, "utf8"), before);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
 it("promotes an existing but optional future-plans-index section to required", async () => {
   const root = mkdtempSync(join(tmpdir(), "doc-canon-ensure-fp-optional-"));
   try {
