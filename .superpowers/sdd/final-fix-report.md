@@ -43,9 +43,7 @@ Both tests were confirmed to fail against the pre-fix code and pass with the fix
 
 Both Important fixes land in the same file (`src/scaffold/ensure-future-plans.ts`) with intermixed hunks, so they are shipped as a single new commit together with `src/commands/upgrade-skills.ts` and the three regression tests:
 
-- `<SHA>` — `fix: prevent replace() dollar-sign corruption and scope INDEX row detection`
-
-(Exact SHA recorded below after commit.)
+- `adcf080` — `fix: prevent replace() dollar-sign corruption and scope INDEX row detection`
 
 ## Status
 
