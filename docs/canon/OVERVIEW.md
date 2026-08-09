@@ -38,10 +38,15 @@ Ad-hoc agent docs drift from code, contradict each other, and diverge in shape w
 - `validate` / `check` fail closed on structural breakage; semantic conflicts stay open until the user decides
 - Skills invoke `doc-canon` on PATH and never edit application code
 
+## Future plans (drafts)
+
+Post-MVP direction (efficiency first, then hardening) lives as **drafts** under [future_plans/INDEX.md](future_plans/INDEX.md). Those files are not behavioral SoT; after implementation, outcomes are absorbed into the living canon sections above. Rationale: `docs/superpowers/specs/2026-08-09-production-path-roadmap-design.md`.
+
 ## Related canon
 
 - [ARCHITECTURE.md](ARCHITECTURE.md) — layers and flows
 - [CLI.md](CLI.md) — deterministic core commands
 - [SKILLS.md](SKILLS.md) — agent layer
 - [GLOSSARY.md](GLOSSARY.md) — terms
+- [future_plans/INDEX.md](future_plans/INDEX.md) — draft initiatives (not SoT)
 - Import provenance (not SoT): `README.md`, `docs/guides/usage-flows.md`, `docs/superpowers/specs/2026-08-07-doc-first-canon-design.md`

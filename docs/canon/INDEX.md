@@ -14,6 +14,8 @@ Start here for agent context about this repository (`doc-canon` / doc-first-cano
 6. [DISCREPANCIES.md](DISCREPANCIES.md) — open conflicts and coding tasks
 7. [CANON_CONTRACT.md](CANON_CONTRACT.md) — structural machine contract (when changing shape)
 
+Optional (not behavioral SoT): [future_plans/INDEX.md](future_plans/INDEX.md) — draft post-MVP initiatives; refine separately, then absorb into living canon.
+
 ## Sections
 | id | path | role | required |
 | --- | --- | --- | --- |
@@ -25,6 +27,11 @@ Start here for agent context about this repository (`doc-canon` / doc-first-cano
 | contract | CANON_CONTRACT.md | contract | true |
 | cli | CLI.md | section | true |
 | skills | SKILLS.md | section | true |
+| future-plans-index | future_plans/INDEX.md | section | false |
+| future-p0-skill-context-efficiency | future_plans/p0-skill-context-efficiency.md | section | false |
+| future-p1-retrieval-and-context-pack | future_plans/p1-retrieval-and-context-pack.md | section | false |
+| future-p2-pluggable-extractors | future_plans/p2-pluggable-extractors.md | section | false |
+| future-p3-production-hardening | future_plans/p3-production-hardening.md | section | false |
 
 ## Discrepancies
 

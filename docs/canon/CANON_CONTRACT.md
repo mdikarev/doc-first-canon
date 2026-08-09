@@ -52,6 +52,31 @@ sections:
     role: section
     required: true
     template: MODULE
+  - id: future-plans-index
+    path: future_plans/INDEX.md
+    role: section
+    required: false
+    template: FUTURE_PLANS_INDEX
+  - id: future-p0-skill-context-efficiency
+    path: future_plans/p0-skill-context-efficiency.md
+    role: section
+    required: false
+    template: FUTURE_PLAN
+  - id: future-p1-retrieval-and-context-pack
+    path: future_plans/p1-retrieval-and-context-pack.md
+    role: section
+    required: false
+    template: FUTURE_PLAN
+  - id: future-p2-pluggable-extractors
+    path: future_plans/p2-pluggable-extractors.md
+    role: section
+    required: false
+    template: FUTURE_PLAN
+  - id: future-p3-production-hardening
+    path: future_plans/p3-production-hardening.md
+    role: section
+    required: false
+    template: FUTURE_PLAN
 templates:
   - id: INDEX
     path: templates/INDEX.md
@@ -73,6 +98,10 @@ templates:
     path: templates/MODULE.md
   - id: DOMAIN_TOPIC
     path: templates/DOMAIN_TOPIC.md
+  - id: FUTURE_PLANS_INDEX
+    path: templates/FUTURE_PLANS_INDEX.md
+  - id: FUTURE_PLAN
+    path: templates/FUTURE_PLAN.md
 policies:
   max_lines: 400
   ignore: []
