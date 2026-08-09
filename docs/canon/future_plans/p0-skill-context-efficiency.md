@@ -30,25 +30,29 @@ Build a **working-set manifest** (not file bodies):
 | --- | --- |
 | `path` | File or artifact path |
 | `role` | e.g. index, section, template, inventory, report, code_evidence, discrepancy |
-| `stub` | One-line why-in-set (from INDEX role, finding kind, or user intent—not a content digest) |
+| `stub` | Short why-in-set note (from INDEX role, finding kind, or user intent—not a content digest). Free-form brevity; no rigid one-line template |
 
 Use existing CLI artifacts where needed (`doc-canon check` → inventory/report). No new Scout CLI in this initiative.
 
 ### 2 — Expand gate
 
-Before full reads, briefly state the working set and a verdict: **sufficient** or **need more** (which paths, why). Doubt → expand. Multiple expands are fine. Silent under-read is not.
+Before full reads, form a working set and a verdict: **sufficient** or **need more** (which paths, why). Doubt → expand. Multiple expands are fine. Silent under-read is not.
+
+**Visibility:** managed canon skills (`canon-write`, `canon-audit`) briefly show the working set (paths + stubs) and verdict in chat—free-form, not a fixed table. Project/coding agents follow the same discipline without a mandatory chat ritual.
 
 ### 3 — Execute
 
-Targeted full reads of the approved set, then normal work (write/audit/coding). After canon edits, `doc-canon validate` before claiming success. Substantial writes still use the existing clarify-before-invent gate.
+Targeted full reads of the approved set, then normal work (write/audit/coding). After canon edits, `doc-canon validate` before claiming success.
+
+For substantial SoT writes: run the existing clarify-before-invent gate **after** Scout → Expand (and any further expands), only if invent-risk remains—not before Scout.
 
 ## How audiences specialize
 
 | Audience | Shape in this initiative |
 | --- | --- |
-| `canon-write` | Full Scout → Expand → Execute; clarify gate unchanged; inventory only when syncing vs code/tree |
-| `canon-audit` | Full phases; `validate` then `check` as Scout inputs; expand until claims are evidence-backed |
-| Project / coding agents | Same recipe via pointer rule / `AGENTS.md`; no pack and no requirement to run canon skills |
+| `canon-write` | Scout → Expand → Execute; clarify-before-invent after Expand if invent-risk remains before substantial write; inventory only when syncing vs code/tree |
+| `canon-audit` | Full phases with visible expand gate; `validate` then `check` as Scout inputs; expand until claims are evidence-backed |
+| Project / coding agents | Same recipe via pointer rule / `AGENTS.md`; no pack, no required canon skills, no mandatory expand-gate chatter |
 | `canon-bootstrap` | Note only: wide inventory/import pass remains legitimate; do not force an artificially tiny set |
 | `canon-contract` | Note only: naturally narrow set (contract + templates + INDEX) |
 
@@ -57,7 +61,7 @@ Targeted full reads of the approved set, then normal work (write/audit/coding). 
 - Shared dual-audience recipe in living canon (`SKILLS.md`, glossary, light architecture note)
 - Explicit phases in `canon-write` and `canon-audit` skill bodies
 - Stronger progressive-disclosure guidance in pointer rule / managed `AGENTS.md`
-- Acceptance scenarios for working set + expand before deep reads
+- Acceptance scenarios for working set + expand before deep reads (skills must show gate; pointer/AGENTS only require guidance text)
 - Split smart-cache ideas into [P0b](p0b-smart-cache.md)
 
 ## Out of scope
@@ -75,5 +79,4 @@ Likely: `SKILLS.md`, `GLOSSARY.md`, light touch on `ARCHITECTURE.md`, skill bodi
 
 ## Open questions
 
-- Exact stub wording conventions in skill text (how verbose is “brief” for the expand verdict in chat)
 - Whether bootstrap later gets explicit phased text in a follow-up once P0 write/audit patterns stabilize
