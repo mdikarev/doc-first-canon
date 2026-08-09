@@ -83,6 +83,30 @@ describe("managed agent assets", () => {
     assert.match(block, /DISCREPANCIES\.md/);
   });
 
+  it("documents future_plans as directional canon, not task storage", () => {
+    const rule = readEmbedded("rules", "doc-canon.mdc");
+    assert.match(rule, /future_plans/i);
+    assert.match(rule, /not.*(?:coding tasks|development tasks|task tracker)/i);
+
+    const block = readEmbedded("agents", "AGENTS.block.md");
+    assert.match(block, /future_plans/i);
+
+    const write = readEmbedded("skills", "canon-write", "SKILL.md");
+    assert.match(write, /future_plans/i);
+    assert.match(write, /absorb/i);
+
+    const contract = readEmbedded("skills", "canon-contract", "SKILL.md");
+    assert.match(contract, /FUTURE_PLAN/);
+    assert.match(contract, /future_plans\//);
+
+    const bootstrap = readEmbedded("skills", "canon-bootstrap", "SKILL.md");
+    assert.match(bootstrap, /future_plans/i);
+
+    const audit = readEmbedded("skills", "canon-audit", "SKILL.md");
+    assert.match(audit, /future_plans/i);
+    assert.match(audit, /not.*(?:behavioral SoT|current SoT)|directional/i);
+  });
+
   it("documents every MVP skill acceptance scenario", () => {
     const scenarios = readFileSync(
       join(process.cwd(), "docs", "acceptance", "skill-scenarios.md"),

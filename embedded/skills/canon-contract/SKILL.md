@@ -19,5 +19,6 @@ description: Change a project's canon contract and registered templates safely.
 3. Show the intended diff and require explicit user confirmation before writing anything.
 4. After confirmation, edit this repository's `docs/canon/CANON_CONTRACT.md` and registered files under `docs/canon/templates/`; create or refactor canon sections only as agreed.
 5. For a new template kind, agree its headings, save its template, register it in the local contract, validate, and only then create documents from it.
-6. Run `doc-canon validate`. If it fails, repair only the confirmed local contract/template change or report the blocker.
-7. Never change other repositories' defaults. Project-specific structure belongs only to this repository's contract and templates.
+6. To add an initiative, confirm with the user first, then register `future_plans/<slug>.md` with `required: false`, template `FUTURE_PLAN`, create the file from that template, and add an INDEX row under `future_plans/INDEX.md`.
+7. Run `doc-canon validate`. If it fails, repair only the confirmed local contract/template change or report the blocker.
+8. Never change other repositories' defaults. Project-specific structure belongs only to this repository's contract and templates.

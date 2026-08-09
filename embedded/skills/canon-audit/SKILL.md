@@ -24,6 +24,7 @@ description: Audit canon semantics, resolve divergence, and maintain discrepancy
    - architecture claims against inventory paths;
    - relative and Related-canon links;
    - doc↔doc conflicts only when supported by at least two cited passages.
+   - Do not treat `future_plans` prose as the current behavioral SoT when judging docs↔code drift; it is directional canon for future system shape.
 5. Every finding must cite canon paths and inventory/code paths, or explicitly say code is missing. Deduplicate normalized kind/path sets and honor all ignores.
 
 ## Report ownership
