@@ -62,6 +62,11 @@ sections:
     role: section
     required: false
     template: FUTURE_PLAN
+  - id: future-p0b-smart-cache
+    path: future_plans/p0b-smart-cache.md
+    role: section
+    required: false
+    template: FUTURE_PLAN
   - id: future-p1-retrieval-and-context-pack
     path: future_plans/p1-retrieval-and-context-pack.md
     role: section

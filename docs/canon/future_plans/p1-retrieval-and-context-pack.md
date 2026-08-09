@@ -2,7 +2,7 @@
 
 - **Status:** draft
 - **Focus:** Deterministic ways to **select** canon (and later related) context for skills without dumping entire docs.
-- **Depends on:** P0 patterns (progressive disclosure / Scout) ideally in place or designed
+- **Depends on:** P0 patterns (progressive disclosure / Scout) ideally in place or designed; cache (P0b) optional and independent
 - **Unblocks:** Scale to larger canons; shared pack for coding agents later
 
 ## Intent

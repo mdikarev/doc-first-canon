@@ -29,6 +29,7 @@ Required, but not behavioral SoT and not a development task tracker: [future_pla
 | skills | SKILLS.md | section | true |
 | future-plans-index | future_plans/INDEX.md | section | true |
 | future-p0-skill-context-efficiency | future_plans/p0-skill-context-efficiency.md | section | false |
+| future-p0b-smart-cache | future_plans/p0b-smart-cache.md | section | false |
 | future-p1-retrieval-and-context-pack | future_plans/p1-retrieval-and-context-pack.md | section | false |
 | future-p2-pluggable-extractors | future_plans/p2-pluggable-extractors.md | section | false |
 | future-p3-production-hardening | future_plans/p3-production-hardening.md | section | false |
