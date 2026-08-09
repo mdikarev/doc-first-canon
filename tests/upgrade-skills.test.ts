@@ -109,6 +109,65 @@ it("refreshes managed assets and stamp without replacing canon prose", async () 
   }
 });
 
+it("restores a stripped future_plans skeleton without touching planted initiatives", async () => {
+  const root = mkdtempSync(join(tmpdir(), "doc-canon-upgrade-future-plans-"));
+  try {
+    assert.equal(await initCanon(root, { yes: true }), 0);
+
+    const canon = join(root, "docs", "canon");
+    const contractPath = join(canon, "CANON_CONTRACT.md");
+    const initiativePath = join(canon, "future_plans", "demo-initiative.md");
+    const planted =
+      "# Planted\n\n## Intent\nx\n\n## In scope\ny\n\n## Out of scope\nz\n\n## Absorbs into\na\n\n## Open questions\nb\n";
+    writeFileSync(initiativePath, planted);
+
+    let contract = readFileSync(contractPath, "utf8");
+    contract = contract
+      .replace(
+        /\n  - id: future-plans-index[\s\S]*?template: FUTURE_PLANS_INDEX\n/,
+        "\n",
+      )
+      .replace(
+        /\n  - id: FUTURE_PLANS_INDEX\n    path: templates\/FUTURE_PLANS_INDEX\.md\n/,
+        "\n",
+      )
+      .replace(
+        /\n  - id: FUTURE_PLAN\n    path: templates\/FUTURE_PLAN\.md\n/,
+        "\n",
+      )
+      .replace(
+        "templates:\n",
+        "  - id: future-demo\n    path: future_plans/demo-initiative.md\n    role: section\n    required: false\n    template: FUTURE_PLAN\ntemplates:\n",
+      );
+    writeFileSync(contractPath, contract);
+    rmSync(join(canon, "future_plans", "INDEX.md"), { force: true });
+    rmSync(join(canon, "templates", "FUTURE_PLANS_INDEX.md"), { force: true });
+    rmSync(join(canon, "templates", "FUTURE_PLAN.md"), { force: true });
+
+    const indexPath = join(canon, "INDEX.md");
+    writeFileSync(
+      indexPath,
+      readFileSync(indexPath, "utf8").replace(
+        /\| future-plans-index \| future_plans\/INDEX\.md \| section \| true \|\n/,
+        "",
+      ),
+    );
+
+    assert.equal(await upgradeSkills(root), 0);
+
+    assert.equal(existsSync(join(canon, "future_plans", "INDEX.md")), true);
+    assert.equal(existsSync(join(canon, "templates", "FUTURE_PLAN.md")), true);
+    assert.equal(readFileSync(initiativePath, "utf8"), planted);
+    assert.match(readFileSync(indexPath, "utf8"), /future_plans\/INDEX\.md/);
+    assert.match(
+      readFileSync(contractPath, "utf8"),
+      /path:\s*future_plans\/INDEX\.md/,
+    );
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
 for (const [name, malformedAgents] of [
   [
     "unmatched start marker",

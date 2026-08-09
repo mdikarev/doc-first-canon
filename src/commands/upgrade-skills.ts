@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { extractYamlBlock } from "../contract/parse.js";
 import { contractPath, resolveRoot } from "../paths.js";
+import { ensureFuturePlansSkeleton } from "../scaffold/ensure-future-plans.js";
 import {
   assertAgentsMarkersWellFormed,
   copyManagedAssets,
@@ -41,6 +42,10 @@ export async function upgradeSkills(root: string): Promise<number> {
   const resolvedRoot = resolveRoot(process.cwd(), root);
   const updatedContract = assertUpgradePreconditions(resolvedRoot);
   copyManagedAssets(resolvedRoot);
-  fs.writeFileSync(contractPath(resolvedRoot), updatedContract);
+  const { contractMarkdown } = ensureFuturePlansSkeleton(
+    resolvedRoot,
+    updatedContract,
+  );
+  fs.writeFileSync(contractPath(resolvedRoot), contractMarkdown);
   return validateCanon(resolvedRoot);
 }
