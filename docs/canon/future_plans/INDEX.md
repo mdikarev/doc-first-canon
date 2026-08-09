@@ -23,10 +23,10 @@ Design rationale: [`docs/superpowers/specs/2026-08-09-production-path-roadmap-de
 
 | # | Initiative | Status | File |
 | --- | --- | --- | --- |
-| 0 | Skill context efficiency | refining | [p0-skill-context-efficiency.md](p0-skill-context-efficiency.md) |
+| 0 | Skill context efficiency | implementing | [p0-skill-context-efficiency.md](p0-skill-context-efficiency.md) |
 | 0b | Smart cache | draft | [p0b-smart-cache.md](p0b-smart-cache.md) |
 | 1 | Retrieval & context pack | draft | [p1-retrieval-and-context-pack.md](p1-retrieval-and-context-pack.md) |
 | 2 | Pluggable extractors | draft | [p2-pluggable-extractors.md](p2-pluggable-extractors.md) |
 | 3 | Production hardening | draft | [p3-production-hardening.md](p3-production-hardening.md) |
 
-P0 is in active design refinement. P0b (cache) was split out of P0 for a later session. P3 may proceed in parallel once P0 direction is clear; it is listed last because efficiency is the near-term product focus.
+P0 is implementing. P0b (cache) was split out of P0 for a later session. P3 may proceed in parallel once P0 direction is clear; it is listed last because efficiency is the near-term product focus.

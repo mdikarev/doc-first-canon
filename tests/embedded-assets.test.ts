@@ -56,6 +56,34 @@ describe("managed agent assets", () => {
     assert.match(write, /do not invent|without inventing|not invent/i);
   });
 
+  it("documents Scout Expand Execute recipe in write and audit skills", () => {
+    const write = readEmbedded("skills", "canon-write", "SKILL.md");
+    assert.match(write, /Scout/i);
+    assert.match(write, /Expand/i);
+    assert.match(write, /working set/i);
+    assert.match(write, /sufficient|need more/i);
+    assert.match(write, /after Expand|after.*Expand|following Expand/i);
+    assert.match(write, /clarif/i);
+
+    const audit = readEmbedded("skills", "canon-audit", "SKILL.md");
+    assert.match(audit, /Scout/i);
+    assert.match(audit, /Expand/i);
+    assert.match(audit, /working set/i);
+    assert.match(audit, /sufficient|need more/i);
+    assert.match(audit, /show|briefly|in chat/i);
+  });
+
+  it("documents working-set discipline in pointer rule and AGENTS block", () => {
+    const rule = readEmbedded("rules", "doc-canon.mdc");
+    assert.match(rule, /working set/i);
+    assert.match(rule, /expand/i);
+    assert.match(rule, /INDEX\.md/);
+
+    const block = readEmbedded("agents", "AGENTS.block.md");
+    assert.match(block, /working set/i);
+    assert.match(block, /expand/i);
+  });
+
   it("documents semantic audit merge and discrepancy lifecycle", () => {
     const audit = readEmbedded("skills", "canon-audit", "SKILL.md");
     assert.match(audit, /doc-canon check/);
@@ -134,6 +162,8 @@ describe("managed agent assets", () => {
       "Pointer rule and AGENTS block after init",
       "Canon-write clarifies before substantial writes",
       "Check preserves skill findings",
+      "Canon-write Scout Expand Execute before deep reads",
+      "Canon-audit Scout Expand Execute before deep reads",
     ]) {
       assert.match(scenarios, new RegExp(phrase, "i"));
     }
