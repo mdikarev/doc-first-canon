@@ -2,7 +2,7 @@
 
 ## Summary
 
-Two layers: a deterministic **CLI** (`doc-canon`) owns schema, scaffold, structural validation, inventory, and report merge for `source: cli` findings; an **agent layer** (Cursor skills + pointer rule / AGENTS block) owns interview, authorship, semantic audit, and discrepancy dialogue. Skills must call the CLI and must not invent structure outside the local contract.
+Two layers: a deterministic **CLI** (`doc-canon`) owns schema, scaffold, structural validation, inventory, and report merge for `source: cli` findings; an **agent layer** (Cursor skills + pointer rule / AGENTS block) owns interview, authorship, semantic audit, and discrepancy dialogue. Skills must call the CLI and must not invent structure outside the local contract. Agents discover a small working set from `INDEX.md` (Scout → Expand) before deep reads—quality over thrift; no pack/search CLI in MVP.
 
 ## System context
 

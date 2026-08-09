@@ -39,6 +39,15 @@ Non-empty bootstrap: inventory and legacy docs are import sources; agreed facts 
 ### Managed assets
 Skills, pointer rule, and `AGENTS.md` block copied/refreshed by `init` / `upgrade-skills` from the installed CLI package.
 
+### Working set
+The small list of canon/artifact paths an agent intends to use for the current task, discovered via INDEX (and CLI inventory/report when needed) before deep-reading file bodies.
+
+### Scout
+Phase that builds a working-set manifest (`path`, `role`, short why-in-set stub) without loading full file bodies or inventing structure.
+
+### Expand gate
+Check that the working set is **sufficient** or **need more** before deep reads. Doubt → expand. Managed canon skills briefly show the set and verdict in chat; coding agents apply the same discipline without a mandatory chat ritual.
+
 ### skills_stamp
 Version marker in the contract YAML recording which managed skills stamp was last applied; validate fails if skills are too old relative to CLI expectations.
 

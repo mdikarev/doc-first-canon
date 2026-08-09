@@ -48,6 +48,7 @@ These human-run checklists cover the MVP agent flows. Automated skill execution 
 - [ ] Confirm the installed Cursor rule is always-on and points agents to `docs/canon/INDEX.md`.
 - [ ] Confirm `AGENTS.md` contains exactly one block bounded by `<!-- doc-canon:start -->` and `<!-- doc-canon:end -->`.
 - [ ] Confirm existing content outside those markers is preserved.
+- [ ] Confirm the pointer rule / `AGENTS` block mention starting at `INDEX.md`, building a small working set, and expanding when unsure (guidance only—not a required chat ritual for coding agents).
 
 ## Future plans are directional; contract adds optional initiative
 
@@ -63,6 +64,21 @@ These human-run checklists cover the MVP agent flows. Automated skill execution 
 - [ ] Answer the question; confirm it may ask at most two more (three total), still one at a time, then edits and runs `doc-canon validate` before claiming success.
 - [ ] Ask `canon-write` for a substantial change that already includes the concrete facts/decision.
 - [ ] Confirm it **skips** clarify (states briefly that it is unnecessary) and writes + validates without ritual questions.
+
+## Canon-write Scout Expand Execute before deep reads
+
+- [ ] Ask `canon-write` for a substantial canon change.
+- [ ] Confirm it briefly shows a working set (paths + stubs) and an expand verdict (`sufficient` or `need more`) before deep-reading section bodies.
+- [ ] If invent-risk remains, confirm clarify runs **after** that expand gate (not before Scout).
+- [ ] Confirm a legitimate expand (`need more` then more paths) is treated as success, not failure.
+- [ ] Confirm it runs `doc-canon validate` before claiming success.
+
+## Canon-audit Scout Expand Execute before deep reads
+
+- [ ] Run `canon-audit` on a repo with inventory available.
+- [ ] Confirm it runs `validate` then `check` as Scout inputs.
+- [ ] Confirm it briefly shows a working set + expand verdict before deep-reading evidence paths.
+- [ ] Confirm it expands until claims are evidence-backed rather than under-reading silently.
 
 ## Check preserves skill findings
 
