@@ -16,21 +16,22 @@ MVP package `doc-canon@0.1.0` (Node ≥20, ESM). Entry: `bin/doc-canon.js` → c
 
 ## Responsibilities
 
-- Materialize default canon + managed Cursor assets on `init`
+- Materialize default canon + managed Cursor assets on `init`, including a required `future_plans/INDEX.md` and its templates
 - Fail closed on invalid contract YAML, incompatible `schema_version`, missing required files/headings, INDEX≠contract, too-old `skills_stamp`
 - Refresh inventory and `source: cli` findings on `check` while preserving `source: skill`
 - Refresh managed skills/rules/AGENTS block on `upgrade-skills` without wiping canon document content
+- On `upgrade-skills`, idempotently migrate existing repos onto the `future_plans/INDEX.md` skeleton (contract section + templates entries, INDEX table row, index file) without overwriting existing initiative prose or templates, and bump `skills_stamp`
 - On existing canon, `init` preserves canon prose; skills refresh only with `--force-skills` / upgrade path
 
 ## Interfaces
 
 | Command | Behavior |
 | --- | --- |
-| `init` | Scaffold `docs/canon/`, templates, default contract, skills, pointer rule, AGENTS block; `--yes`, `--force-skills`, `--root` |
+| `init` | Scaffold `docs/canon/`, templates, default contract (including required `future_plans/INDEX.md`), skills, pointer rule, AGENTS block; `--yes`, `--force-skills`, `--root` |
 | `validate` | Schema + structure; exit ≠0 on errors; need not write report |
 | `check` | validate + inventory + merge CLI findings into `.doc-canon/report.json` |
 | `report` | Print last report.json to stdout (read-only) |
-| `upgrade-skills` | Refresh managed assets from installed package |
+| `upgrade-skills` | Refresh managed assets from installed package; idempotently ensure `future_plans/INDEX.md` skeleton on pre-existing canons; bump `skills_stamp` |
 
 Artifacts: `.doc-canon/inventory.json`, `.doc-canon/report.json` (may be gitignored in target repos).
 

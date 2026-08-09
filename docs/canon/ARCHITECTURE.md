@@ -23,16 +23,17 @@ Two layers: a deterministic **CLI** (`doc-canon`) owns schema, scaffold, structu
 - **Inventory** (`src/inventory/*`) — language-agnostic tree walk; applies ignore helpers when listing the repo
 - **Report** (`src/report/*`) — merge CLI findings; preserve `source: skill`
 - **Scaffold / embedded** (`src/scaffold/*`, `embedded/**`) — default templates, skills, pointer rule, AGENTS block
+- **Future plans skeleton** (`src/scaffold/ensure-future-plans.ts`) — idempotently ensures `future_plans/INDEX.md`, its templates, and the contract/INDEX rows exist; `init` creates a fresh required section, `upgrade-skills` migrates existing repos onto it without touching existing initiative prose
 - **Agent skills** (copied into `.cursor/skills/`) — bootstrap, write, audit, contract
 
 ## Key flows
 
-1. **Bootstrap** — `init` scaffolds; `canon-bootstrap` interviews (empty) or extract-then-freeze (non-empty); then `validate`. After success, only `docs/canon/` is SoT.
+1. **Bootstrap** — `init` scaffolds, including a required `future_plans/INDEX.md`; `canon-bootstrap` interviews (empty) or extract-then-freeze (non-empty); then `validate`. After success, only `docs/canon/` is SoT.
 2. **Validate** — structural fail-closed checks; need not write `report.json`.
 3. **Check** — validate + inventory + CLI findings in `.doc-canon/report.json`; does not edit canon prose or `DISCREPANCIES.md`.
 4. **Audit / resolve** — `canon-audit` semantic pass + user decision; apply order: successful apply → set `decision` → Open→Resolved when appropriate.
 5. **Everyday sync** — human-invoked `canon-write` / `canon-audit` after meaningful changes.
-6. **Upgrade managed assets** — `upgrade-skills` refreshes skills/rules/AGENTS without wiping canon content.
+6. **Upgrade managed assets** — `upgrade-skills` refreshes skills/rules/AGENTS, ensures the `future_plans/INDEX.md` skeleton (contract entry, INDEX row, templates, index file) exists for repos scaffolded before it was required, and bumps `skills_stamp`, without wiping canon content.
 
 ## Boundaries & non-responsibilities
 

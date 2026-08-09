@@ -23,4 +23,5 @@ description: Bootstrap or import a repository's documentation canon.
    - Propose extra sections, interview the user, and use the contract workflow for confirmed structural changes.
    - Extract agreed facts into files created from registered templates, then refresh `INDEX.md`.
 5. Run `doc-canon validate`. After it succeeds, import sources outside `docs/canon/` are not SoT. Do not delete or silently update those legacy files.
-6. Surface docs↔code conflicts for user resolution; never silently merge or choose a side.
+6. After init, confirm `future_plans/INDEX.md` exists. Do not invent initiatives unless the user asks.
+7. Surface docs↔code conflicts for user resolution; never silently merge or choose a side.

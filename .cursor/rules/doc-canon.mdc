@@ -7,6 +7,8 @@ alwaysApply: true
 
 For design and development, the context source of truth is `docs/canon/`. Start with `docs/canon/INDEX.md`, then read the relevant indexed sections.
 
+`docs/canon/future_plans/` is part of the canon for **future system shape** (initiatives). It is not the behavioral source of truth for current behavior. Do not store development tasks, checklists, or coding-agent prompts there; use roadmap/issues/`DISCREPANCIES.md` for execution work. After an initiative is realized, absorb outcomes into living canon sections.
+
 Before architectural or behavioral changes, consult the relevant canon sections. Coding agents may implement application changes, but must lean on the canon.
 
 On docs↔code divergence, do not silently pick a side. Present the evidence and escalate through the canon skills and `docs/canon/DISCREPANCIES.md`. Canon skills never modify application code.

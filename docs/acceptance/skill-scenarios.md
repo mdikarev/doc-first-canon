@@ -49,6 +49,13 @@ These human-run checklists cover the MVP agent flows. Automated skill execution 
 - [ ] Confirm `AGENTS.md` contains exactly one block bounded by `<!-- doc-canon:start -->` and `<!-- doc-canon:end -->`.
 - [ ] Confirm existing content outside those markers is preserved.
 
+## Future plans are directional; contract adds optional initiative
+
+- [ ] Confirm `future_plans/INDEX.md` is required and scaffolded by `doc-canon init`, and migrated onto pre-existing canons by `doc-canon upgrade-skills`.
+- [ ] Ask `canon-write` to add a new post-MVP initiative; confirm it registers `future_plans/<slug>.md` as `required: false` via `canon-contract`, adds an INDEX row, and writes directional prose (no checklists, sprint plans, or `coding_agent_prompt` entries).
+- [ ] Confirm the initiative stays out of behavioral SoT: `canon-audit` does not treat its prose as current-behavior ground truth when judging docs↔code drift.
+- [ ] Mark the initiative `absorbed` after implementation and confirm outcomes move into the relevant living canon sections.
+
 ## Check preserves skill findings
 
 - [ ] Seed `.doc-canon/report.json` with both `source: skill` and `source: cli` findings.

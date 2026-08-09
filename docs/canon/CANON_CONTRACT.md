@@ -55,7 +55,7 @@ sections:
   - id: future-plans-index
     path: future_plans/INDEX.md
     role: section
-    required: false
+    required: true
     template: FUTURE_PLANS_INDEX
   - id: future-p0-skill-context-efficiency
     path: future_plans/p0-skill-context-efficiency.md

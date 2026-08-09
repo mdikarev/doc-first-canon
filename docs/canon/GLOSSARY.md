@@ -42,6 +42,9 @@ Skills, pointer rule, and `AGENTS.md` block copied/refreshed by `init` / `upgrad
 ### skills_stamp
 Version marker in the contract YAML recording which managed skills stamp was last applied; validate fails if skills are too old relative to CLI expectations.
 
+### Future plans
+Canon subtree `docs/canon/future_plans/` for initiatives describing the **future shape** of the system. Not behavioral SoT for current behavior; not a development task tracker. After realization, absorb into living sections and mark the initiative absorbed or remove it.
+
 ## Naming conventions
 
 - Section files use `UPPER_SNAKE` or clear `Title.md` paths registered in the contract (`OVERVIEW.md`, `CLI.md`, …).

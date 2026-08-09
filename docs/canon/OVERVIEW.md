@@ -20,6 +20,7 @@ Ad-hoc agent docs drift from code, contradict each other, and diverge in shape w
 
 - CLI: `init`, `validate`, `check`, `report`, `upgrade-skills`
 - Per-repo canon tree, templates, and `CANON_CONTRACT.md`
+- `future_plans/INDEX.md`: required, scaffolded canon subtree for directional post-MVP initiatives (not behavioral SoT, not a task tracker); `upgrade-skills` migrates existing repos onto it
 - Managed Cursor skills (`canon-bootstrap`, `canon-write`, `canon-audit`, `canon-contract`), pointer rule, and `AGENTS.md` managed block
 - Language-agnostic inventory and machine-readable reports under `.doc-canon/`
 - Human-in-the-loop discrepancy workflow (skills never patch application code)
@@ -38,9 +39,9 @@ Ad-hoc agent docs drift from code, contradict each other, and diverge in shape w
 - `validate` / `check` fail closed on structural breakage; semantic conflicts stay open until the user decides
 - Skills invoke `doc-canon` on PATH and never edit application code
 
-## Future plans (drafts)
+## Future plans (product feature)
 
-Post-MVP direction (efficiency first, then hardening) lives as **drafts** under [future_plans/INDEX.md](future_plans/INDEX.md). Those files are not behavioral SoT; after implementation, outcomes are absorbed into the living canon sections above. Rationale: `docs/superpowers/specs/2026-08-09-production-path-roadmap-design.md`.
+`future_plans/INDEX.md` is a required, scaffolded canon section (`init` creates it; `upgrade-skills` migrates existing repos onto it) that holds **directional** post-MVP initiatives — not behavioral SoT and not a development task tracker. This repository's own post-MVP direction (efficiency first, then hardening) is captured there as initiatives P0–P3; see [future_plans/INDEX.md](future_plans/INDEX.md). After implementation, outcomes are absorbed into the living canon sections above and the initiative is marked `absorbed` or removed. Rationale: `docs/superpowers/specs/2026-08-09-production-path-roadmap-design.md`.
 
 ## Related canon
 
@@ -48,5 +49,5 @@ Post-MVP direction (efficiency first, then hardening) lives as **drafts** under 
 - [CLI.md](CLI.md) — deterministic core commands
 - [SKILLS.md](SKILLS.md) — agent layer
 - [GLOSSARY.md](GLOSSARY.md) — terms
-- [future_plans/INDEX.md](future_plans/INDEX.md) — draft initiatives (not SoT)
+- [future_plans/INDEX.md](future_plans/INDEX.md) — directional initiatives (not SoT, not a task tracker)
 - Import provenance (not SoT): `README.md`, `docs/guides/usage-flows.md`, `docs/superpowers/specs/2026-08-07-doc-first-canon-design.md`
