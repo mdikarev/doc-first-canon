@@ -56,6 +56,14 @@ These human-run checklists cover the MVP agent flows. Automated skill execution 
 - [ ] Confirm the initiative stays out of behavioral SoT: `canon-audit` does not treat its prose as current-behavior ground truth when judging docs↔code drift.
 - [ ] Mark the initiative `absorbed` after implementation and confirm outcomes move into the relevant living canon sections.
 
+## Canon-write clarifies before substantial writes
+
+- [ ] Ask `canon-write` to make a substantial but ambiguous canon change (missing a material decision).
+- [ ] Confirm it asks **one** clarifying question with **A/B/C** options and an explicit **recommended** answer before editing `docs/canon/**`.
+- [ ] Answer the question; confirm it may ask at most two more (three total), still one at a time, then edits and runs `doc-canon validate` before claiming success.
+- [ ] Ask `canon-write` for a substantial change that already includes the concrete facts/decision.
+- [ ] Confirm it **skips** clarify (states briefly that it is unnecessary) and writes + validates without ritual questions.
+
 ## Check preserves skill findings
 
 - [ ] Seed `.doc-canon/report.json` with both `source: skill` and `source: cli` findings.

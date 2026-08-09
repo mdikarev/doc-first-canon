@@ -19,7 +19,7 @@ Four skills ship in `embedded/skills/` and are copied into target repos on `init
 | Skill | Responsibility |
 | --- | --- |
 | `canon-bootstrap` | First run; empty interview or non-empty extract-then-freeze; fill mandatory (+ agreed) sections including required `future_plans/INDEX.md`; validate |
-| `canon-write` | Author/refactor canon prose and everyday sync of affected sections; when writing `future_plans/**`, keep initiatives directional (not a task list) and follow the draft → refining → implementing → absorbed lifecycle |
+| `canon-write` | Author/refactor canon prose and everyday sync of affected sections; before substantial SoT writes, clarify when ambiguous (one question at a time, A/B/C options, recommended answer, max 3) or skip when the request is already unambiguous; when writing `future_plans/**`, keep initiatives directional (not a task list) and follow the draft → refining → implementing → absorbed lifecycle |
 | `canon-audit` | Semantic audit vs inventory; resolve dialogue; discrepancy lifecycle; mark unconfirmed skill findings stale |
 | `canon-contract` | Propose contract/template diffs; write only after explicit user confirmation; validate |
 
@@ -43,6 +43,7 @@ Pointer rule: always-on context priority — start at `docs/canon/INDEX.md`; esc
 - Never bypass contract for new section kinds
 - `future_plans/**` holds directional initiatives only; never convert it into a task tracker, checklist, or coding-agent prompt list — execution work belongs in `DISCREPANCIES.md` / project task tools
 - Always `doc-canon validate` before claiming success on canon edits
+- `canon-write` must not invent material facts for substantial edits: clarify (MCQ + recommendation) or skip only when the request already resolves ambiguity
 - `check` does not close discrepancies; only audit applies the lifecycle when appropriate
 
 ## Open questions

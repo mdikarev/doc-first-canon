@@ -132,6 +132,7 @@ describe("managed agent assets", () => {
       "Resolved on a later audit",
       "Add a new template kind",
       "Pointer rule and AGENTS block after init",
+      "Canon-write clarifies before substantial writes",
       "Check preserves skill findings",
     ]) {
       assert.match(scenarios, new RegExp(phrase, "i"));
