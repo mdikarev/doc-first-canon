@@ -8,7 +8,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { describe, it } from "node:test";
 import { parseContractMarkdown } from "../src/contract/parse.js";
 import { defaultContractMarkdown } from "../src/scaffold/default-contract.js";
@@ -28,6 +28,8 @@ const TEMPLATE_IDS = [
   "ENTITY",
   "MODULE",
   "DOMAIN_TOPIC",
+  "FUTURE_PLANS_INDEX",
+  "FUTURE_PLAN",
 ] as const;
 
 const TEMPLATE_HEADINGS: Record<(typeof TEMPLATE_IDS)[number], string[]> = {
@@ -41,6 +43,8 @@ const TEMPLATE_HEADINGS: Record<(typeof TEMPLATE_IDS)[number], string[]> = {
   ENTITY: ["Purpose", "Scope", "Current state", "Identity & fields", "Lifecycle", "Invariants", "Relations", "Open questions", "Related canon"],
   MODULE: ["Purpose", "Scope", "Current state", "Responsibilities", "Interfaces", "Dependencies", "Invariants", "Open questions", "Related canon"],
   DOMAIN_TOPIC: ["Purpose", "Scope", "Current state", "Concepts", "Rules & invariants", "Key details", "Open questions", "Related canon"],
+  FUTURE_PLANS_INDEX: ["Future plans", "How to use", "Status vocabulary", "Initiatives"],
+  FUTURE_PLAN: ["Intent", "In scope", "Out of scope", "Absorbs into", "Open questions"],
 };
 
 const MANDATORY_SECTIONS = [
@@ -50,6 +54,7 @@ const MANDATORY_SECTIONS = [
   ["glossary", "GLOSSARY.md", "glossary"],
   ["discrepancies", "DISCREPANCIES.md", "discrepancies"],
   ["contract", "CANON_CONTRACT.md", "contract"],
+  ["future-plans-index", "future_plans/INDEX.md", "section"],
 ] as const;
 
 describe("embedded default canon", () => {
@@ -91,11 +96,14 @@ describe("embedded default canon", () => {
           join(templateRoot, `${id}.md`),
         );
       }
-      for (const [, sectionPath] of MANDATORY_SECTIONS) {
-        if (sectionPath === "CANON_CONTRACT.md") continue;
+      const contract = parseContractMarkdown(defaultContractMarkdown());
+      for (const section of contract.sections) {
+        if (section.path === "CANON_CONTRACT.md") continue;
+        const dest = join(canonRoot, section.path);
+        mkdirSync(dirname(dest), { recursive: true });
         cpSync(
-          join(templateRoot, sectionPath),
-          join(canonRoot, sectionPath),
+          join(templateRoot, `${section.template}.md`),
+          dest,
         );
       }
       writeFileSync(

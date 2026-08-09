@@ -7,6 +7,7 @@ const SECTIONS = [
   ["glossary", "GLOSSARY.md", "glossary", "GLOSSARY"],
   ["discrepancies", "DISCREPANCIES.md", "discrepancies", "DISCREPANCIES"],
   ["contract", "CANON_CONTRACT.md", "contract", "CANON_CONTRACT"],
+  ["future-plans-index", "future_plans/INDEX.md", "section", "FUTURE_PLANS_INDEX"],
 ] as const;
 
 const TEMPLATE_IDS = [
@@ -20,6 +21,8 @@ const TEMPLATE_IDS = [
   "ENTITY",
   "MODULE",
   "DOMAIN_TOPIC",
+  "FUTURE_PLANS_INDEX",
+  "FUTURE_PLAN",
 ] as const;
 
 export function defaultContractMarkdown(): string {

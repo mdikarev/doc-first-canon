@@ -22,9 +22,11 @@ function scaffoldCanon(root: string): void {
   const contract = parseContractMarkdown(contractMarkdown);
   for (const section of contract.sections) {
     if (section.path === "CANON_CONTRACT.md") continue;
+    const dest = path.join(canonRoot, section.path);
+    fs.mkdirSync(path.dirname(dest), { recursive: true });
     fs.copyFileSync(
       path.join(templateRoot, `${section.template}.md`),
-      path.join(canonRoot, section.path),
+      dest,
     );
   }
 

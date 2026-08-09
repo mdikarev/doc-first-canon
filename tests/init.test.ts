@@ -26,6 +26,8 @@ const TEMPLATE_FILES = [
   "ENTITY.md",
   "MODULE.md",
   "DOMAIN_TOPIC.md",
+  "FUTURE_PLANS_INDEX.md",
+  "FUTURE_PLAN.md",
 ] as const;
 
 const SKILLS = [
@@ -64,6 +66,18 @@ it("initializes a valid canon and managed assets in an empty repository", async 
     assert.match(
       readFileSync(join(root, "docs", "canon", "INDEX.md"), "utf8"),
       /\| overview \| OVERVIEW\.md \| overview \| true \|/,
+    );
+    assert.equal(
+      existsSync(join(root, "docs", "canon", "future_plans", "INDEX.md")),
+      true,
+    );
+    assert.match(
+      readFileSync(join(root, "docs", "canon", "CANON_CONTRACT.md"), "utf8"),
+      /path:\s*future_plans\/INDEX\.md/,
+    );
+    assert.match(
+      readFileSync(join(root, "docs", "canon", "INDEX.md"), "utf8"),
+      /future_plans\/INDEX\.md/,
     );
   } finally {
     rmSync(root, { recursive: true, force: true });
