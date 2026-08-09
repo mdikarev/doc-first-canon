@@ -10,7 +10,7 @@ Treat the machine contract as the source of truth for canon structure.
 ```yaml
 schema_version: 1
 cli_compat: ">=0.1.0"
-skills_stamp: "0.2.0"
+skills_stamp: "0.3.0"
 sections:
   - id: index
     path: INDEX.md
