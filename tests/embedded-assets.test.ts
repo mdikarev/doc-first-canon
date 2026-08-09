@@ -44,6 +44,18 @@ describe("managed agent assets", () => {
     assert.match(write, /validate after edits/i);
   });
 
+  it("documents canon-write clarify-before-invent protocol", () => {
+    const write = readEmbedded("skills", "canon-write", "SKILL.md");
+    assert.match(write, /Clarify before substantial writes/i);
+    assert.match(write, /substantial/i);
+    assert.match(write, /skip/i);
+    assert.match(write, /one (?:question )?at a time|one at a time/i);
+    assert.match(write, /recommend/i);
+    assert.match(write, /A\/B\/C|multiple-choice|options/i);
+    assert.match(write, /three|at most 3|cap of 3|up to 3/i);
+    assert.match(write, /do not invent|without inventing|not invent/i);
+  });
+
   it("documents semantic audit merge and discrepancy lifecycle", () => {
     const audit = readEmbedded("skills", "canon-audit", "SKILL.md");
     assert.match(audit, /doc-canon check/);
