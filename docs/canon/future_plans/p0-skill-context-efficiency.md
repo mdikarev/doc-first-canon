@@ -1,6 +1,8 @@
 # P0 — Skill context efficiency
 
-- **Status:** implementing
+> Outcomes absorbed into `SKILLS.md`, glossary, architecture, write/audit skills, pointer/`AGENTS`, and acceptance scenarios.
+
+- **Status:** absorbed
 - **Focus:** Reduce tokens and noise while agents use `docs/canon/`, without harming solution quality—starting with canon skills, with the same reading discipline for project agents.
 - **Depends on:** MVP CLI + skills (current)
 - **Unblocks:** Cheaper everyday sync; shared progressive-disclosure habit for coding agents; cleaner base for P1 packs and P0b cache
