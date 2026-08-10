@@ -67,6 +67,11 @@ sections:
     role: section
     required: false
     template: FUTURE_PLAN
+  - id: future-p0c-future-plans-authoring-skill
+    path: future_plans/p0c-future-plans-authoring-skill.md
+    role: section
+    required: false
+    template: FUTURE_PLAN
   - id: future-p1-retrieval-and-context-pack
     path: future_plans/p1-retrieval-and-context-pack.md
     role: section
