@@ -140,7 +140,7 @@ describe("managed agent assets", () => {
     assert.match(rule, /alwaysApply:\s*true/);
     assert.match(rule, /context source of truth/i);
     assert.match(rule, /start.*INDEX\.md/i);
-    assert.match(rule, /architectural or behavioral changes/i);
+    assert.match(rule, /Feature-change order|canon-first|canon-write/i);
     assert.match(rule, /do not silently pick a side/i);
     assert.match(rule, /does not replace other domain rules/i);
   });
