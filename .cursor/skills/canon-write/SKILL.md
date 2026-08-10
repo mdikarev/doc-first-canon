@@ -12,6 +12,10 @@ description: Author, refactor, and synchronize canon documentation.
 - Always run `doc-canon validate` before claiming success on canon edits.
 - If `doc-canon` is missing on PATH, stop and give an install hint: `npm install -g doc-canon` or use a local npx invocation. Do not continue without validation.
 
+## Called before feature code
+
+Coding agents updating **behavior or public contract** must invoke this skill (or ask the user to run it) **before** application-code changes for that feature. They must not edit `docs/canon/**` themselves. After a **substantial** write, the coding agent should wait for explicit user go-ahead before implementing; spot sync may proceed. Pure bugfix / `code_stale` / non-behavioral work are exceptions to that canon-first order (see pointer rule).
+
 ## Scout → Expand before deep reads
 
 Before deep-reading canon file bodies or drafting substantial SoT changes:
