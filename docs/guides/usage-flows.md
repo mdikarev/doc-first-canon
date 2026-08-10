@@ -69,11 +69,34 @@ doc-canon validate
 - Treating pre-canon `docs/**` as still authoritative after bootstrap — after freeze, only `docs/canon/` is SoT.
 - Expecting bootstrap to patch application code — it must not.
 
+## Feature / behavior change
+
+**When to use:** Intentional new or changed application behavior / public contract in a bootstrapped repo.
+
+**CLI vs skill:** Living canon updates go through **`canon-write`**. Coding agents must not edit `docs/canon/**` themselves. Optional design/plan artifacts live outside the canon at a **project-chosen** path (not mandated by doc-canon).
+
+### Steps
+
+1. Classify exceptions: pure bugfix with intended behavior unchanged; Open `code_stale` task; non-behavioral edits — those skip this order.
+2. Run **`canon-write`** so living canon reflects the desired behavior; confirm `doc-canon validate` passes under the skill.
+3. If the change is large (multi-module, non-obvious design, or handoff), write or sync a project-local design/plan from the updated canon; otherwise skip.
+4. After a **substantial** canon change, wait for explicit user go-ahead before coding; after spot sync, proceed.
+5. Implement application code and tests against the canon (and optional plan).
+6. If docs↔code drift appears, use **`canon-audit`** / `DISCREPANCIES.md` — do not silently pick a side.
+
+### Common mistakes
+
+- Coding the feature first and treating canon as optional cleanup.
+- Editing `docs/canon/**` from a coding agent instead of invoking `canon-write`.
+- Skipping the wait-gate after substantial SoT changes.
+
 ## Day-to-day
 
 **When to use:** After meaningful changes to application code or canon docs in an already-bootstrapped repo.
 
 **CLI vs skill:** `canon-write` updates affected canon sections. `doc-canon check` builds inventory and writes `.doc-canon/report.json` (preserves `source: skill` findings). `canon-audit` handles docs↔code drift and discrepancy lifecycle. `doc-canon report` prints the last report.
+
+This journey is post-hoc sync after meaningful edits and does not replace **Feature / behavior change** for intentional work.
 
 ### Steps
 
@@ -185,11 +208,34 @@ doc-canon validate
 - Считать pre-canon `docs/**` источником истины после bootstrap — после freeze SoT только `docs/canon/`.
 - Ожидать, что bootstrap правит код приложения — он не должен.
 
+## Изменение функции / поведения
+
+**Когда использовать:** Намеренное добавление или изменение поведения приложения / публичного контракта в репозитории с уже созданным каноном.
+
+**CLI vs skill:** Обновления живого канона выполняются через **`canon-write`**. Coding agents не должны сами редактировать `docs/canon/**`. Необязательные артефакты дизайна/плана хранятся вне канона по пути, **выбранному проектом** (doc-canon его не предписывает).
+
+### Шаги
+
+1. Определите исключения: чистый bugfix без изменения предполагаемого поведения; открытая задача `code_stale`; небихевиоральные правки — для них этот порядок можно пропустить.
+2. Запустите **`canon-write`**, чтобы живой канон отражал желаемое поведение; убедитесь, что skill успешно выполняет `doc-canon validate`.
+3. Если изменение большое (затрагивает несколько модулей, имеет неочевидный дизайн или требует передачи работы), напишите или синхронизируйте локальный для проекта дизайн/план из обновлённого канона; иначе пропустите этот шаг.
+4. После **существенного** изменения канона дождитесь явного разрешения пользователя перед написанием кода; после точечной синхронизации можно продолжать.
+5. Реализуйте код приложения и тесты в соответствии с каноном (и необязательным планом).
+6. Если появляется drift между docs↔code, используйте **`canon-audit`** / `DISCREPANCIES.md` — не выбирайте сторону молча.
+
+### Типичные ошибки
+
+- Сначала писать код функции, считая обновление канона необязательной уборкой.
+- Редактировать `docs/canon/**` из coding agent вместо вызова `canon-write`.
+- Пропускать ожидание разрешения после существенных изменений SoT.
+
 ## Повседневный цикл
 
 **Когда использовать:** После заметных изменений кода или канона в уже проинициализированном репозитории.
 
 **CLI vs skill:** `canon-write` обновляет затронутые секции. `doc-canon check` строит inventory и пишет `.doc-canon/report.json` (сохраняет findings с `source: skill`). `canon-audit` разбирает drift docs↔code и lifecycle discrepancies. `doc-canon report` печатает последний отчёт.
+
+Этот сценарий предназначен для постфактум-синхронизации после заметных правок и не заменяет **Изменение функции / поведения** при намеренной работе.
 
 ### Шаги
 

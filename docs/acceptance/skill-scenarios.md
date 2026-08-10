@@ -49,6 +49,15 @@ These human-run checklists cover the MVP agent flows. Automated skill execution 
 - [ ] Confirm `AGENTS.md` contains exactly one block bounded by `<!-- doc-canon:start -->` and `<!-- doc-canon:end -->`.
 - [ ] Confirm existing content outside those markers is preserved.
 - [ ] Confirm the pointer rule / `AGENTS` block mention starting at `INDEX.md`, building a small working set, and expanding when unsure (guidance only—not a required chat ritual for coding agents).
+- [ ] Confirm the pointer rule / `AGENTS` block state canon-first feature-change order (`canon-write` before application code; optional project-local spec/plan; substantial wait; coding agents do not edit canon themselves).
+
+## Feature-change order is canon-first
+
+- [ ] Request intentional new or changed application behavior in a bootstrapped repo.
+- [ ] Confirm the coding agent invokes **`canon-write`** (or asks the user to) and does **not** edit `docs/canon/**` itself before feature code.
+- [ ] Confirm optional project-local design/plan is used only when the change is large; small unambiguous changes may go canon → code.
+- [ ] Confirm that after a **substantial** canon write the agent waits for explicit user go-ahead before implementing; spot sync may proceed.
+- [ ] Confirm exceptions (pure bugfix with intended behavior unchanged, `code_stale`, non-behavioral edits) may skip canon-first.
 
 ## Future plans are directional; contract adds optional initiative
 
