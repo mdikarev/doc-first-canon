@@ -57,12 +57,15 @@ Version marker in the contract YAML recording which managed skills stamp was las
 ### Future plans
 Canon subtree `docs/canon/future_plans/` for initiatives describing the **future shape** of the system. Not behavioral SoT for current behavior; not a development task tracker. After realization, absorb into living sections and mark the initiative absorbed or remove it.
 
+### Future plans validate zone
+Target validate behavior (ships with `canon-future-plan`) for `future_plans/*.md` other than `INDEX.md`: exempt from the "not listed in contract" orphan check; instead checked against `future_plans/INDEX.md`'s Initiatives table (INDEX↔disk agreement) and required `FUTURE_PLAN` headings. Replaces per-initiative `future-p*` contract rows once shipped.
+
 ## Naming conventions
 
 - Section files use `UPPER_SNAKE` or clear `Title.md` paths registered in the contract (`OVERVIEW.md`, `CLI.md`, …).
 - Discrepancy IDs: `D-NNN` assigned monotonically; never reuse.
 - Finding IDs: `F-NNN` in reports.
-- Skill names: `canon-<verb>` (`canon-bootstrap`, `canon-write`, `canon-audit`, `canon-contract`).
+- Skill names: `canon-<verb>` (`canon-bootstrap`, `canon-write`, `canon-audit`, `canon-contract`, `canon-future-plan` — target, pending implementation).
 - Prefer repo-relative paths in evidence fields.
 
 ## Related canon
