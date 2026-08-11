@@ -16,7 +16,7 @@ Two layers: a deterministic **CLI** (`doc-canon`) owns schema, scaffold, structu
 ## Building blocks
 
 - **CLI entry & shared** (`src/cli.ts`, `src/paths.ts`, `src/version.ts`) — commander wiring, root/`.doc-canon` path helpers, package/`skills_stamp` constants
-- **CLI commands** (`src/commands/*`) — `init`, `upgrade-skills`, `validate`, `check`, `report`
+- **CLI commands** (`src/commands/*`) — `init`, `upgrade-skills`, `validate`, `check`, `report`, `index`
 - **Contract** (`src/contract/*`) — parse and schema-check the YAML machine block in `CANON_CONTRACT.md`
 - **Validate** (`src/validate/*`) — required files, headings, INDEX↔contract agreement, stamp checks
 - **Agnostic ignore** (`src/agnostic/*`) — default exclude globs plus contract `policies.ignore` matching (via `micromatch`)
@@ -26,6 +26,7 @@ Two layers: a deterministic **CLI** (`doc-canon`) owns schema, scaffold, structu
 - **Future plans skeleton** (`src/scaffold/ensure-future-plans.ts`) — idempotently ensures `future_plans/INDEX.md`, its templates, and the contract/INDEX rows exist; `init` creates a fresh required section, `upgrade-skills` migrates existing repos onto it without touching existing initiative prose
 - **Future plans validate zone** — `future_plans/*.md` other than `INDEX.md` are exempt from the "not listed in contract" orphan check; validate instead parses the Initiatives table in `future_plans/INDEX.md` (File column) and requires INDEX↔disk agreement plus required `FUTURE_PLAN` headings on each linked file. Initiatives are **not** per-file contract sections — only `future-plans-index` stays a registered, required section; root `INDEX.md` Sections never list individual initiative files.
 - **Agent skills** (copied into `.cursor/skills/`) — bootstrap, write, audit, contract, future-plan
+- **Index sync** (`src/index/*`) — hash-driven logical rebuild of a local BM25 index over `docs/canon/**/*.md`: unchanged content hashes are a no-op, any create/update/delete triggers a full rebuild from all current docs (no posting-level incremental updates); poll-based watch (`doc-canon index --watch`, default 2000 ms, `--interval`) with a pid-locked single instance and `--stop`; a thin stable reader facade (`openCanonIndex` from `doc-canon/index-reader`) so later `search` (P1) consumes the dual `.doc-canon/index-manifest.json` + `.doc-canon/bm25-index.json` artifacts without ad-hoc JSON parsing
 
 ## Key flows
 

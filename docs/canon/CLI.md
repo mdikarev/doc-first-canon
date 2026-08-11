@@ -6,7 +6,7 @@ Own the deterministic core of `doc-canon`: scaffold, structural validation, inve
 
 ## Scope
 
-**Covers:** commands `init`, `validate`, `check`, `report`, `upgrade-skills`; contract parse/schema; heading and INDEX agreement checks; ignore-aware inventory; CLI finding merge; embedding default templates/skills/rules into target repos.
+**Covers:** commands `init`, `validate`, `check`, `report`, `upgrade-skills`, `index`; contract parse/schema; heading and INDEX agreement checks; ignore-aware inventory; CLI finding merge; embedding default templates/skills/rules into target repos; build/update a local BM25 index over `docs/canon/**` (`index`), including poll-based `--watch` (default 2000 ms, `--interval`) and `--stop`, writing `.doc-canon/index-manifest.json` + `.doc-canon/bm25-index.json`; one-shot `index` exits ≠0 if a watch process is running.
 
 **Excludes:** interview, semantic audit judgements, discrepancy dialogue, and any application-code edits (those belong to skills or coding agents).
 
@@ -35,8 +35,9 @@ MVP package `doc-canon@0.1.0` (Node ≥20, ESM). Entry: `bin/doc-canon.js` → c
 | `check` | validate + inventory + merge CLI findings into `.doc-canon/report.json` |
 | `report` | Print last report.json to stdout (read-only) |
 | `upgrade-skills` | Refresh managed assets from installed package; idempotently ensure `future_plans/INDEX.md` skeleton on pre-existing canons; bump `skills_stamp` |
+| `index` | Build/update a local BM25 index for `docs/canon/**`; one-shot exits ≠0 if a watch is running; `--watch` polls (default 2000 ms, `--interval <ms>`, min 200) and keeps artifacts in sync; `--stop` stops a running watch via its pid file; `--root` |
 
-Artifacts: `.doc-canon/inventory.json`, `.doc-canon/report.json` (may be gitignored in target repos).
+Artifacts: `.doc-canon/inventory.json`, `.doc-canon/report.json`, `.doc-canon/index-manifest.json`, `.doc-canon/bm25-index.json` (may be gitignored in target repos).
 
 ## Dependencies
 

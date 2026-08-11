@@ -60,6 +60,18 @@ Canon subtree `docs/canon/future_plans/` for initiatives describing the **future
 ### Future plans validate zone
 Validate behavior for `future_plans/*.md` other than `INDEX.md`: exempt from the "not listed in contract" orphan check; instead checked against `future_plans/INDEX.md`'s Initiatives table (INDEX↔disk agreement) and required `FUTURE_PLAN` headings. Replaces per-initiative `future-p*` contract rows.
 
+### index-manifest
+`.doc-canon/index-manifest.json`: BM25 index manifest artifact (`schema_version`, opaque `index_id`, `built_at`, per-doc `hash`/`token_count`) written last as the commit marker after a successful `bm25-index` write.
+
+### bm25-index
+`.doc-canon/bm25-index.json`: serialized Okapi BM25 data (postings/df/doc-length) for the current corpus, sharing `index_id` with its companion `index-manifest`.
+
+### index_id
+Opaque string shared by one `index-manifest` + `bm25-index` pair from the same rebuild; a mismatch between the two makes the `openCanonIndex` reader facade fail closed.
+
+### doc_hash
+Per-document `sha256:<hex>` content hash recorded in `index-manifest`, used to detect create/update/delete and trigger a full BM25 rebuild.
+
 ## Naming conventions
 
 - Section files use `UPPER_SNAKE` or clear `Title.md` paths registered in the contract (`OVERVIEW.md`, `CLI.md`, …).
