@@ -4,6 +4,7 @@
   "description": "Deterministic canon CLI for agent documentation",
   "type": "module",
   "bin": { "doc-canon": "./bin/doc-canon.js" },
+  "exports": { "./index-reader": "./dist/index/reader.js" },
   "files": ["dist", "embedded", "bin"],
   "scripts": {
     "build": "tsc -p tsconfig.json",
