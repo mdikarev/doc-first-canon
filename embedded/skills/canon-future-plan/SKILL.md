@@ -43,7 +43,7 @@ After Scout → Expand, if invent-risk remains before writing or refining an ini
 2. Apply **Clarify before invent** when invent-risk remains for id, slug, table order, or status.
 3. Propose an id (`pN`, or `pN` plus a letter suffix when interleaving), a filename slug, the Initiatives table position, and the initial status — `draft` for a new initiative, or the current status when refining.
 4. Author or refine the file from `templates/FUTURE_PLAN.md`, preserving its required headings (`Intent`, `In scope`, `Out of scope`, `Absorbs into`, `Open questions`). Established metadata bullets such as Status / Focus / Depends / Unblocks / Design are allowed.
-5. Update the `future_plans/INDEX.md` Initiatives table: add or update the row (file, status), keep table order reflecting priority, and add a short ordering note under the table when priority changes.
+5. Update the `future_plans/INDEX.md` Initiatives table (columns `| # | Initiative | Status | File |`): add or update the row (file, status), keep table order reflecting priority, and add a short ordering note under the table when priority changes.
 6. Refuse checklists, sprint plans, task-tracker content, and coding-agent prompts inside initiative bodies; point the user to a roadmap, issue tracker, or `DISCREPANCIES.md` instead.
 7. Do not edit `CANON_CONTRACT.md`'s section list for a new initiative — initiative files are not registered per-file; only the `future-plans-index` section and the `FUTURE_PLAN` / `FUTURE_PLANS_INDEX` templates are contract-registered. If a genuinely new template kind is needed, stop and invoke `canon-contract`.
 8. Never edit application code or living canon sections outside `future_plans/`.

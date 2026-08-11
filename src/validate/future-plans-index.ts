@@ -18,11 +18,12 @@ function tableCellPath(cell: string): string | undefined {
 
 export function isFuturePlansInitiativePath(relativePosix: string): boolean {
   const normalized = relativePosix.replaceAll("\\", "/");
-  return (
-    normalized.startsWith(`${FUTURE_PLANS_DIR}/`) &&
-    normalized !== FUTURE_PLANS_INDEX &&
-    !normalized.startsWith(`${FUTURE_PLANS_DIR}/templates/`)
-  );
+  if (!normalized.startsWith(`${FUTURE_PLANS_DIR}/`)) return false;
+  if (normalized === FUTURE_PLANS_INDEX) return false;
+  const rest = normalized.slice(`${FUTURE_PLANS_DIR}/`.length);
+  // Only direct children of future_plans/ are exempt; nested paths (e.g.
+  // future_plans/notes/x.md) remain contract orphans (fail closed).
+  return rest.length > 0 && !rest.includes("/") && rest.endsWith(".md");
 }
 
 export function initiativePathsFromFuturePlansIndex(

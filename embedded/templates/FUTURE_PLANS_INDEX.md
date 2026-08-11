@@ -10,3 +10,6 @@
 
 ## Initiatives
 <!-- Table of initiative files and statuses. Zero rows is valid. -->
+
+| # | Initiative | Status | File |
+| --- | --- | --- | --- |

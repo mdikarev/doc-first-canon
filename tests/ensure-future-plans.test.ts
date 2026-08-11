@@ -248,6 +248,79 @@ templates:
   }
 });
 
+it("adds the required future-plans-index row even when stripping initiative rows in the same pass", async () => {
+  const root = mkdtempSync(join(tmpdir(), "doc-canon-ensure-fp-both-"));
+  try {
+    assert.equal(await initCanon(root, { yes: true }), 0);
+    const canon = join(root, "docs", "canon");
+    const initiativePath = join(canon, "future_plans", "demo-initiative.md");
+    writeFileSync(
+      initiativePath,
+      "# Demo\n\n## Intent\nx\n\n## In scope\ny\n\n## Out of scope\nz\n\n## Absorbs into\na\n\n## Open questions\nb\n",
+    );
+    const fpIndex = join(canon, "future_plans", "INDEX.md");
+    writeFileSync(
+      fpIndex,
+      readFileSync(fpIndex, "utf8").replace(
+        /## Initiatives[\s\S]*$/,
+        `## Initiatives
+
+| # | Initiative | Status | File |
+| --- | --- | --- | --- |
+| 9 | Demo | draft | [demo-initiative.md](demo-initiative.md) |
+`,
+      ),
+    );
+
+    // Legacy shape: root INDEX has an initiative row for the per-file
+    // section AND has NO future-plans-index row at all (pre-feature repo
+    // that never picked up the future_plans/INDEX.md skeleton row).
+    const contractPath = join(canon, "CANON_CONTRACT.md");
+    writeFileSync(
+      contractPath,
+      readFileSync(contractPath, "utf8").replace(
+        "templates:\n",
+        `  - id: future-demo
+    path: future_plans/demo-initiative.md
+    role: section
+    required: false
+    template: FUTURE_PLAN
+templates:
+`,
+      ),
+    );
+    const rootIndex = join(canon, "INDEX.md");
+    writeFileSync(
+      rootIndex,
+      readFileSync(rootIndex, "utf8").replace(
+        /\| future-plans-index \| future_plans\/INDEX\.md \| section \| true \|\n/,
+        `| future-demo | future_plans/demo-initiative.md | section | false |
+`,
+      ),
+    );
+    assert.doesNotMatch(
+      readFileSync(rootIndex, "utf8"),
+      /future-plans-index/,
+    );
+
+    const before = readFileSync(contractPath, "utf8");
+    const result = ensureFuturePlansSkeleton(root, before);
+    writeFileSync(contractPath, result.contractMarkdown);
+
+    assert.equal(result.indexTableChanged, true);
+    const updatedRootIndex = readFileSync(rootIndex, "utf8");
+    // The required future-plans-index row must be present...
+    assert.match(updatedRootIndex, /\| future-plans-index \| future_plans\/INDEX\.md \| section \| true \|/);
+    // ...and the stripped per-initiative row must be gone.
+    assert.doesNotMatch(updatedRootIndex, /future_plans\/demo-initiative\.md/);
+    assert.equal(existsSync(initiativePath), true);
+    const validation = validateCanon(root);
+    assert.equal(validation.ok, true, validation.errors.join("\n"));
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
 it("promotes an existing but optional future-plans-index section to required", async () => {
   const root = mkdtempSync(join(tmpdir(), "doc-canon-ensure-fp-optional-"));
   try {

@@ -223,8 +223,8 @@ export function ensureFuturePlansSkeleton(
     ensureContractYaml(contractMarkdown);
   const createdIndex = ensureFuturePlansIndexFile(root);
   const strippedIndexRows = stripInitiativeRowsFromRootIndex(root);
-  const indexTableChanged =
-    strippedIndexRows || ensureIndexTableRow(root);
+  const ensuredIndexRow = ensureIndexTableRow(root);
+  const indexTableChanged = strippedIndexRows || ensuredIndexRow;
 
   return {
     contractMarkdown: markdown,

@@ -8,3 +8,6 @@
 
 ## Initiatives
 <!-- Ordered table of initiative files and statuses. -->
+
+| # | Initiative | Status | File |
+| --- | --- | --- | --- |

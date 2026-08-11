@@ -144,6 +144,27 @@ y
     }
   });
 
+  it("rejects a nested future_plans file as a contract orphan (not exempt)", () => {
+    const { root, cleanup } = temporaryInitLikeCanon();
+    try {
+      mkdirSync(join(root, "docs", "canon", "future_plans", "notes"), {
+        recursive: true,
+      });
+      writeFileSync(
+        join(root, "docs", "canon", "future_plans", "notes", "orphan.md"),
+        COMPLETE_INITIATIVE,
+      );
+      const result = validateCanon(root);
+      assert.equal(result.ok, false);
+      assert.match(
+        result.errors.join("\n"),
+        /Orphan canon file .*future_plans[\\/]notes[\\/]orphan\.md.*not listed in the contract/i,
+      );
+    } finally {
+      cleanup();
+    }
+  });
+
   it("rejects a broken Initiatives link to a missing file", () => {
     const { root, cleanup } = temporaryInitLikeCanon();
     try {
