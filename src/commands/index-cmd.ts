@@ -5,6 +5,7 @@ import {
   stopWatchPid,
 } from "../index/pid-lock.js";
 import { syncCanonIndex } from "../index/sync.js";
+import { watchCanonIndex } from "../index/watch.js";
 
 export type IndexOptions = {
   watch?: boolean;
@@ -39,8 +40,12 @@ export async function indexCanon(
     return 0;
   }
   if (opts.watch) {
-    console.error("error: --watch not implemented yet");
-    return 1;
+    const intervalMs = opts.interval === undefined ? 2000 : Number(opts.interval);
+    if (!Number.isFinite(intervalMs) || intervalMs < 200) {
+      console.error("error: --interval must be a finite number of at least 200 ms");
+      return 1;
+    }
+    return watchCanonIndex(root, intervalMs);
   }
 
   const watchPid = readWatchPid(root);

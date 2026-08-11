@@ -50,4 +50,42 @@ describe("doc-canon index cli", () => {
       fs.rmSync(empty, { recursive: true, force: true });
     }
   });
+
+  it("rejects --watch with --stop", () => {
+    const result = spawnSync(
+      "node",
+      [bin, "index", "--root", root, "--watch", "--stop"],
+      { encoding: "utf8" },
+    );
+    assert.notEqual(result.status, 0);
+  });
+
+  it("rejects invalid --interval", () => {
+    const result = spawnSync(
+      "node",
+      [bin, "index", "--root", root, "--watch", "--interval", "50"],
+      { encoding: "utf8" },
+    );
+    assert.notEqual(result.status, 0);
+  });
+
+  it("second --watch fails while first holds pid", () => {
+    fs.mkdirSync(path.join(root, ".doc-canon"), { recursive: true });
+    fs.writeFileSync(indexWatchPidPath(root), String(process.pid));
+    const result = spawnSync(
+      "node",
+      [bin, "index", "--root", root, "--watch", "--interval", "200"],
+      { encoding: "utf8" },
+    );
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /already running/i);
+  });
+
+  it("--stop is idempotent", () => {
+    const result = spawnSync("node", [bin, "index", "--root", root, "--stop"], {
+      encoding: "utf8",
+    });
+    assert.equal(result.status, 0);
+    assert.match(result.stdout, /not running/i);
+  });
 });
