@@ -31,7 +31,14 @@ description: Audit canon semantics, resolve divergence, and maintain discrepancy
 
 ## Report ownership
 
-Merge semantic findings into `.doc-canon/report.json` with `source: skill`. Use a read-modify-write update that preserves every `source: cli` finding. Never replace the other source's findings. Mark prior `source: skill` findings that this audit cannot confirm as `status: stale`; do not silently delete or resolve them.
+After the semantic pass, before writing `.doc-canon/report.json`:
+
+1. Run `doc-canon report` and collect every finding with `source: skill` as **prior**.
+2. Match this audit's confirmed findings to prior by normalized `(kind, paths)`.
+3. On match: keep the same `F-NNN`, set `status: open`, update summary/evidence as needed.
+4. Prior with no match (this audit did not reproduce it): set `status: stale`; do not delete or resolve them.
+5. Confirmed with no prior: assign a new `F-NNN` from the greatest existing id.
+6. Read-modify-write the report: emit updated skill findings plus every `source: cli` finding unchanged. Never replace the other source's findings.
 
 `structure` and `consistency` findings are not filed into `DISCREPANCIES.md`. Repair them through validate, canon-write, or canon-contract. Only grounded `conflict` and `drift` findings enter the discrepancy dialogue.
 
