@@ -64,13 +64,13 @@ For substantial SoT writes: run the existing clarify-before-invent gate **after*
 - Explicit phases in `canon-write` and `canon-audit` skill bodies
 - Stronger progressive-disclosure guidance in pointer rule / managed `AGENTS.md`
 - Acceptance scenarios for working set + expand before deep reads (skills must show gate; pointer/AGENTS only require guidance text)
-- Split smart-cache ideas into [P0b](p0b-smart-cache.md)
+- Split index/hash work into [P0b](p0b-bm25-index.md) (later remapped to BM25 index)
 
 ## Out of scope
 
-- Smart cache / content hashes ([P0b](p0b-smart-cache.md))
+- BM25 index / content hashes / `doc-canon index` ([P0b](p0b-bm25-index.md))
 - Deep AST, dependency graphs, schema extractors (P2)
-- Git-diff–driven context packs; BM25 / `context` pack CLI (P1)
+- Git-diff–driven context packs; search / context pack CLI (P1)
 - Embeddings / RAG
 - New CLI scout helpers
 - Changing the rule that canon skills never patch application code

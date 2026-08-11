@@ -25,9 +25,9 @@ Design rationale: [`docs/superpowers/specs/2026-08-09-production-path-roadmap-de
 | --- | --- | --- | --- |
 | 0 | Skill context efficiency | absorbed | [p0-skill-context-efficiency.md](p0-skill-context-efficiency.md) |
 | 0c | Future plans authoring skill | absorbed | [p0c-future-plans-authoring-skill.md](p0c-future-plans-authoring-skill.md) |
-| 0b | Smart cache | draft | [p0b-smart-cache.md](p0b-smart-cache.md) |
-| 1 | Retrieval & context pack | draft | [p1-retrieval-and-context-pack.md](p1-retrieval-and-context-pack.md) |
+| 0b | BM25 index | refining | [p0b-bm25-index.md](p0b-bm25-index.md) |
+| 1 | Retrieval search & context pack | refining | [p1-retrieval-and-context-pack.md](p1-retrieval-and-context-pack.md) |
 | 2 | Pluggable extractors | draft | [p2-pluggable-extractors.md](p2-pluggable-extractors.md) |
 | 3 | Production hardening | draft | [p3-production-hardening.md](p3-production-hardening.md) |
 
-P0 is absorbed. P0c is absorbed. P0b (cache) was split out of P0 for a later session. P3 may proceed in parallel.
+P0 and P0c are absorbed. P0b (BM25 index + hashes + `doc-canon index` / `--watch`) unblocks P1 (search + pack + skill/CLI usage rules); implement each in its own session. P3 may proceed in parallel.
