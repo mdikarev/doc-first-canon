@@ -85,6 +85,16 @@ function ensureContractYaml(contractMarkdown: string): {
     changed = true;
   }
 
+  const beforeLen = contract.sections.length;
+  contract.sections = contract.sections.filter(
+    (section) =>
+      !(
+        section.path.startsWith("future_plans/") &&
+        section.path !== FUTURE_PLANS_INDEX_PATH
+      ),
+  );
+  if (contract.sections.length !== beforeLen) changed = true;
+
   if (!changed) {
     return { markdown: contractMarkdown, changed: false };
   }
@@ -112,6 +122,60 @@ function ensureFuturePlansIndexFile(root: string): boolean {
 }
 
 const SECTIONS_HEADING_RE = /^##\s+Sections\s*$(.*?)(?=^##\s|(?![\s\S]))/ims;
+
+function tableCellPath(cell: string): string | undefined {
+  const value = cell.trim().replace(/^`|`$/g, "");
+  const link = /\[[^\]]*]\(([^)]+)\)/.exec(value);
+  const candidate = (link?.[1] ?? value).split("#", 1)[0]?.trim();
+  return candidate?.endsWith(".md") ? candidate : undefined;
+}
+
+function stripInitiativeRowsFromRootIndex(root: string): boolean {
+  const indexPath = path.join(canonDir(root), "INDEX.md");
+  if (!fs.existsSync(indexPath)) return false;
+
+  const markdown = fs.readFileSync(indexPath, "utf8");
+  const sectionsMatch = SECTIONS_HEADING_RE.exec(markdown);
+  if (!sectionsMatch) return false;
+
+  const body = sectionsMatch[1]!;
+  const bodyLines = body.split("\n");
+  let changed = false;
+  const filteredLines: string[] = [];
+
+  for (const line of bodyLines) {
+    if (!line.trim().startsWith("|")) {
+      filteredLines.push(line);
+      continue;
+    }
+    const cells = line.split("|").slice(1, -1);
+    if (cells.length < 2 || /^[-:\s]+$/.test(cells[1] ?? "")) {
+      filteredLines.push(line);
+      continue;
+    }
+    const cellPath = tableCellPath(cells[1] ?? "");
+    if (
+      cellPath &&
+      cellPath.startsWith("future_plans/") &&
+      cellPath !== FUTURE_PLANS_INDEX_PATH
+    ) {
+      changed = true;
+      continue;
+    }
+    filteredLines.push(line);
+  }
+
+  if (!changed) return false;
+
+  const updatedBody = filteredLines.join("\n");
+  const updatedMarkdown =
+    markdown.slice(0, sectionsMatch.index) +
+    sectionsMatch[0].replace(body, () => updatedBody) +
+    markdown.slice(sectionsMatch.index + sectionsMatch[0].length);
+
+  fs.writeFileSync(indexPath, updatedMarkdown);
+  return true;
+}
 
 function ensureIndexTableRow(root: string): boolean {
   const indexPath = path.join(canonDir(root), "INDEX.md");
@@ -158,7 +222,9 @@ export function ensureFuturePlansSkeleton(
   const { markdown, changed: contractChanged } =
     ensureContractYaml(contractMarkdown);
   const createdIndex = ensureFuturePlansIndexFile(root);
-  const indexTableChanged = ensureIndexTableRow(root);
+  const strippedIndexRows = stripInitiativeRowsFromRootIndex(root);
+  const indexTableChanged =
+    strippedIndexRows || ensureIndexTableRow(root);
 
   return {
     contractMarkdown: markdown,

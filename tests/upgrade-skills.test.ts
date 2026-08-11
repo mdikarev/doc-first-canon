@@ -15,6 +15,7 @@ import { initCanon } from "../src/commands/init.js";
 import { upgradeSkills } from "../src/commands/upgrade-skills.js";
 import { embeddedRoot } from "../src/paths.js";
 import { SKILLS_STAMP } from "../src/version.js";
+import { validateCanon } from "../src/validate/validate.js";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -116,6 +117,24 @@ it("restores a stripped future_plans skeleton", async () => {
 
     const canon = join(root, "docs", "canon");
     const contractPath = join(canon, "CANON_CONTRACT.md");
+    const initiativePath = join(canon, "future_plans", "demo-initiative.md");
+    const planted =
+      "# Planted\n\n## Intent\nx\n\n## In scope\ny\n\n## Out of scope\nz\n\n## Absorbs into\na\n\n## Open questions\nb\n";
+    writeFileSync(initiativePath, planted);
+
+    const fpIndexPath = join(canon, "future_plans", "INDEX.md");
+    writeFileSync(
+      fpIndexPath,
+      readFileSync(fpIndexPath, "utf8").replace(
+        /## Initiatives[\s\S]*$/,
+        `## Initiatives
+
+| # | Initiative | Status | File |
+| --- | --- | --- | --- |
+| 9 | Demo | draft | [demo-initiative.md](demo-initiative.md) |
+`,
+      ),
+    );
 
     let contract = readFileSync(contractPath, "utf8");
     contract = contract
@@ -130,9 +149,18 @@ it("restores a stripped future_plans skeleton", async () => {
       .replace(
         /\n  - id: FUTURE_PLAN\n    path: templates\/FUTURE_PLAN\.md\n/,
         "\n",
+      )
+      .replace(
+        "templates:\n",
+        `  - id: future-demo
+    path: future_plans/demo-initiative.md
+    role: section
+    required: false
+    template: FUTURE_PLAN
+templates:
+`,
       );
     writeFileSync(contractPath, contract);
-    rmSync(join(canon, "future_plans", "INDEX.md"), { force: true });
     rmSync(join(canon, "templates", "FUTURE_PLANS_INDEX.md"), { force: true });
     rmSync(join(canon, "templates", "FUTURE_PLAN.md"), { force: true });
 
@@ -141,19 +169,28 @@ it("restores a stripped future_plans skeleton", async () => {
       indexPath,
       readFileSync(indexPath, "utf8").replace(
         /\| future-plans-index \| future_plans\/INDEX\.md \| section \| true \|\n/,
-        "",
+        `| future-plans-index | future_plans/INDEX.md | section | true |
+| future-demo | future_plans/demo-initiative.md | section | false |
+`,
       ),
     );
 
     assert.equal(await upgradeSkills(root), 0);
 
-    assert.equal(existsSync(join(canon, "future_plans", "INDEX.md")), true);
+    assert.equal(existsSync(fpIndexPath), true);
     assert.equal(existsSync(join(canon, "templates", "FUTURE_PLAN.md")), true);
     assert.match(readFileSync(indexPath, "utf8"), /future_plans\/INDEX\.md/);
     assert.match(
       readFileSync(contractPath, "utf8"),
       /path:\s*future_plans\/INDEX\.md/,
     );
+    assert.doesNotMatch(
+      readFileSync(contractPath, "utf8"),
+      /future_plans\/demo-initiative\.md/,
+    );
+    assert.doesNotMatch(readFileSync(contractPath, "utf8"), /future-demo/);
+    assert.equal(readFileSync(initiativePath, "utf8"), planted);
+    assert.equal(validateCanon(root).ok, true);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }

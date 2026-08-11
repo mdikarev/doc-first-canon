@@ -12,6 +12,7 @@ import { it } from "node:test";
 import { initCanon } from "../src/commands/init.js";
 import { ensureFuturePlansSkeleton } from "../src/scaffold/ensure-future-plans.js";
 import { parseContractMarkdown } from "../src/contract/parse.js";
+import { validateCanon } from "../src/validate/validate.js";
 
 it("adds future_plans skeleton to a pre-feature contract without clobbering initiatives", async () => {
   const root = mkdtempSync(join(tmpdir(), "doc-canon-ensure-fp-"));
@@ -173,6 +174,75 @@ it("does not duplicate the Sections row when it is present as a markdown link ce
 
     assert.equal(result.indexTableChanged, false);
     assert.equal(readFileSync(indexPath, "utf8"), before);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+it("strips optional initiative section rows but keeps initiative files", async () => {
+  const root = mkdtempSync(join(tmpdir(), "doc-canon-strip-fp-"));
+  try {
+    assert.equal(await initCanon(root, { yes: true }), 0);
+    const canon = join(root, "docs", "canon");
+    const initiativePath = join(canon, "future_plans", "demo-initiative.md");
+    writeFileSync(
+      initiativePath,
+      "# Demo\n\n## Intent\nx\n\n## In scope\ny\n\n## Out of scope\nz\n\n## Absorbs into\na\n\n## Open questions\nb\n",
+    );
+    const fpIndex = join(canon, "future_plans", "INDEX.md");
+    writeFileSync(
+      fpIndex,
+      readFileSync(fpIndex, "utf8").replace(
+        /## Initiatives[\s\S]*$/,
+        `## Initiatives
+
+| # | Initiative | Status | File |
+| --- | --- | --- | --- |
+| 9 | Demo | draft | [demo-initiative.md](demo-initiative.md) |
+`,
+      ),
+    );
+
+    const contractPath = join(canon, "CANON_CONTRACT.md");
+    writeFileSync(
+      contractPath,
+      readFileSync(contractPath, "utf8").replace(
+        "templates:\n",
+        `  - id: future-demo
+    path: future_plans/demo-initiative.md
+    role: section
+    required: false
+    template: FUTURE_PLAN
+templates:
+`,
+      ),
+    );
+    const rootIndex = join(canon, "INDEX.md");
+    writeFileSync(
+      rootIndex,
+      readFileSync(rootIndex, "utf8").replace(
+        /\| future-plans-index \| future_plans\/INDEX\.md \| section \| true \|\n/,
+        `| future-plans-index | future_plans/INDEX.md | section | true |
+| future-demo | future_plans/demo-initiative.md | section | false |
+`,
+      ),
+    );
+
+    const before = readFileSync(contractPath, "utf8");
+    const result = ensureFuturePlansSkeleton(root, before);
+    writeFileSync(contractPath, result.contractMarkdown);
+
+    assert.equal(result.contractChanged, true);
+    assert.doesNotMatch(
+      result.contractMarkdown,
+      /future_plans\/demo-initiative\.md/,
+    );
+    assert.doesNotMatch(
+      readFileSync(rootIndex, "utf8"),
+      /future_plans\/demo-initiative\.md/,
+    );
+    assert.equal(existsSync(initiativePath), true);
+    assert.equal(validateCanon(root).ok, true);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
