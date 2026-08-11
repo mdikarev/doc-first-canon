@@ -1,6 +1,8 @@
 # P0b — BM25 index for canon
 
-- **Status:** refining
+> Outcomes absorbed into `CLI.md`, `ARCHITECTURE.md`, `OVERVIEW.md`, and `GLOSSARY.md` (`index` / `--watch` / `--stop`, dual artifacts, reader facade, glossary terms).
+
+- **Status:** absorbed
 - **Focus:** Local BM25 index over `docs/canon/**` with per-document content hashes, hash-driven logical full rebuilds on any change, poll-based `doc-canon index --watch` (default 2000 ms) with `--stop` and a pid lock, and a public reader facade for P1.
 - **Depends on:** P0 Scout → Expand → Execute patterns (already absorbed)
 - **Unblocks:** P1 retrieval (`doc-canon search` / context pack / skill search rules)
@@ -32,7 +34,7 @@ Skills and CLI need a durable, deterministic retrieval substrate so later search
 
 ## Absorbs into
 
-Likely: `CLI.md` (`index` / `--watch` / `--stop`), `ARCHITECTURE.md` (index/sync building block, dual artifacts, reader facade), `GLOSSARY.md` (manifest / hash / `index_id` / bm25-index terms). Skill guidance for *when* to run `index` stays thin here; Scout/search protocol belongs to P1.
+Absorbed into: `CLI.md` (`index` / `--watch` / `--stop`), `ARCHITECTURE.md` (index/sync building block, dual artifacts, reader facade), `OVERVIEW.md` (In scope), `GLOSSARY.md` (manifest / hash / `index_id` / bm25-index terms). Skill guidance for *when* to run `index` stays thin here; Scout/search protocol belongs to P1.
 
 ## Open questions
 
