@@ -22,9 +22,11 @@ export async function syncCanonIndex(root: string): Promise<SyncResult> {
   const hashes = new Map(docs.map((doc) => [doc.path, contentHash(doc.text)]));
 
   let previousDocs: Record<string, IndexDocMeta> = {};
+  let loadedValidPair = false;
   if (tryLoadManifest(root)) {
     try {
       previousDocs = loadIndexPair(root).manifest.docs;
+      loadedValidPair = true;
     } catch {
       // Corrupt or mismatched artifacts are rebuilt from the current corpus.
     }
@@ -35,7 +37,7 @@ export async function syncCanonIndex(root: string): Promise<SyncResult> {
     ...Object.keys(previousDocs).filter((docPath) => !hashes.has(docPath)),
   ];
 
-  if (changed.length === 0) {
+  if (loadedValidPair && changed.length === 0) {
     return { status: "fresh", indexed: paths.length, changed: [] };
   }
 

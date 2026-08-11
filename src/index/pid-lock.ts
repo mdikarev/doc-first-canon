@@ -22,28 +22,43 @@ export function isPidAlive(pid: number): boolean {
 }
 
 export function acquireWatchPid(root: string): void {
-  const existingPid = readWatchPid(root);
-  if (existingPid !== null && isPidAlive(existingPid)) {
-    throw new Error(`watch already running (pid ${existingPid})`);
-  }
-
   fs.mkdirSync(docCanonDir(root), { recursive: true });
-  fs.writeFileSync(indexWatchPidPath(root), `${process.pid}\n`);
+  const pidPath = indexWatchPidPath(root);
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      const fd = fs.openSync(pidPath, "wx");
+      try {
+        fs.writeFileSync(fd, `${process.pid}\n`);
+      } finally {
+        fs.closeSync(fd);
+      }
+      return;
+    } catch (error: unknown) {
+      if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
+      const existingPid = readWatchPid(root);
+      if (existingPid !== null && isPidAlive(existingPid)) {
+        throw new Error(`watch already running (pid ${existingPid})`);
+      }
+      if (attempt === 1) {
+        throw new Error("could not acquire watch pid lock");
+      }
+      fs.rmSync(pidPath, { force: true });
+    }
+  }
 }
 
 export function releaseWatchPid(root: string): void {
-  fs.rmSync(indexWatchPidPath(root), { force: true });
+  if (readWatchPid(root) === process.pid) {
+    fs.rmSync(indexWatchPidPath(root), { force: true });
+  }
 }
 
 export function stopWatchPid(root: string): { stopped: boolean; pid?: number } {
   const pid = readWatchPid(root);
-  try {
-    if (pid !== null && isPidAlive(pid)) {
-      process.kill(pid, "SIGTERM");
-      return { stopped: true, pid };
-    }
-    return { stopped: false };
-  } finally {
-    releaseWatchPid(root);
+  if (pid !== null && isPidAlive(pid)) {
+    process.kill(pid, "SIGTERM");
+    return { stopped: true, pid };
   }
+  fs.rmSync(indexWatchPidPath(root), { force: true });
+  return { stopped: false };
 }

@@ -35,6 +35,23 @@ describe("pid-lock", () => {
     assert.throws(() => acquireWatchPid(root), /already running/);
   });
 
+  it("release leaves a lock owned by another process", () => {
+    fs.mkdirSync(path.join(root, ".doc-canon"), { recursive: true });
+    fs.writeFileSync(indexWatchPidPath(root), "12345\n");
+
+    releaseWatchPid(root);
+
+    assert.equal(fs.readFileSync(indexWatchPidPath(root), "utf8"), "12345\n");
+  });
+
+  it("stop removes a stale pid file", () => {
+    fs.mkdirSync(path.join(root, ".doc-canon"), { recursive: true });
+    fs.writeFileSync(indexWatchPidPath(root), "999999\n");
+
+    assert.deepEqual(stopWatchPid(root), { stopped: false });
+    assert.equal(fs.existsSync(indexWatchPidPath(root)), false);
+  });
+
   it("stopWatchPid is idempotent when not running", () => {
     const result = stopWatchPid(root);
     assert.equal(result.stopped, false);

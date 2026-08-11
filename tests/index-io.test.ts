@@ -47,6 +47,16 @@ describe("index io", () => {
     assert.throws(() => loadIndexPair(root), /index_id/);
   });
 
+  it("rejects structurally corrupt artifacts with matching schema versions", () => {
+    saveIndexPair(root, manifest("id-1"), bm25("id-1"));
+    fs.writeFileSync(
+      path.join(root, ".doc-canon", "bm25-index.json"),
+      JSON.stringify({ schema_version: 1, index_id: "id-1", postings: [], doc_lengths: {} }),
+    );
+
+    assert.throws(() => loadIndexPair(root), /invalid bm25/);
+  });
+
   it("tryLoadManifest returns null when missing", () => {
     assert.equal(tryLoadManifest(root), null);
   });

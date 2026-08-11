@@ -14,20 +14,64 @@ function readJson(file: string): unknown {
   return JSON.parse(fs.readFileSync(file, "utf8"));
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isNumber(value: unknown): value is number {
+  return typeof value === "number" && Number.isFinite(value);
+}
+
 function parseManifest(raw: unknown): IndexManifest {
-  const manifest = raw as IndexManifest;
-  if (manifest?.schema_version !== 1) {
-    throw new Error(`unsupported manifest schema_version: ${manifest?.schema_version}`);
+  if (!isRecord(raw)) {
+    throw new Error("invalid manifest");
   }
-  return manifest;
+  if (raw.schema_version !== 1) {
+    throw new Error(`unsupported manifest schema_version: ${raw.schema_version}`);
+  }
+  if (
+    typeof raw.index_id !== "string" ||
+    typeof raw.built_at !== "string" ||
+    typeof raw.corpus !== "string" ||
+    !isRecord(raw.docs)
+  ) {
+    throw new Error("invalid manifest");
+  }
+  for (const doc of Object.values(raw.docs)) {
+    if (
+      !isRecord(doc) ||
+      typeof doc.hash !== "string" ||
+      !isNumber(doc.token_count)
+    ) {
+      throw new Error("invalid manifest");
+    }
+  }
+  return raw as IndexManifest;
 }
 
 function parseBm25(raw: unknown): Bm25State {
-  const bm25 = raw as Bm25State;
-  if (bm25?.schema_version !== 1) {
-    throw new Error(`unsupported bm25 schema_version: ${bm25?.schema_version}`);
+  if (!isRecord(raw)) {
+    throw new Error("invalid bm25");
   }
-  return bm25;
+  if (raw.schema_version !== 1) {
+    throw new Error(`unsupported bm25 schema_version: ${raw.schema_version}`);
+  }
+  if (
+    typeof raw.index_id !== "string" ||
+    !isRecord(raw.postings) ||
+    !isRecord(raw.doc_lengths)
+  ) {
+    throw new Error("invalid bm25");
+  }
+  for (const terms of Object.values(raw.postings)) {
+    if (!isRecord(terms) || !Object.values(terms).every(isNumber)) {
+      throw new Error("invalid bm25");
+    }
+  }
+  if (!Object.values(raw.doc_lengths).every(isNumber)) {
+    throw new Error("invalid bm25");
+  }
+  return raw as Bm25State;
 }
 
 export function saveIndexPair(

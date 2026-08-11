@@ -6,6 +6,7 @@ import path from "node:path";
 import { syncCanonIndex } from "../src/index/sync.js";
 import { bm25IndexPath, indexManifestPath } from "../src/index/paths.js";
 import { loadIndexPair } from "../src/index/io.js";
+import { openCanonIndex } from "../src/index/reader.js";
 
 function writeCanon(root: string, rel: string, body: string): void {
   const abs = path.join(root, rel);
@@ -37,6 +38,22 @@ describe("syncCanonIndex", () => {
     const second = await syncCanonIndex(root);
     assert.equal(second.status, "fresh");
     assert.equal(fs.readFileSync(indexManifestPath(root), "utf8"), before);
+  });
+
+  it("writes and opens an empty corpus, then returns fresh", async () => {
+    fs.unlinkSync(path.join(root, "docs/canon/a.md"));
+
+    const first = await syncCanonIndex(root);
+    assert.equal(first.status, "updated");
+    assert.equal(first.indexed, 0);
+    assert.ok(fs.existsSync(indexManifestPath(root)));
+    assert.ok(fs.existsSync(bm25IndexPath(root)));
+    const pair = loadIndexPair(root);
+    assert.equal(pair.manifest.index_id, pair.bm25.index_id);
+    assert.deepEqual(openCanonIndex(root).score("anything"), []);
+
+    const second = await syncCanonIndex(root);
+    assert.equal(second.status, "fresh");
   });
 
   it("rebuilds on edit with new index_id", async () => {
