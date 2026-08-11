@@ -59,12 +59,13 @@ These human-run checklists cover the MVP agent flows. Automated skill execution 
 - [ ] Confirm that after a **substantial** canon write the agent waits for explicit user go-ahead before implementing; spot sync may proceed.
 - [ ] Confirm exceptions (pure bugfix with intended behavior unchanged, `code_stale`, non-behavioral edits) may skip canon-first.
 
-## Future plans are directional; contract adds optional initiative
+## Future plans authoring uses canon-future-plan
 
 - [ ] Confirm `future_plans/INDEX.md` is required and scaffolded by `doc-canon init`, and migrated onto pre-existing canons by `doc-canon upgrade-skills`.
-- [ ] Ask `canon-write` to add a new post-MVP initiative; confirm it registers `future_plans/<slug>.md` as `required: false` via `canon-contract`, adds an INDEX row, and writes directional prose (no checklists, sprint plans, or `coding_agent_prompt` entries).
+- [ ] Ask `canon-future-plan` to add a new post-MVP initiative; confirm it creates `future_plans/<slug>.md` from `FUTURE_PLAN`, adds an Initiatives INDEX row, does **not** add a per-file contract section, and writes directional prose (no checklists, sprint plans, or `coding_agent_prompt` entries).
+- [ ] Ask `canon-write` to add an initiative; confirm it stops and hands off to `canon-future-plan`.
 - [ ] Confirm the initiative stays out of behavioral SoT: `canon-audit` does not treat its prose as current-behavior ground truth when judging docs↔code drift.
-- [ ] Mark the initiative `absorbed` after implementation and confirm outcomes move into the relevant living canon sections.
+- [ ] After implementation, confirm `canon-write` absorbs outcomes into living sections, then `canon-future-plan` marks the initiative `absorbed` (INDEX status).
 
 ## Canon-write clarifies before substantial writes
 

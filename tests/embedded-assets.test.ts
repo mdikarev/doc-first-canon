@@ -9,6 +9,7 @@ const SKILLS = [
   "canon-audit",
   "canon-write",
   "canon-contract",
+  "canon-future-plan",
 ] as const;
 
 function readEmbedded(...parts: string[]): string {
@@ -18,7 +19,7 @@ function readEmbedded(...parts: string[]): string {
 }
 
 describe("managed agent assets", () => {
-  it("ships four canon skills with shared safety guidance", () => {
+  it("ships five canon skills with shared safety guidance", () => {
     for (const skill of SKILLS) {
       const markdown = readEmbedded("skills", skill, "SKILL.md");
       assert.match(markdown, /doc-canon validate/, skill);
@@ -177,6 +178,27 @@ describe("managed agent assets", () => {
     assert.match(audit, /not.*(?:behavioral SoT|current SoT)|directional/i);
   });
 
+  it("documents canon-future-plan ownership and write handoff", () => {
+    const future = readEmbedded("skills", "canon-future-plan", "SKILL.md");
+    assert.match(future, /future_plans/i);
+    assert.match(future, /FUTURE_PLAN/);
+    assert.match(future, /INDEX\.md/);
+    assert.match(future, /Scout/i);
+    assert.match(future, /draft|refining|absorbed/i);
+    assert.match(future, /checklist|task tracker|coding-agent prompt/i);
+
+    const write = readEmbedded("skills", "canon-write", "SKILL.md");
+    assert.match(write, /canon-future-plan/);
+    assert.match(write, /handoff|stop|invoke/i);
+
+    const contract = readEmbedded("skills", "canon-contract", "SKILL.md");
+    assert.match(contract, /canon-future-plan/);
+    assert.doesNotMatch(
+      contract,
+      /register `?future_plans\/<slug>\.md`? with `?required: false`?/,
+    );
+  });
+
   it("documents every MVP skill acceptance scenario", () => {
     const scenarios = readFileSync(
       join(process.cwd(), "docs", "acceptance", "skill-scenarios.md"),
@@ -195,6 +217,7 @@ describe("managed agent assets", () => {
       "Canon-write Scout Expand Execute before deep reads",
       "Canon-audit Scout Expand Execute before deep reads",
       "Feature-change order is canon-first",
+      "Future plans authoring uses canon-future-plan",
     ]) {
       assert.match(scenarios, new RegExp(phrase, "i"));
     }

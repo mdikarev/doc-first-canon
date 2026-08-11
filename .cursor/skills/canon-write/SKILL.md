@@ -54,7 +54,7 @@ Clarify does **not** replace the contract workflow: for a new kind or structural
 5. For a new kind or structural change, stop and invoke the contract workflow. Do not invent files, section kinds, or template structures.
 6. During everyday sync, update affected sections and `INDEX.md` as needed, and keep cross-links consistent.
 7. If canon and code diverge, ask the user which side is stale. Never edit application code. Record code work through `DISCREPANCIES.md`.
-8. You may edit `future_plans/**` for directional initiatives. Do not convert plans into task trackers, checklists, or coding-agent prompts.
-9. When the user marks an initiative done, absorb its outcomes into the relevant living canon sections and update `future_plans/INDEX.md`.
+8. Do **not** create or refine initiatives, or edit `future_plans/**` for status/INDEX sync — stop and tell the user to run `canon-future-plan`.
+9. When absorbing a finished initiative, update living SoT sections only, validate, then instruct the user to run `canon-future-plan` to mark it `absorbed` and sync `future_plans/INDEX.md`.
 10. Validate after edits by running `doc-canon validate`. Claim success only after it passes.
 11. A docs-stale discrepancy may move from Open to Resolved in this session only after the canon fix validates. A code-stale entry remains Open until a later audit confirms that code has aligned.
