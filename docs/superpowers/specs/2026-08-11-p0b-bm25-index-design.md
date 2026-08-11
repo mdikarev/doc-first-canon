@@ -184,9 +184,9 @@ Okapi BM25 with `k1 = 1.2`, `b = 0.75`:
 
 For each query term `t` in doc `d`:  
 `idf(t) * (tf * (k1+1)) / (tf + k1 * (1 - b + b * |d|/avgdl))`  
-where `idf(t) = ln(1 + (N - df + 0.75) / (df + 0.5))` — use the same idf form as the prior plan: `ln(1 + (N - df + 0.5) / (df + 0.5))`.
+where `idf(t) = ln(1 + (N - df + 0.5) / (df + 0.5))`.
 
-Document the chosen idf form in `bm25.ts` and keep tests locked to it.
+Document this idf form in `bm25.ts` and lock tests to it.
 
 ## Testing
 
