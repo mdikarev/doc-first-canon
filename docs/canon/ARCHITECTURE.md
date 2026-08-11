@@ -24,8 +24,8 @@ Two layers: a deterministic **CLI** (`doc-canon`) owns schema, scaffold, structu
 - **Report** (`src/report/*`) — merge CLI findings; preserve `source: skill`
 - **Scaffold / embedded** (`src/scaffold/*`, `embedded/**`) — default templates, skills, pointer rule, AGENTS block
 - **Future plans skeleton** (`src/scaffold/ensure-future-plans.ts`) — idempotently ensures `future_plans/INDEX.md`, its templates, and the contract/INDEX rows exist; `init` creates a fresh required section, `upgrade-skills` migrates existing repos onto it without touching existing initiative prose
-- **Future plans validate zone** (target, ships with `canon-future-plan` — see `CLI.md`) — `future_plans/*.md` other than `INDEX.md` are exempt from the "not listed in contract" orphan check; validate instead parses the Initiatives table in `future_plans/INDEX.md` (File column) and requires INDEX↔disk agreement plus required `FUTURE_PLAN` headings on each linked file. Initiatives are **not** per-file contract sections — only `future-plans-index` stays a registered, required section; root `INDEX.md` Sections never list individual initiative files.
-- **Agent skills** (copied into `.cursor/skills/`) — bootstrap, write, audit, contract; `canon-future-plan` (target, not yet shipped)
+- **Future plans validate zone** — `future_plans/*.md` other than `INDEX.md` are exempt from the "not listed in contract" orphan check; validate instead parses the Initiatives table in `future_plans/INDEX.md` (File column) and requires INDEX↔disk agreement plus required `FUTURE_PLAN` headings on each linked file. Initiatives are **not** per-file contract sections — only `future-plans-index` stays a registered, required section; root `INDEX.md` Sections never list individual initiative files.
+- **Agent skills** (copied into `.cursor/skills/`) — bootstrap, write, audit, contract, future-plan
 
 ## Key flows
 
@@ -36,7 +36,7 @@ Two layers: a deterministic **CLI** (`doc-canon`) owns schema, scaffold, structu
 5. **Audit / resolve** — `canon-audit` semantic pass + user decision; apply order: successful apply → set `decision` → Open→Resolved when appropriate.
 6. **Everyday sync** — human-invoked post-hoc `canon-write` / `canon-audit` after meaningful changes.
 7. **Upgrade managed assets** — `upgrade-skills` refreshes skills/rules/AGENTS, ensures the `future_plans/INDEX.md` skeleton (contract entry, INDEX row, templates, index file) exists for repos scaffolded before it was required, and bumps `skills_stamp`, without wiping canon content.
-8. **Future plans validate (target)** — for `future_plans/*.md` (except `INDEX.md`): not orphans; must have a matching `future_plans/INDEX.md` Initiatives row; must carry required `FUTURE_PLAN` headings; root `INDEX.md` Sections stay contract-only. Ships with `canon-future-plan`; until then this repo's contract still registers each initiative as an optional `future-p*` section (migration tracked in `future_plans/p0c-future-plans-authoring-skill.md`).
+8. **Future plans validate** — for `future_plans/*.md` (except `INDEX.md`): not orphans; must have a matching `future_plans/INDEX.md` Initiatives row; must carry required `FUTURE_PLAN` headings; root `INDEX.md` Sections stay contract-only.
 
 ## Boundaries & non-responsibilities
 

@@ -1,6 +1,6 @@
 # P0c — Future plans authoring skill
 
-- **Status:** refining
+- **Status:** absorbed
 - **Focus:** A dedicated agent skill (`canon-future-plan`) that authors directional initiatives under `future_plans/` from the `FUTURE_PLAN` template, keeps prose clear and non-checklist, and keeps `future_plans/INDEX.md` in sync.
 - **Depends on:** Existing `FUTURE_PLAN` / `FUTURE_PLANS_INDEX` templates and status vocabulary (`draft` → `refining` → `implementing` → `absorbed`)
 - **Unblocks:** Consistent capture of new initiatives without ad-hoc structure; an INDEX-driven validate zone that drops per-initiative contract registration

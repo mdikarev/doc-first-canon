@@ -4,7 +4,7 @@ Directional initiatives describing the **future shape** of the system. **Not** b
 
 ## How to use
 
-1. Capture an initiative directionally (`draft`) via the `canon-future-plan` skill, then refine one at a time in a dedicated brainstorming session (`draft` → `refining`). Author here through `canon-future-plan`, not ad-hoc edits or `canon-write` create — `canon-write` hands off any create/refine/status request for this folder (see `SKILLS.md`). `canon-future-plan` is a target skill pending implementation (P0c); until it ships, `canon-write` performs this step directly.
+1. Capture an initiative directionally (`draft`) via the `canon-future-plan` skill, then refine one at a time in a dedicated brainstorming session (`draft` → `refining`). Author here through `canon-future-plan`, not ad-hoc edits or `canon-write` create — `canon-write` hands off any create/refine/status request for this folder (see `SKILLS.md`).
 2. Execute/build the initiative using this project's normal task-tracking (outside `future_plans/`); this folder only records status, not the work items themselves. If `implementing` is used, it must stay a single status marker — never let it grow into a task dump.
 3. After implementation, absorb outcomes into normal canon sections and mark the initiative `absorbed` (or remove it).
 
@@ -24,10 +24,10 @@ Design rationale: [`docs/superpowers/specs/2026-08-09-production-path-roadmap-de
 | # | Initiative | Status | File |
 | --- | --- | --- | --- |
 | 0 | Skill context efficiency | absorbed | [p0-skill-context-efficiency.md](p0-skill-context-efficiency.md) |
-| 0c | Future plans authoring skill | refining | [p0c-future-plans-authoring-skill.md](p0c-future-plans-authoring-skill.md) |
+| 0c | Future plans authoring skill | absorbed | [p0c-future-plans-authoring-skill.md](p0c-future-plans-authoring-skill.md) |
 | 0b | Smart cache | draft | [p0b-smart-cache.md](p0b-smart-cache.md) |
 | 1 | Retrieval & context pack | draft | [p1-retrieval-and-context-pack.md](p1-retrieval-and-context-pack.md) |
 | 2 | Pluggable extractors | draft | [p2-pluggable-extractors.md](p2-pluggable-extractors.md) |
 | 3 | Production hardening | draft | [p3-production-hardening.md](p3-production-hardening.md) |
 
-P0 is absorbed. **P0c is `refining` and the near-term priority** (skill to author initiatives + keep this INDEX; design approved, canon-first living-canon update landed ahead of CLI/skill code). P0b (cache) was split out of P0 for a later session. P3 may proceed in parallel.
+P0 is absorbed. P0c is absorbed. P0b (cache) was split out of P0 for a later session. P3 may proceed in parallel.
