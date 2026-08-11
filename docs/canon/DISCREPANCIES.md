@@ -18,6 +18,14 @@ Never silently pick a side. Never edit application code from canon skills.
 
 ## Resolved
 
+### D-001: OVERVIEW managed skills list lags current canon
+- **status:** resolved
+- **decision:** docs_stale
+- **canon_paths:** `docs/canon/OVERVIEW.md`, `docs/canon/SKILLS.md`
+- **code_paths:** `embedded/skills/canon-future-plan/SKILL.md`
+- **evidence:** `OVERVIEW.md` listed only `canon-bootstrap`, `canon-write`, `canon-audit`, and `canon-contract`, while `SKILLS.md` states five managed skills and embedded assets include `canon-future-plan`. `OVERVIEW.md` was updated to include `canon-future-plan`, then `doc-canon validate` succeeded in the same session.
+- **finding_ids:** `F-001`
+
 <!-- Move resolved discrepancy entries here. -->
 
 ## Template for new entries
