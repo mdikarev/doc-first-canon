@@ -16,6 +16,10 @@ import {
   assertRequiredHeadings,
   requiredHeadingsFromTemplate,
 } from "./headings.js";
+import {
+  isFuturePlansInitiativePath,
+  validateFuturePlansZone,
+} from "./future-plans-index.js";
 import { validateIndexAgreement } from "./index-agreement.js";
 import { findBrokenCanonLinks } from "./links.js";
 import type { FindingKind } from "../report/types.js";
@@ -273,6 +277,8 @@ export function validateCanon(root: string): ValidateResult {
       }
     }
 
+    errors.push(...validateFuturePlansZone(canonRoot, contract));
+
     const contractedPaths = new Set(
       contract.sections.map((section) => path.normalize(section.path)),
     );
@@ -281,7 +287,8 @@ export function validateCanon(root: string): ValidateResult {
       if (
         relative !== "templates" &&
         !relative.startsWith(`templates${path.sep}`) &&
-        !contractedPaths.has(path.normalize(relative))
+        !contractedPaths.has(path.normalize(relative)) &&
+        !isFuturePlansInitiativePath(relative.replaceAll("\\", "/"))
       ) {
         errors.push(
           `Orphan canon file ${relative} is not listed in the contract`,
