@@ -20,10 +20,11 @@ This skill owns `docs/canon/future_plans/**`: creating and refining directional 
 
 Before drafting or refining an initiative:
 
-1. **Progressive disclosure:** build a narrow working set — `future_plans/INDEX.md`, the target initiative file (if refining), and `templates/FUTURE_PLAN.md`. Do not preload the rest of the canon.
-2. **Scout:** note `path`, `role`, and a short free-form `stub` for each item in the working set. Do not invent structure.
-3. **Expand gate:** briefly show the working set and a verdict — **sufficient** or **need more** (which paths, why). Doubt → expand; silent under-read is not acceptable.
-4. Only after **sufficient**, deep-read the approved set and continue the Workflow.
+1. **Try search first (optional):** run `doc-canon search "<topic>"` when cross-canon context helps; seed stubs from pack paths/snippets. On fail-closed, hint `doc-canon index` and continue with the narrow set below.
+2. **Progressive disclosure:** build a narrow working set — `future_plans/INDEX.md`, the target initiative file (if refining), and `templates/FUTURE_PLAN.md`. Do not preload the rest of the canon.
+3. **Scout:** note `path`, `role`, and a short free-form `stub` for each item in the working set. Do not invent structure.
+4. **Expand gate:** briefly show the working set and a verdict — **sufficient** or **need more** (which paths, why). Doubt → expand; silent under-read is not acceptable.
+5. Only after **sufficient**, deep-read the approved set and continue the Workflow.
 
 ## Clarify before invent
 

@@ -65,6 +65,9 @@ describe("managed agent assets", () => {
     assert.match(write, /sufficient|need more/i);
     assert.match(write, /after Expand|after.*Expand|following Expand/i);
     assert.match(write, /clarif/i);
+    assert.match(write, /doc-canon search/i);
+    assert.match(write, /index_stale/i);
+    assert.match(write, /one-shot.*doc-canon index|doc-canon index.*one-shot/i);
 
     const audit = readEmbedded("skills", "canon-audit", "SKILL.md");
     assert.match(audit, /Scout/i);
@@ -72,6 +75,17 @@ describe("managed agent assets", () => {
     assert.match(audit, /working set/i);
     assert.match(audit, /sufficient|need more/i);
     assert.match(audit, /show|briefly|in chat/i);
+    assert.match(audit, /doc-canon search/i);
+    assert.match(audit, /index_stale/i);
+  });
+
+  it("documents search-first retrieval in pointer rule and AGENTS block", () => {
+    const rule = readEmbedded("rules", "doc-canon.mdc");
+    assert.match(rule, /doc-canon search/i);
+    assert.match(rule, /fail-closed|fail closed/i);
+
+    const block = readEmbedded("agents", "AGENTS.block.md");
+    assert.match(block, /doc-canon search/i);
   });
 
   it("documents working-set discipline in pointer rule and AGENTS block", () => {
@@ -143,7 +157,7 @@ describe("managed agent assets", () => {
     const rule = readEmbedded("rules", "doc-canon.mdc");
     assert.match(rule, /alwaysApply:\s*true/);
     assert.match(rule, /context source of truth/i);
-    assert.match(rule, /start.*INDEX\.md/i);
+    assert.match(rule, /doc-canon search|INDEX\.md/i);
     assert.match(rule, /Feature-change order|canon-first|canon-write/i);
     assert.match(rule, /do not silently pick a side/i);
     assert.match(rule, /does not replace other domain rules/i);
@@ -219,6 +233,9 @@ describe("managed agent assets", () => {
       "Check preserves skill findings",
       "Canon-write Scout Expand Execute before deep reads",
       "Canon-audit Scout Expand Execute before deep reads",
+      "Scout uses search then Expand",
+      "Search missing index falls back",
+      "Post-write runs index",
       "Feature-change order is canon-first",
       "Future plans authoring uses canon-future-plan",
     ]) {

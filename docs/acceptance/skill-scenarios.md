@@ -96,3 +96,17 @@ These human-run checklists cover the MVP agent flows. Automated skill execution 
 - [ ] Run `doc-canon check`.
 - [ ] Confirm CLI findings refresh without removing or changing skill-owned findings.
 - [ ] Run `canon-audit` and confirm only it marks unconfirmed skill findings `status: stale`.
+
+## Scout uses search then Expand
+
+- [ ] With a built index, ask `canon-write` for a substantial change; confirm Scout tries `doc-canon search` before dumping all canon files.
+- [ ] Confirm the working set is seeded from pack paths and snippets.
+- [ ] Confirm Expand still runs when the pack is thin or doubtful.
+
+## Search missing index falls back
+
+- [ ] In a repo without `.doc-canon` index artifacts, start Scout; confirm INDEX-first fallback plus an explicit hint to run `doc-canon index` (skill does not hard-stop).
+
+## Post-write runs index
+
+- [ ] After a successful substantive `docs/canon/**` write via a managed skill, confirm the skill runs one-shot `doc-canon index` (or surfaces watch-lock failure without fighting the lock).

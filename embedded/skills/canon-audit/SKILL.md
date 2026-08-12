@@ -16,10 +16,11 @@ description: Audit canon semantics, resolve divergence, and maintain discrepancy
 
 1. Run `doc-canon validate` first. If it fails, stop the semantic pass and repair structure through canon-write or the contract through canon-contract.
 2. Run `doc-canon check` to refresh the language-agnostic inventory and CLI findings (Scout inputs).
-3. **Scout:** from `INDEX.md`, contract, fresh inventory/report, and user intent, build a working-set manifest (`path`, `role`, short free-form `stub`). Include likely evidence paths for claims you will make. Do not preload every markdown file.
-4. **Expand gate:** briefly show the working set (paths + stubs) and verdict **sufficient** or **need more** (which paths, why). Doubt → expand until claims can be evidence-backed. Free-form brevity; multiple expands are fine; silent under-read is not.
-5. Only after **sufficient**, deep-read the approved set (inventory, report, canon, and code evidence paths). Do not rely on model memory.
-6. Perform the semantic checks:
+3. **Try search first:** run `doc-canon search "<topic>"` from user intent and seed the working set from pack paths and snippet stubs. If search fails closed, hint `doc-canon index` and fall back to INDEX-first Scout. If `index_stale`, surface the warning and continue; Expand when thin.
+4. **Scout:** from search results (or `INDEX.md` fallback), contract, fresh inventory/report, build a working-set manifest (`path`, `role`, short free-form `stub`). Include likely evidence paths for claims you will make. Do not preload every markdown file.
+5. **Expand gate:** briefly show the working set (paths + stubs) and verdict **sufficient** or **need more** (which paths, why). Doubt → expand until claims can be evidence-backed. Free-form brevity; multiple expands are fine; silent under-read is not.
+6. Only after **sufficient**, deep-read the approved set (inventory, report, canon, and code evidence paths). Do not rely on model memory.
+7. Perform the semantic checks:
    - coverage of required contract paths and INDEX entries;
    - orphans, while recognizing the CLI already checks them;
    - glossary terms against inventory/text hits or explicit doc-only evidence;
@@ -27,7 +28,7 @@ description: Audit canon semantics, resolve divergence, and maintain discrepancy
    - relative and Related-canon links;
    - doc↔doc conflicts only when supported by at least two cited passages.
    - Do not treat `future_plans` prose as the current behavioral SoT when judging docs↔code drift; it is directional canon for future system shape.
-7. Every finding must cite canon paths and inventory/code paths, or explicitly say code is missing. Deduplicate normalized kind/path sets and honor all ignores.
+8. Every finding must cite canon paths and inventory/code paths, or explicitly say code is missing. Deduplicate normalized kind/path sets and honor all ignores.
 
 ## Report ownership
 
