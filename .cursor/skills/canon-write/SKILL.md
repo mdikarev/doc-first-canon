@@ -20,10 +20,13 @@ Coding agents updating **behavior or public contract** must invoke this skill (o
 
 Before deep-reading canon file bodies or drafting substantial SoT changes:
 
-1. **Progressive disclosure:** start at `docs/canon/INDEX.md`; select only relevant INDEX rows; do not preload the entire canon; open `CANON_CONTRACT.md` / templates only when structure, a new kind, or a write template is needed.
-2. **Scout:** build a working-set manifest of `path`, `role`, and short free-form `stub` (why-in-set—not a content digest). Do not invent structure. Use `doc-canon check` inventory/report only when syncing against the tree/code.
-3. **Expand gate:** briefly show the working set (paths + stubs) and a verdict **sufficient** or **need more** (which paths, why). Free-form brevity is fine. Doubt → expand; multiple expands are fine; silent under-read is not.
-4. Only after **sufficient**, deep-read the approved set and continue the Workflow.
+1. **Try search first:** run `doc-canon search "<topic>"` and build the working-set manifest from pack paths and brief snippet stubs. Do not dump all canon markdown.
+2. **If search fails closed** (missing/corrupt index): surface an explicit hint to run `doc-canon index`, then continue with INDEX-first progressive disclosure (`docs/canon/INDEX.md`; select only relevant rows). Do not hard-stop the skill.
+3. **If search returns `index_stale`:** surface the warning, continue with the pack, and Expand when evidence feels thin.
+4. **Expand gate:** briefly show the working set (paths + stubs) and a verdict **sufficient** or **need more** (which paths, why). Free-form brevity is fine. Doubt → expand; multiple expands are fine; silent under-read is not.
+5. Only after **sufficient**, deep-read the approved set and continue the Workflow.
+
+Use `doc-canon check` inventory/report only when syncing against the tree/code. Open `CANON_CONTRACT.md` / templates only when structure, a new kind, or a write template is needed.
 
 ## Clarify before substantial writes
 
@@ -57,4 +60,5 @@ Clarify does **not** replace the contract workflow: for a new kind or structural
 8. Do **not** create or refine initiatives, or edit `future_plans/**` for status/INDEX sync — stop and tell the user to run `canon-future-plan`.
 9. When absorbing a finished initiative, update living SoT sections only, validate, then instruct the user to run `canon-future-plan` to mark it `absorbed` and sync `future_plans/INDEX.md`.
 10. Validate after edits by running `doc-canon validate`. Claim success only after it passes.
-11. A docs-stale discrepancy may move from Open to Resolved in this session only after the canon fix validates. A code-stale entry remains Open until a later audit confirms that code has aligned.
+11. After any successful **substantive** write to `docs/canon/**`, run one-shot `doc-canon index`. If a watch holds the index lock, surface the failure and rely on the watch or suggest `doc-canon index --stop`; do not reindex inside `search`.
+12. A docs-stale discrepancy may move from Open to Resolved in this session only after the canon fix validates. A code-stale entry remains Open until a later audit confirms that code has aligned.

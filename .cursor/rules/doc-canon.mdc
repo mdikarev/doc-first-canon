@@ -5,7 +5,7 @@ alwaysApply: true
 
 # doc-canon context rule
 
-For design and development, the context source of truth is `docs/canon/`. Start with `docs/canon/INDEX.md`, select only relevant indexed sections, and build a small **working set** before deep reads. If the working set is doubtful, **expand**; do not silently under-read or invent structure to save tokens. Do not preload the entire canon.
+For design and development, the context source of truth is `docs/canon/`. Try `doc-canon search "<topic>"` first; on fail-closed fall back to `docs/canon/INDEX.md`, select only relevant indexed sections, and build a small **working set** before deep reads. If the working set is doubtful, **expand**; do not silently under-read or invent structure to save tokens. Do not preload the entire canon.
 
 `docs/canon/future_plans/` is part of the canon for **future system shape** (initiatives). It is not the behavioral source of truth for current behavior. Do not store development tasks, checklists, or coding-agent prompts there; use roadmap/issues/`DISCREPANCIES.md` for execution work. After an initiative is realized, absorb outcomes into living canon sections.
 

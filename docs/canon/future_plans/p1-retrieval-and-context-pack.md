@@ -1,6 +1,6 @@
 # P1 — Retrieval search & context pack
 
-- **Status:** refining
+- **Status:** absorbed
 - **Focus:** Deterministic public `searchCanon` retrieval, a thin `doc-canon search` CLI, bounded context packs, and skill/CLI rules for try-then-fallback Scout and post-write indexing — without owning index construction.
 - **Depends on:** P0b BM25 index (hashes + `doc-canon index`); P0 Scout → Expand → Execute patterns
 - **Unblocks:** Scale to larger canons; shared pack for coding agents later
