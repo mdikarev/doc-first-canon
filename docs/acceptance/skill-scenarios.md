@@ -90,6 +90,7 @@ These human-run checklists cover the MVP agent flows. Automated skill execution 
 - [ ] Confirm it runs `validate` then `check` as Scout inputs.
 - [ ] Confirm it briefly shows a working set + expand verdict before deep-reading evidence paths.
 - [ ] Confirm it expands until claims are evidence-backed rather than under-reading silently.
+- [ ] Confirm report evidence used for Scout / Expand / semantic judgement is open findings only (stale bodies not deep-read; `stale_skipped: N` count is enough).
 
 ## Check preserves skill findings
 
