@@ -1,10 +1,10 @@
 # P1 — Retrieval search & context pack
 
 - **Status:** refining
-- **Focus:** Deterministic `doc-canon search` and bounded context packs, plus skill and CLI rules so agents know when and how to search canon — without owning index construction.
+- **Focus:** Deterministic public `searchCanon` retrieval, a thin `doc-canon search` CLI, bounded context packs, and skill/CLI rules for try-then-fallback Scout and post-write indexing — without owning index construction.
 - **Depends on:** P0b BM25 index (hashes + `doc-canon index`); P0 Scout → Expand → Execute patterns
 - **Unblocks:** Scale to larger canons; shared pack for coding agents later
-- **Design:** [2026-08-11-bm25-index-and-retrieval-split-design.md](../../superpowers/specs/2026-08-11-bm25-index-and-retrieval-split-design.md) — approved split: P0b owns index freshness; this initiative owns search, pack, and usage protocol. Implement in a separate session after P0b.
+- **Design:** [2026-08-12-p1-retrieval-and-context-pack-design.md](../../superpowers/specs/2026-08-12-p1-retrieval-and-context-pack-design.md) — approved P1 design; the earlier split remains its ownership-boundary reference.
 
 ## Intent
 
@@ -12,10 +12,12 @@ Agents should request “what matters for X” instead of reading every canon fi
 
 ## In scope
 
-- CLI `doc-canon search <query>` (no LLM): score against the P0b index and emit a bounded pack
-- Pack format and size knobs (aligned with `policies.max_lines` spirit): paths + scores + snippets; human and/or `--json` output
+- Public Node API `searchCanon(root, query, options) → PackResult`, exported as `doc-canon/search`
+- Thin CLI `doc-canon search <query>` (no LLM): score against the P0b index and emit the same bounded pack in human-first or `--json` form
+- Hybrid pack format and size knobs (aligned with `policies.max_lines` spirit): ranked paths + scores + short snippet windows
 - Freshness policy at search time: **warn + serve** when hashes mismatch (`index_stale`); **fail closed** with hint to run `doc-canon index` when the index is missing
-- Skill + CLI rules and example flows: when to search in Scout; how to treat stale warnings; Expand when pack is thin; when to call `index` (explicit / post-write / watcher already running — not silently inside every Scout search)
+- Skill + CLI rules and example flows: always try search first in Scout; fall back to INDEX-first Scout when search fails closed; surface stale warnings; Expand when the pack is thin
+- After successful substantive canon writes, managed skills **run** one-shot `doc-canon index`; watch remains optional for long sessions
 - Contract/policy guidance absorbed into living `CLI.md` / `SKILLS.md` when this ships
 
 ## Out of scope
@@ -33,7 +35,4 @@ Likely: `CLI.md` (`search`), `ARCHITECTURE.md` (retrieval/pack path), `SKILLS.md
 
 ## Open questions
 
-Resolved in the design linked above (corpus consumed via P0b index over `docs/canon/**`; stale = warn+serve; missing = fail closed; skills + CLI both document the protocol). No separate `doc-canon context` alias for v1 — `search` + pack is enough. Left for the implementation session:
-
-- Exact pack encoding details (JSON schema field names, snippet window size, default `max-hits`)
-- How strongly embedded skills mandate search vs INDEX-first Scout when no index exists yet
+None blocking. The approved design fixes the snake_case Pack fields; defaults (`max-hits` 10, `snippet-lines` 4, up to 2 windows per hit, and a soft ~120 total snippet-line cap); and the Scout rule (always try search first, then fall back to INDEX-first Scout with an explicit index hint when search fails closed). These defaults may be tuned during implementation without changing the initiative's ownership or protocol decisions.
