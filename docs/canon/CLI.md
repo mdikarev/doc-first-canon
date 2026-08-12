@@ -2,11 +2,11 @@
 
 ## Purpose
 
-Own the deterministic core of `doc-canon`: scaffold, structural validation, inventory, report I/O, managed-asset copy, and local BM25 index build/watch — with no LLM calls and no invented prose.
+Own the deterministic core of `doc-canon`: scaffold, structural validation, inventory, report I/O, managed-asset copy, local BM25 index build/watch, and bounded canon retrieval — with no LLM calls and no invented prose.
 
 ## Scope
 
-**Covers:** commands `init`, `validate`, `check`, `report`, `upgrade-skills`, `index`; contract parse/schema; heading and INDEX agreement checks; ignore-aware inventory; CLI finding merge; embedding default templates/skills/rules into target repos; build/update a local BM25 index over `docs/canon/**/*.md` (`index`), including poll-based `--watch` (default 2000 ms, `--interval`) and `--stop`, writing `.doc-canon/index-manifest.json` + `.doc-canon/bm25-index.json`; one-shot `index` exits ≠0 if a watch process is running.
+**Covers:** commands `init`, `validate`, `check`, `report`, `upgrade-skills`, `index`, `search`; contract parse/schema; heading and INDEX agreement checks; ignore-aware inventory; CLI finding merge; embedding default templates/skills/rules into target repos; build/update a local BM25 index over `docs/canon/**/*.md` (`index`), including poll-based `--watch` (default 2000 ms, `--interval`) and `--stop`, writing `.doc-canon/index-manifest.json` + `.doc-canon/bm25-index.json`; one-shot `index` exits ≠0 if a watch process is running; search that index and return a bounded context pack without auto-reindexing.
 
 **Excludes:** interview, semantic audit judgements, discrepancy dialogue, and any application-code edits (those belong to skills or coding agents).
 
@@ -36,8 +36,11 @@ MVP package `doc-canon@0.1.0` (Node ≥20, ESM). Entry: `bin/doc-canon.js` → c
 | `report` | Print last report.json to stdout (read-only) |
 | `upgrade-skills` | Refresh managed assets from installed package; idempotently ensure `future_plans/INDEX.md` skeleton on pre-existing canons; bump `skills_stamp` |
 | `index` | Build/update a local BM25 index for `docs/canon/**/*.md`; one-shot exits ≠0 if a watch is running; `--watch` polls (default 2000 ms, `--interval <ms>`, min 200) and keeps artifacts in sync; `--stop` stops a running watch via its pid file; `--root` |
+| `search <query>` | Search the existing index and print a ranked context pack; human output on stdout; `--json`; `--max-hits <N>` (default 10); `--snippet-lines <N>` (default 4); `--root <path>` |
 
 Artifacts: `.doc-canon/inventory.json`, `.doc-canon/report.json`, `.doc-canon/index-manifest.json`, `.doc-canon/bm25-index.json` (may be gitignored in target repos).
+
+`search` fails with exit ≠0 for an empty or whitespace-only query and for a missing or corrupt index; index failures include a hint to run `doc-canon index`. A stale index is served with an `index_stale` warning on stderr and exit 0. Zero hits also exit 0. `search` never auto-reindexes.
 
 ## Dependencies
 

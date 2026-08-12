@@ -72,6 +72,15 @@ Opaque string shared by one `index-manifest` + `bm25-index` pair from the same r
 ### doc_hash
 Per-document `sha256:<hex>` content hash recorded in `index-manifest`, used to detect create/update/delete and trigger a full BM25 rebuild.
 
+### Pack
+A bounded retrieval result containing the query, index identity and freshness, warnings, and ranked canon hits with scores and short snippet windows from live files.
+
+### searchCanon / search
+`searchCanon` is the public `doc-canon/search` API that ranks canon documents from the local BM25 index and builds a Pack from live-file snippets. `doc-canon search` is its thin human/JSON CLI wrapper.
+
+### index_stale
+A non-fatal search warning that one or more indexed document hashes differ from the live canon corpus. Search serves the Pack with exit 0, surfaces the warning, and does not auto-reindex.
+
 ## Naming conventions
 
 - Section files use `UPPER_SNAKE` or clear `Title.md` paths registered in the contract (`OVERVIEW.md`, `CLI.md`, …).

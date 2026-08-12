@@ -18,12 +18,13 @@ Ad-hoc agent docs drift from code, contradict each other, and diverge in shape w
 
 ### In scope
 
-- CLI: `init`, `validate`, `check`, `report`, `upgrade-skills`, `index`
+- CLI: `init`, `validate`, `check`, `report`, `upgrade-skills`, `index`, `search`
 - Per-repo canon tree, templates, and `CANON_CONTRACT.md`
 - `future_plans/INDEX.md`: required, scaffolded canon subtree for directional post-MVP initiatives (not behavioral SoT, not a task tracker); `upgrade-skills` migrates existing repos onto it
 - Managed Cursor skills (`canon-bootstrap`, `canon-write`, `canon-audit`, `canon-contract`, `canon-future-plan`), pointer rule, and `AGENTS.md` managed block
 - Language-agnostic inventory and machine-readable reports under `.doc-canon/`
 - Local BM25 index over `docs/canon/**/*.md` via `doc-canon index` (manifest + bm25 artifacts under `.doc-canon/`; optional poll `--watch`)
+- Bounded context packs via public `searchCanon` (`doc-canon/search`) and the human/JSON `doc-canon search` CLI, with ranked paths, scores, and live-file snippets
 - Human-in-the-loop discrepancy workflow (skills never patch application code)
 
 ### Out of scope
