@@ -29,7 +29,7 @@ Agents still discover canon mainly by reading `INDEX.md` and dumping sections. P
 - Pluggable AST extractors (P2)
 - Separate `doc-canon context` alias in v1
 - Writing pack artifacts under `.doc-canon/` for reuse
-- Changing living SoT before canon-first absorption at ship time
+- Ad-hoc living-SoT / `future_plans` edits outside the skills: living sections update via `canon-write` **before** app code (canon-first); initiative `absorbed` via `canon-future-plan` **after** ship
 
 ## Decisions
 
