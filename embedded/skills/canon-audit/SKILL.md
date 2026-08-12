@@ -30,6 +30,14 @@ description: Audit canon semantics, resolve divergence, and maintain discrepancy
    - Do not treat `future_plans` prose as the current behavioral SoT when judging docs↔code drift; it is directional canon for future system shape.
 8. Every finding must cite canon paths and inventory/code paths, or explicitly say code is missing. Deduplicate normalized kind/path sets and honor all ignores.
 
+## Open findings for LLM context
+
+During Scout → Expand → semantic deep-read, keep report evidence in the model context to **open** findings only (`status: open`, both `source: cli` and `source: skill`). Do not paste or paraphrase `status: stale` finding bodies into the reasoning transcript. A single compact note is allowed: `stale_skipped: N` (count only). Prefer filtering `doc-canon report` / report JSON to an open-only view for judgement; do not `Read` the full `.doc-canon/report.json` just to “understand the picture.”
+
+After write-back, when summarizing to the user, default to open findings; mention stale only as a count or if the user asks.
+
+Full `doc-canon report` (all statuses) is still required at the merge step under **Report ownership**—open filtering must not skip prior skill discovery or stale marking.
+
 ## Report ownership
 
 After the semantic pass, before writing `.doc-canon/report.json`:
