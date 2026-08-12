@@ -1,7 +1,7 @@
 # Adopter-ready first public release — Design Spec
 
 **Date:** 2026-08-12  
-**Status:** Approved for implementation planning  
+**Status:** Approved; implementation plan in `docs/superpowers/plans/2026-08-12-adopter-ready-release.md`  
 **Approach:** Rewrite P3 as adopter-ready checkpoint; ship `migrate` + npm `0.1.x` + docs; no dogfood GitHub Actions CI  
 **Related initiative:** `docs/canon/future_plans/p3-production-hardening.md`
 
@@ -12,12 +12,12 @@ Efficiency track (P0–P1) and the Claude dual-write overlay slice are largely d
 ## Goals
 
 1. First **public** `doc-canon@0.1.x` on npm so adopters can `npx doc-canon` / global install without cloning.
-2. **`doc-canon migrate`**: bring a target repo up to the installed CLI (orchestrates `upgrade-skills` + contract/scaffold gaps; no prose rewrites).
+2. **`doc-canon migrate`**: bring a target repo up to the installed CLI (fill target-contract gaps, then `upgrade-skills`; no prose rewrites).
 3. Clear **upgrade / versioning** guidance with soft coupling between npm semver and `skills_stamp`.
 4. **Adopter CI guidance**: recommend `doc-canon validate` as the gate; document `check` as optional; never fail CI on open `DISCREPANCIES.md` by default.
 5. **Local one-command release**: `npm run release` → `scripts/release.sh` (test → build → pack-check → publish); no GitHub Actions in this repo for that.
 6. **Rewrite P3** (via `canon-future-plan`) to match this checkpoint; treat Claude dual-write as a shipped slice ready to absorb separately when living-canon drift is closed.
-7. Package hygiene: `LICENSE`, `CHANGELOG`, pack contents suitable for publish.
+7. Package hygiene: MIT `LICENSE`, `CHANGELOG`, pack contents suitable for publish.
 
 ## Non-goals
 
@@ -40,10 +40,14 @@ Efficiency track (P0–P1) and the Claude dual-write overlay slice are largely d
 | Own CI | Out of scope |
 | Adopter CI recipe | `validate` as recommended gate; `check` optional/local (or optional in their CI); no Open-discrepancies fail |
 | Migrate exists | Yes — first-class CLI command in this checkpoint |
-| Migrate scope | Contract/schema + missing required scaffold only; no prose rewrite |
-| Migrate ↔ upgrade-skills | `migrate` calls `upgrade-skills` internally, then scaffold/contract step |
+| Migrate scope | Gaps vs the **target repo's existing contract** only; no prose rewrite; no default-kit injection |
+| Migrate ↔ upgrade-skills | Gap-fill **first**, then public `upgrade-skills` (overlays + future_plans ensure + stamp + validate). Do not call `upgrade-skills` before missing required files exist — its trailing validate would abort migrate |
+| Migrate schema | `0.1.x` has no schema rewriter: `schema_version` must already be `1`; otherwise fail closed |
+| Migrate flags | `--root` only in v1 (no `--yes` / command `--dry-run`) |
+| Migrate validate | No extra validate command: public `upgrade-skills` already ends in `validate`; that exit code is migrate’s |
 | Semver ↔ skills_stamp | Soft couple: asset changes bump both; CLI-only bugfix may bump npm patch only |
-| Release UX | `npm run release` + `scripts/release.sh`; dry-run mode; tag/push only explicit |
+| License | MIT (`LICENSE` + `package.json` `"license": "MIT"`) |
+| Release UX | `npm run release` + `scripts/release.sh`; dry-run mode; git tag/push is a **separate documented step**, not part of the default script |
 | Publish | Manual from maintainer machine after local tests |
 | Claude overlay | Already shipped as P3 slice; absorb into living canon separately; do not re-expand scope here |
 
@@ -66,11 +70,20 @@ Status stays a single marker (`refining` while authoring / `implementing` while 
 | Command | Role |
 | --- | --- |
 | `upgrade-skills` | Unchanged primary role: refresh Cursor + Claude managed overlays; idempotent `future_plans` skeleton / related ensure behavior; bump `skills_stamp`. Remains the frequent “updated the CLI package, refresh assets” command. |
-| `migrate` | Orchestrator for “bring this repo to current CLI”: (1) run `upgrade-skills` (fail → migrate fail); (2) contract/schema + missing required scaffold (create missing required files/templates from embedded defaults only when absent; structural INDEX↔contract gaps via existing ensure-style helpers); (3) supported `schema_version` adjustments only when CLI defines a safe path; else fail closed. Prefer ending with validate success or non-zero if still invalid. |
+| `migrate` | Orchestrator for “bring this repo to current CLI”. Requires an existing canon + parseable `CANON_CONTRACT.md` (otherwise fail closed — that path is `init`). Sequence: (1) reject unsupported `schema_version` (anything other than `1`) with a docs pointer; do not rewrite YAML; (2) fill **target-contract** gaps only (see below); (3) run public `upgrade-skills` (fail → migrate fail). Exit code is that of `upgrade-skills` / its trailing `validate`. Do not add a second validate pass. |
 
-Idempotent: second `migrate` on an already-current repo succeeds as no-op.
+**Step 2 — target-contract gaps only (not the CLI default kit):**
 
-Flags: at least `--root` parity with other commands; align with existing `--yes` / dry-run patterns where the CLI already has them — do not invent a large flag surface in v1.
+- Create missing template files the target contract already lists, from the matching embedded template. Never overwrite. If the contract names a template with no on-disk file and no embedded original, fail closed.
+- Create a missing **required** section file listed in the target contract, using that section’s named template (now present on disk or just restored). Never overwrite an existing file.
+- Add missing INDEX Sections **table rows** for contract sections that have no row (same idea as `ensure-future-plans` INDEX sync). Do not rewrite other INDEX prose. If `INDEX.md` itself is a missing required file, create it from its template first, then ensure the table rows.
+- Leave `future_plans` skeleton ensure to `upgrade-skills` (step 3); do not duplicate that helper in gap-fill.
+- Do **not** add sections, templates, or files that the target contract does not already require. Do not inject this repo’s extra sections (e.g. `CLI.md` / `SKILLS.md`) or otherwise reshape a custom contract toward `default-contract.ts`.
+- Do not rewrite section body prose, initiative files, or `DISCREPANCIES.md`.
+
+Idempotent: a second `migrate` on a repo that already matches its contract makes **no extra writes**. Exit code still follows `validate` (pre-existing heading/prose errors are not repaired).
+
+Flags: `--root` only in v1. Dry-run belongs to `scripts/release.sh`, not to `migrate`.
 
 ### Versioning
 
@@ -79,16 +92,19 @@ Flags: at least `--root` parity with other commands; align with existing `--yes`
 
 ### Release script
 
-`package.json` → `"release": "…/scripts/release.sh"` (or equivalent):
+`package.json` → `"release": "scripts/release.sh"`:
 
 1. `npm test`
 2. `npm run build`
 3. `doc-canon validate` in this repository (structural gate before publish)
-4. `npm pack` / inspect expectations (or pack dry verification)
-5. `npm publish` (with public access if required for the package name)
-6. Git tag / push **only** when explicitly requested (flag or separate documented step) so a release cannot accidentally push
+4. `npm pack --dry-run` and require `LICENSE`, `CHANGELOG`, and `README` in the tarball listing
+5. `npm publish` (with public access if required for the unscoped name `doc-canon`)
 
-`DRY_RUN=1` / `--dry-run`: run through pack, skip publish (and skip tag).
+Git tag / push is **not** in this script. Document a separate maintainer step after a successful publish so a release cannot accidentally push.
+
+`DRY_RUN=1` or `--dry-run`: run through pack, skip publish.
+
+Pack must include MIT `LICENSE` and `CHANGELOG` (npm already ships `README` / `LICENSE` when present; add `CHANGELOG` to `"files"` if needed).
 
 No GitHub Actions workflow is added for CI or release in this checkpoint.
 
@@ -102,15 +118,16 @@ No GitHub Actions workflow is added for CI or release in this checkpoint.
 ## Error handling
 
 - Any orchestrator step failure aborts `migrate` (no silent continuation).
-- Unsupported schema jump: non-zero exit, clear message pointing at docs; no partial destructive rewrite of contract/prose.
-- Malformed contract / missing canon root: same fail-closed posture as other commands.
+- `schema_version` other than `1`: non-zero exit **before** scaffold writes, message pointing at docs; no YAML rewrite and no partial contract/prose mutation.
+- Malformed contract / missing canon root: fail closed (same posture as `upgrade-skills`); do not run `init`.
 - Release script: non-zero if tests/build/publish fail; dry-run never calls publish.
 
 ## Testing
 
-- Fixture: missing scaffold → `migrate` creates required gaps; overlays refreshed; validate exit 0; second run idempotent.
+- Fixture: target contract already lists required sections; some required files/templates absent → `migrate` creates only those gaps; overlays refreshed; validate exit 0; second run makes no extra writes.
+- Fixture: target contract omits a default-kit section the CLI would create on `init` → `migrate` does **not** add it.
 - Existing section/initiative prose preserved.
-- Unsupported schema → fail closed, no corruption.
+- Unsupported `schema_version` → fail closed, no file corruption.
 - `upgrade-skills` regressions still pass when invoked alone and via migrate.
 - Release script dry-run smoke (no registry, no publish).
 - No network/npm registry required in unit tests for migrate.
@@ -120,7 +137,7 @@ No GitHub Actions workflow is added for CI or release in this checkpoint.
 1. Refine P3 via `canon-future-plan` to match this spec.
 2. Canon-first living updates for `migrate` + release/versioning/CI guidance as behavior is defined (spot sync may proceed; substantial contract/command surface → user go-ahead before large code if required by repo rules).
 3. Implement `migrate` + tests; wire CLI help.
-4. Package hygiene (LICENSE, CHANGELOG) + `scripts/release.sh`.
+4. Package hygiene (MIT `LICENSE`, `CHANGELOG`, `package.json` license field) + `scripts/release.sh`.
 5. README/guides + acceptance.
 6. Maintainer runs local tests and `npm run release` for first public `0.1.x`.
 7. Absorb Claude slice and, when checkpoint complete, absorb P3 into living canon.
@@ -130,7 +147,7 @@ Execution tracking (tasks/PRs) stays outside `future_plans/` (roadmap/issues/as-
 ## Done criteria
 
 - `doc-canon` published on npm at `0.1.x` and installable via `npx` / global.
-- `doc-canon migrate` documented, tested, and calls `upgrade-skills` then scaffold/contract step.
+- `doc-canon migrate` documented, tested, and fills target-contract gaps then calls `upgrade-skills`.
 - Soft versioning rule documented; prior P3 open questions closed as decided here.
 - Adopter CI guidance published (validate gate; check optional).
 - `npm run release` works locally with dry-run; real publish used for first release.
