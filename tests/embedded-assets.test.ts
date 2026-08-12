@@ -146,6 +146,10 @@ describe("managed agent assets", () => {
     assert.match(audit, /doc-canon report/);
     assert.match(audit, /kind.*paths|normalized.*kind/i);
     assert.match(audit, /cannot confirm|not reproduce|unreproduced|no match/i);
+    assert.match(audit, /open findings|status: open/i);
+    assert.match(audit, /stale_skipped/);
+    assert.match(audit, /full report|doc-canon report.*merge|merge.*doc-canon report/i);
+    assert.match(audit, /Scout|Expand|semantic/i);
   });
 
   it("requires explicit confirmation for contract changes", () => {
