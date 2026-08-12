@@ -26,6 +26,8 @@ it("rejects a missing contract before creating managed assets", async () => {
     assert.equal(existsSync(join(root, ".cursor", "skills")), false);
     assert.equal(existsSync(join(root, ".cursor", "rules")), false);
     assert.equal(existsSync(join(root, "AGENTS.md")), false);
+    assert.equal(existsSync(join(root, "CLAUDE.md")), false);
+    assert.equal(existsSync(join(root, ".claude")), false);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
@@ -104,6 +106,40 @@ it("refreshes managed assets and stamp without replacing canon prose", async () 
     assert.match(
       readFileSync(agentsPath, "utf8"),
       /For design and development, treat `docs\/canon\/`/,
+    );
+    assert.equal(
+      readFileSync(
+        join(root, ".claude", "skills", "canon-write", "SKILL.md"),
+        "utf8",
+      ),
+      readFileSync(
+        join(embeddedRoot(), "skills", "canon-write", "SKILL.md"),
+        "utf8",
+      ),
+    );
+    assert.match(
+      readFileSync(join(root, "CLAUDE.md"), "utf8"),
+      /Feature-change order \(canon-first\)/,
+    );
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+it("restores Claude overlay on upgrade for Cursor-only trees", async () => {
+  const root = mkdtempSync(join(tmpdir(), "doc-canon-upgrade-claude-"));
+  try {
+    assert.equal(await initCanon(root, { yes: true }), 0);
+    rmSync(join(root, ".claude"), { recursive: true, force: true });
+    rmSync(join(root, "CLAUDE.md"), { force: true });
+    assert.equal(await upgradeSkills(root), 0);
+    assert.equal(
+      existsSync(join(root, ".claude", "skills", "canon-write", "SKILL.md")),
+      true,
+    );
+    assert.match(
+      readFileSync(join(root, "CLAUDE.md"), "utf8"),
+      /# doc-canon context rule/,
     );
   } finally {
     rmSync(root, { recursive: true, force: true });
@@ -196,7 +232,7 @@ templates:
   }
 });
 
-for (const [name, malformedAgents] of [
+for (const [name, malformed] of [
   [
     "unmatched start marker",
     "Project instructions.\n\n<!-- doc-canon:start -->\nUser content.\n",
@@ -223,14 +259,43 @@ for (const [name, malformedAgents] of [
         "SKILL.md",
       );
       writeFileSync(skillPath, "user-visible stale skill\n");
-      writeFileSync(agentsPath, malformedAgents);
+      writeFileSync(agentsPath, malformed);
 
       await assert.rejects(
         upgradeSkills(root),
         /AGENTS\.md.*exactly one.*doc-canon:start.*doc-canon:end.*start.*before.*end/i,
       );
-      assert.equal(readFileSync(agentsPath, "utf8"), malformedAgents);
+      assert.equal(readFileSync(agentsPath, "utf8"), malformed);
       assert.equal(readFileSync(skillPath, "utf8"), "user-visible stale skill\n");
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it(`rejects ${name} without changing CLAUDE.md`, async () => {
+    const root = mkdtempSync(join(tmpdir(), "doc-canon-upgrade-claude-markers-"));
+    try {
+      assert.equal(await initCanon(root, { yes: true }), 0);
+      const claudePath = join(root, "CLAUDE.md");
+      const skillPath = join(
+        root,
+        ".claude",
+        "skills",
+        "canon-write",
+        "SKILL.md",
+      );
+      writeFileSync(skillPath, "user-visible stale claude skill\n");
+      writeFileSync(claudePath, malformed);
+
+      await assert.rejects(
+        upgradeSkills(root),
+        /CLAUDE\.md.*exactly one.*doc-canon:start.*doc-canon:end.*start.*before.*end/i,
+      );
+      assert.equal(readFileSync(claudePath, "utf8"), malformed);
+      assert.equal(
+        readFileSync(skillPath, "utf8"),
+        "user-visible stale claude skill\n",
+      );
     } finally {
       rmSync(root, { recursive: true, force: true });
     }

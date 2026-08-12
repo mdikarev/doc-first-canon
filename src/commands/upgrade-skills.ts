@@ -4,7 +4,7 @@ import { extractYamlBlock } from "../contract/parse.js";
 import { contractPath, resolveRoot } from "../paths.js";
 import { ensureFuturePlansSkeleton } from "../scaffold/ensure-future-plans.js";
 import {
-  assertAgentsMarkersWellFormed,
+  assertManagedMarkersWellFormed,
   copyManagedAssets,
 } from "../scaffold/copy-managed.js";
 import { SKILLS_STAMP } from "../version.js";
@@ -30,10 +30,12 @@ function upgradedContractMarkdown(root: string): string {
 
 function assertUpgradePreconditions(root: string): string {
   const updatedContract = upgradedContractMarkdown(root);
-  const agentsPath = path.join(root, "AGENTS.md");
-  if (fs.existsSync(agentsPath)) {
-    fs.accessSync(agentsPath, fs.constants.R_OK | fs.constants.W_OK);
-    assertAgentsMarkersWellFormed(fs.readFileSync(agentsPath, "utf8"));
+  for (const name of ["AGENTS.md", "CLAUDE.md"] as const) {
+    const filePath = path.join(root, name);
+    if (fs.existsSync(filePath)) {
+      fs.accessSync(filePath, fs.constants.R_OK | fs.constants.W_OK);
+      assertManagedMarkersWellFormed(fs.readFileSync(filePath, "utf8"), name);
+    }
   }
   return updatedContract;
 }

@@ -35,6 +35,7 @@ const SKILLS = [
   "canon-audit",
   "canon-write",
   "canon-contract",
+  "canon-future-plan",
 ] as const;
 
 it("initializes a valid canon and managed assets in an empty repository", async () => {
@@ -58,10 +59,19 @@ it("initializes a valid canon and managed assets in an empty repository", async 
         true,
         skill,
       );
+      assert.equal(
+        existsSync(join(root, ".claude", "skills", skill, "SKILL.md")),
+        true,
+        `claude ${skill}`,
+      );
     }
 
     assert.equal(existsSync(join(root, ".cursor", "rules", "doc-canon.mdc")), true);
     assert.match(readFileSync(join(root, "AGENTS.md"), "utf8"), /<!-- doc-canon:start -->/);
+    const claude = readFileSync(join(root, "CLAUDE.md"), "utf8");
+    assert.match(claude, /<!-- doc-canon:start -->/);
+    assert.match(claude, /# doc-canon context rule/);
+    assert.doesNotMatch(claude, /alwaysApply/);
     assert.match(readFileSync(join(root, ".gitignore"), "utf8"), /^\.doc-canon\/$/m);
     assert.match(
       readFileSync(join(root, "docs", "canon", "INDEX.md"), "utf8"),
