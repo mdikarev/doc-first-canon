@@ -40,7 +40,7 @@ MVP package `doc-canon@0.1.0` (Node ≥20, ESM). Entry: `bin/doc-canon.js` → c
 
 Artifacts: `.doc-canon/inventory.json`, `.doc-canon/report.json`, `.doc-canon/index-manifest.json`, `.doc-canon/bm25-index.json` (may be gitignored in target repos).
 
-`search` fails with exit ≠0 for an empty or whitespace-only query and for a missing or corrupt index; index failures include a hint to run `doc-canon index`. A stale index is served with an `index_stale` warning on stderr and exit 0. Zero hits also exit 0. `search` never auto-reindexes.
+`search` fails with exit ≠0 for an empty or whitespace-only query and for a missing or corrupt index; index failures include a hint to run `doc-canon index`. A stale index is served with exit 0 and an `index_stale` signal: human mode prints a warning on stderr; `--json` includes `warnings` (and `freshness`) in the Pack on stdout with no stderr warning. Zero hits also exit 0. `search` never auto-reindexes.
 
 ## Dependencies
 

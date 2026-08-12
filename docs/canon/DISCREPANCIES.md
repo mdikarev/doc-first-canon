@@ -18,6 +18,14 @@ Never silently pick a side. Never edit application code from canon skills.
 
 ## Resolved
 
+### D-007: CLI.md stale-index warning omits `--json` pack signal
+- **status:** resolved
+- **decision:** docs_stale
+- **canon_paths:** `docs/canon/CLI.md`
+- **code_paths:** `src/commands/search.ts`
+- **evidence:** User chose docs_stale. Clarified that human mode prints `index_stale` on stderr while `--json` puts the signal in Pack `warnings` / `freshness` only; `doc-canon validate` succeeded in the same session.
+- **finding_ids:** `F-007`
+
 ### D-006: GLOSSARY Working set discovery lags search-first Scout
 - **status:** resolved
 - **decision:** docs_stale
