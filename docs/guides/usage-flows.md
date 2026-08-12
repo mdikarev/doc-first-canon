@@ -82,13 +82,14 @@ doc-canon validate
 3. If the change is large (multi-module, non-obvious design, or handoff), write or sync a project-local design/plan from the updated canon; otherwise skip.
 4. After a **substantial** canon change, wait for explicit user go-ahead before coding; after spot sync, proceed.
 5. Implement application code and tests against the canon (and optional plan).
-6. If docs↔code drift appears, use **`canon-audit`** / `DISCREPANCIES.md` — do not silently pick a side.
+6. Close with **`canon-audit`** on the affected topic (sibling sections and docs↔code); do not silently pick a side — use `DISCREPANCIES.md` when needed.
 
 ### Common mistakes
 
 - Coding the feature first and treating canon as optional cleanup.
 - Editing `docs/canon/**` from a coding agent instead of invoking `canon-write`.
 - Skipping the wait-gate after substantial SoT changes.
+- Skipping the closing **`canon-audit`** after feature code (spot write is not a full-canon sync).
 
 ## Day-to-day
 

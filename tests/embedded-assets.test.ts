@@ -114,6 +114,8 @@ describe("managed agent assets", () => {
       rule,
       /(?:do not|never|must not).*(?:edit|modify).*docs\/canon|invoke.*canon-write|through.*canon-write/i,
     );
+    assert.match(rule, /canon-audit/i);
+    assert.match(rule, /clos(?:e|ing).*canon-audit|canon-audit.*clos/i);
 
     const block = readEmbedded("agents", "AGENTS.block.md");
     assert.match(block, /canon-write/i);
@@ -121,6 +123,7 @@ describe("managed agent assets", () => {
       block,
       /canon.*(?:first|before).*code|before.*(?:application )?code|then.*code/i,
     );
+    assert.match(block, /close with `?canon-audit`?/i);
 
     const write = readEmbedded("skills", "canon-write", "SKILL.md");
     assert.match(

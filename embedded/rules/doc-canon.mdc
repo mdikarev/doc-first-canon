@@ -17,8 +17,9 @@ For **new or changed functionality** (behavior / public contract), do **not** st
 2. Optionally write or sync a **project-local** design/plan artifact when the change is large (multi-module, non-obvious design, or handoff). Do not assume a fixed path such as `docs/superpowers/specs/`.
 3. After a **substantial** canon change, wait for explicit user go-ahead before coding. After a spot section sync, you may proceed.
 4. Implement application code against the updated canon (and optional plan).
+5. Close with **`canon-audit`** on the affected topic (spot `canon-write` does not guarantee sibling-section sync; the closing audit catches that and docs↔code drift).
 
-**Exceptions** (skip canon-first): pure bugfix with intended behavior unchanged; `code_stale` (canon already correct); non-behavioral edits (typos, tests, refactor without contract change).
+**Exceptions** (skip canon-first, including the closing audit): pure bugfix with intended behavior unchanged; `code_stale` (canon already correct); non-behavioral edits (typos, tests, refactor without contract change).
 
 Post-hoc sync (`canon-write` / `check` / `canon-audit` after drift) remains valid and does not replace this order for intentional feature work. Coding agents follow working-set discipline without a mandatory chat ritual of listing the set every turn.
 

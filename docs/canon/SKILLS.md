@@ -16,7 +16,7 @@ Five skills ship in `embedded/skills/` and are copied into target repos on `init
 
 Agents that use the canon follow a shared dual-audience recipe: try `doc-canon search` → Scout a working-set manifest → Expand gate (`sufficient` / `need more`) → Execute with targeted deep reads. Search failure falls back to progressive disclosure from `INDEX.md`. **Quality over thrift:** expand when doubtful; never silently under-read or invent facts to save tokens.
 
-Coding agents follow feature-change order for new or changed behavior and public contracts: invoke `canon-write` first, then proceed to application code only after the canon-first flow in the pointer rule is satisfied.
+Coding agents follow feature-change order for new or changed behavior and public contracts: invoke `canon-write` first, proceed to application code only after the canon-first flow in the pointer rule is satisfied, then close the cycle with `canon-audit` (spot write does not replace a full-topic semantic pass).
 
 ## Responsibilities
 
@@ -30,7 +30,7 @@ Coding agents follow feature-change order for new or changed behavior and public
 
 **Absorb split:** once an initiative ships, `canon-write` merges outcomes into the relevant living sections; `canon-future-plan` then sets the initiative's status to `absorbed` and updates `future_plans/INDEX.md`.
 
-Pointer rule / `AGENTS.md`: always-on context priority — try canon search first, then fall back to `docs/canon/INDEX.md` when search fails closed; build a small working set and expand if unsure before deep reads (no mandatory chat ritual); for new/changed behavior use **canon-first** (`canon-write` → optional project-local spec/plan → code; substantial canon waits for user go-ahead; coding agents do not edit canon themselves); escalate docs↔code divergence; do not silently pick a side.
+Pointer rule / `AGENTS.md`: always-on context priority — try canon search first, then fall back to `docs/canon/INDEX.md` when search fails closed; build a small working set and expand if unsure before deep reads (no mandatory chat ritual); for new/changed behavior use **canon-first** (`canon-write` → optional project-local spec/plan → code → closing `canon-audit`; substantial canon waits for user go-ahead; coding agents do not edit canon themselves); escalate docs↔code divergence; do not silently pick a side.
 
 ### Scout retrieval protocol
 

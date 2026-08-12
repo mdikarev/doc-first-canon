@@ -32,7 +32,7 @@ Two layers: a deterministic **CLI** (`doc-canon`) owns schema, scaffold, structu
 ## Key flows
 
 1. **Bootstrap** — `init` scaffolds, including a required `future_plans/INDEX.md`; `canon-bootstrap` interviews (empty) or extract-then-freeze (non-empty); then `validate`. After success, only `docs/canon/` is SoT.
-2. **Feature change** — intentional new/changed behavior: coding agents invoke `canon-write` first (they do not edit `docs/canon/**` themselves), optionally sync/write a project-local design/plan when large, wait after substantial canon edits for user go-ahead, then implement application code. Distinct from post-hoc everyday sync and from `code_stale` coding tasks.
+2. **Feature change** — intentional new/changed behavior: coding agents invoke `canon-write` first (they do not edit `docs/canon/**` themselves), optionally sync/write a project-local design/plan when large, wait after substantial canon edits for user go-ahead, implement application code, then close with `canon-audit` (sibling-section and docs↔code drift that spot write may miss). Distinct from post-hoc everyday sync and from `code_stale` coding tasks.
 3. **Validate** — structural fail-closed checks; need not write `report.json`.
 4. **Check** — validate + inventory + CLI findings in `.doc-canon/report.json`; does not edit canon prose or `DISCREPANCIES.md`.
 5. **Audit / resolve** — `canon-audit` semantic pass + user decision; apply order: successful apply → set `decision` → Open→Resolved when appropriate.

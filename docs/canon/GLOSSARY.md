@@ -49,7 +49,7 @@ Phase that builds a working-set manifest (`path`, `role`, short why-in-set stub)
 Check that the working set is **sufficient** or **need more** before deep reads. Doubt → expand. Managed canon skills briefly show the set and verdict in chat; coding agents apply the same discipline without a mandatory chat ritual.
 
 ### Feature-change order (canon-first)
-For intentional new or changed behavior: update living canon via `canon-write` first, optionally write/sync a project-local design/plan when the change is large, wait for user go-ahead after substantial canon edits, then implement application code. Exceptions: pure bugfix with intended behavior unchanged, `code_stale`, non-behavioral edits. Distinct from post-hoc everyday sync.
+For intentional new or changed behavior: update living canon via `canon-write` first, optionally write/sync a project-local design/plan when the change is large, wait for user go-ahead after substantial canon edits, implement application code, then close with `canon-audit` (semantic pass on the affected topic until open decisions are cleared or unreproduced drift is marked stale). Spot `canon-write` does not guarantee full-canon sibling sync; the closing audit catches that gap. Exceptions: pure bugfix with intended behavior unchanged, `code_stale`, non-behavioral edits. Distinct from post-hoc everyday sync.
 
 ### skills_stamp
 Version marker in the contract YAML recording which managed skills stamp was last applied; validate fails if skills are too old relative to CLI expectations.

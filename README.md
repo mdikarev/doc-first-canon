@@ -2,7 +2,7 @@
 
 [English](#doc-canon) · [Русский](#doc-canon-ru)
 
-Deterministic CLI for agent documentation canon: scaffold, validate, and report on structured docs under `docs/canon` with managed skills and rules.
+Deterministic CLI for agent documentation canon: scaffold, validate, report, index, and search structured docs under `docs/canon` with managed skills and rules.
 
 ## Why
 
@@ -49,14 +49,14 @@ Short recipes. Full walkthroughs: [`docs/guides/usage-flows.md`](docs/guides/usa
 
 ### Day-to-day
 
-1. After meaningful code or canon edits, run `canon-write` to sync affected sections
+1. After meaningful code or canon edits, run `canon-write` to sync affected sections (skills reindex with `doc-canon index` after substantive canon writes)
 2. `doc-canon check` — inventory + `.doc-canon/report.json`
 3. On docs↔code drift, run `canon-audit` (`docs_stale` or `code_stale`)
-4. Optionally `doc-canon report` to print the last report
+4. Optionally `doc-canon report` to print the last report; agents/skills use `doc-canon search` for a bounded working set
 
 ## Usage
 
-All commands accept `--root <path>` (default: current directory) to target a repo root.
+All commands accept `--root <path>` (default: current directory) to target a repo root. Behavior SoT: [`docs/canon/CLI.md`](docs/canon/CLI.md).
 
 ### init
 
@@ -98,16 +98,39 @@ doc-canon report --root /path/to/repo
 
 ### upgrade-skills
 
-Refresh managed skills, rules, and the AGENTS block without touching canon content.
+Refresh managed skills, rules, and the AGENTS block without touching canon content. Also migrates existing repos onto the required `future_plans/INDEX.md` skeleton when missing.
 
 ```bash
 doc-canon upgrade-skills
 doc-canon upgrade-skills --root /path/to/repo
 ```
 
+### index
+
+Build or refresh the local BM25 index over `docs/canon/**/*.md` (writes `.doc-canon/index-manifest.json` and `.doc-canon/bm25-index.json`). One-shot exits non-zero if a watch process is already running.
+
+```bash
+doc-canon index
+doc-canon index --root /path/to/repo
+doc-canon index --watch                 # poll and keep the index in sync (default 2000 ms)
+doc-canon index --watch --interval 500  # custom poll interval (ms, min 200)
+doc-canon index --stop                  # stop a running --watch process
+```
+
+### search
+
+Search the existing BM25 index and print a bounded context pack (ranked paths, scores, live-file snippets). Does not auto-reindex. Missing/corrupt index → exit ≠0 with a hint to run `doc-canon index`. Stale index → exit 0 with an `index_stale` warning (stderr in human mode; Pack `warnings` / `freshness` with `--json`).
+
+```bash
+doc-canon search "CLI commands"
+doc-canon search "working set" --json
+doc-canon search "BM25" --max-hits 5 --snippet-lines 6
+doc-canon search "topic" --root /path/to/repo
+```
+
 ## Agent skills
 
-Managed skills (`canon-bootstrap`, `canon-write`, `canon-audit`, `canon-contract`) invoke `doc-canon` subprocesses. **`doc-canon` must be on PATH** (e.g. via `npm link`, global install, or CI `npm install -g .`).
+Managed skills (`canon-bootstrap`, `canon-write`, `canon-audit`, `canon-contract`, `canon-future-plan`) invoke `doc-canon` subprocesses. **`doc-canon` must be on PATH** (e.g. via `npm link`, global install, or CI `npm install -g .`).
 
 Claude Code–specific packaging is planned for a later release; MVP targets Cursor skills and rules.
 
@@ -132,7 +155,7 @@ node bin/doc-canon.js --help
 
 [English](#doc-canon) · [Русский](#doc-canon-ru)
 
-Детерминированный CLI для канона агентской документации: создание каркаса, валидация и отчёты по структурированным документам в `docs/canon` с управляемыми skills и rules.
+Детерминированный CLI для канона агентской документации: создание каркаса, валидация, отчёты, индекс и поиск по структурированным документам в `docs/canon` с управляемыми skills и rules.
 
 ## Зачем
 
@@ -179,14 +202,14 @@ npm link   # опционально: добавить doc-canon в PATH для �
 
 ### Повседневный цикл
 
-1. После заметных правок кода или канона запустите `canon-write`, чтобы синхронизировать затронутые секции
+1. После заметных правок кода или канона запустите `canon-write`, чтобы синхронизировать затронутые секции (после substantive-правок канона skills делают `doc-canon index`)
 2. `doc-canon check` — inventory + `.doc-canon/report.json`
 3. При drift docs↔code запустите `canon-audit` (`docs_stale` или `code_stale`)
-4. Опционально `doc-canon report`, чтобы напечатать последний отчёт
+4. Опционально `doc-canon report`, чтобы напечатать последний отчёт; агенты/skills используют `doc-canon search` для ограниченного working set
 
 ## Использование
 
-Все команды принимают `--root <path>` (по умолчанию: текущая директория) для указания корня репозитория.
+Все команды принимают `--root <path>` (по умолчанию: текущая директория) для указания корня репозитория. SoT по поведению: [`docs/canon/CLI.md`](docs/canon/CLI.md).
 
 ### init
 
@@ -228,16 +251,39 @@ doc-canon report --root /path/to/repo
 
 ### upgrade-skills
 
-Обновление управляемых skills, rules и блока AGENTS без изменения содержимого канона.
+Обновление управляемых skills, rules и блока AGENTS без изменения содержимого канона. Также мигрирует существующие репозитории на обязательный каркас `future_plans/INDEX.md`, если его ещё нет.
 
 ```bash
 doc-canon upgrade-skills
 doc-canon upgrade-skills --root /path/to/repo
 ```
 
+### index
+
+Сборка или обновление локального BM25-индекса по `docs/canon/**/*.md` (пишет `.doc-canon/index-manifest.json` и `.doc-canon/bm25-index.json`). One-shot завершается с ненулевым кодом, если уже запущен watch.
+
+```bash
+doc-canon index
+doc-canon index --root /path/to/repo
+doc-canon index --watch                 # опрос и поддержание индекса (по умолчанию 2000 мс)
+doc-canon index --watch --interval 500  # свой интервал опроса (мс, мин. 200)
+doc-canon index --stop                  # остановить запущенный --watch
+```
+
+### search
+
+Поиск по существующему BM25-индексу и печать ограниченного context pack (ранжированные пути, scores, сниппеты из живых файлов). Не делает auto-reindex. Нет/битый индекс → exit ≠0 с подсказкой `doc-canon index`. Устаревший индекс → exit 0 с сигналом `index_stale` (stderr в human-режиме; Pack `warnings` / `freshness` при `--json`).
+
+```bash
+doc-canon search "CLI commands"
+doc-canon search "working set" --json
+doc-canon search "BM25" --max-hits 5 --snippet-lines 6
+doc-canon search "topic" --root /path/to/repo
+```
+
 ## Agent skills
 
-Управляемые skills (`canon-bootstrap`, `canon-write`, `canon-audit`, `canon-contract`) вызывают subprocess `doc-canon`. **`doc-canon` должен быть в PATH** (например, через `npm link`, глобальную установку или `npm install -g .` в CI).
+Управляемые skills (`canon-bootstrap`, `canon-write`, `canon-audit`, `canon-contract`, `canon-future-plan`) вызывают subprocess `doc-canon`. **`doc-canon` должен быть в PATH** (например, через `npm link`, глобальную установку или `npm install -g .` в CI).
 
 Отдельная упаковка для Claude Code планируется в следующем релизе; MVP ориентирован на Cursor skills и rules.
 
