@@ -6,13 +6,13 @@ Own the agent layer: interview, extract-then-freeze bootstrap, canon authorship,
 
 ## Scope
 
-**Covers:** managed Cursor skills `canon-bootstrap`, `canon-write`, `canon-audit`, `canon-contract`, `canon-future-plan`; guidance in the pointer rule and `AGENTS.md` managed block.
+**Covers:** managed skills `canon-bootstrap`, `canon-write`, `canon-audit`, `canon-contract`, `canon-future-plan` (identical trees under `.cursor/skills/` and `.claude/skills/`); Cursor pointer rule; short `AGENTS.md` managed block; full pointer-rule body in `CLAUDE.md` (Claude Code always-on; Claude does not load `.cursor/rules`).
 
 **Excludes:** inventing required files/section types/templates outside the contract; editing application code; replacing CLI structural validation.
 
 ## Current state
 
-Five skills ship in `embedded/skills/` and are copied into target repos on `init` / `upgrade-skills`. `canon-future-plan` authors directional initiatives under `future_plans/`; validate enforces an INDEX-driven zone for that folder (see `ARCHITECTURE.md`, `CLI.md`). Acceptance scenarios live in `docs/acceptance/skill-scenarios.md` (import source; not SoT). Automated skill execution tests are out of MVP scope.
+Five skills ship in `embedded/skills/` and are dual-written into `.cursor/skills/` and `.claude/skills/` on `init` / `upgrade-skills`. `canon-future-plan` authors directional initiatives under `future_plans/`; validate enforces an INDEX-driven zone for that folder (see `ARCHITECTURE.md`, `CLI.md`). Acceptance scenarios live in `docs/acceptance/skill-scenarios.md` (import source; not SoT). Automated skill execution tests are out of MVP scope.
 
 Agents that use the canon follow a shared dual-audience recipe: try `doc-canon search` → Scout a working-set manifest → Expand gate (`sufficient` / `need more`) → Execute with targeted deep reads. Search failure falls back to progressive disclosure from `INDEX.md`. **Quality over thrift:** expand when doubtful; never silently under-read or invent facts to save tokens.
 
@@ -30,7 +30,7 @@ Coding agents follow feature-change order for new or changed behavior and public
 
 **Absorb split:** once an initiative ships, `canon-write` merges outcomes into the relevant living sections; `canon-future-plan` then sets the initiative's status to `absorbed` and updates `future_plans/INDEX.md`.
 
-Pointer rule / `AGENTS.md`: always-on context priority — try canon search first, then fall back to `docs/canon/INDEX.md` when search fails closed; build a small working set and expand if unsure before deep reads (no mandatory chat ritual); for new/changed behavior use **canon-first** (`canon-write` → optional project-local spec/plan → code → closing `canon-audit`; substantial canon waits for user go-ahead; coding agents do not edit canon themselves); escalate docs↔code divergence; do not silently pick a side.
+Pointer rule / `AGENTS.md` / `CLAUDE.md`: always-on context priority — try canon search first, then fall back to `docs/canon/INDEX.md` when search fails closed; build a small working set and expand if unsure before deep reads (no mandatory chat ritual); for new/changed behavior use **canon-first** (`canon-write` → optional project-local spec/plan → code → closing `canon-audit`; substantial canon waits for user go-ahead; coding agents do not edit canon themselves); escalate docs↔code divergence; do not silently pick a side. Cursor loads the `.mdc` pointer rule; Claude Code loads the same policy body from `CLAUDE.md` (not `.cursor/rules`).
 
 ### Scout retrieval protocol
 
@@ -53,7 +53,7 @@ After any successful substantive write to `docs/canon/**`, the responsible manag
 
 - Installed `doc-canon` CLI on PATH
 - Local `CANON_CONTRACT.md` and templates
-- Cursor (MVP); Claude Code packaging deferred
+- Cursor and Claude Code overlays via dual-write on `init` / `upgrade-skills` (identical skill trees; Cursor `.mdc` + short `AGENTS.md`; full rule body in `CLAUDE.md`)
 
 ## Invariants
 
@@ -66,7 +66,7 @@ After any successful substantive write to `docs/canon/**`, the responsible manag
 
 ## Open questions
 
-- Timing and packaging for Claude Code distribution remain Future.
+- Claude Code marketplace / plugin packaging remains Future; dual-write overlay is the shipped packaging model.
 
 ## Related canon
 

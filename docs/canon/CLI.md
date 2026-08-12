@@ -16,10 +16,10 @@ MVP package `doc-canon@0.1.0` (Node ≥20, ESM). Entry: `bin/doc-canon.js` → c
 
 ## Responsibilities
 
-- Materialize default canon + managed Cursor assets on `init`, including a required `future_plans/INDEX.md` and its templates
+- Materialize default canon + managed Cursor and Claude Code overlays on `init`, including a required `future_plans/INDEX.md` and its templates: identical skill trees under `.cursor/skills/` and `.claude/skills/`, Cursor pointer rule (`.cursor/rules/doc-canon.mdc`), short managed block in `AGENTS.md`, and full pointer-rule body (YAML frontmatter stripped) in `CLAUDE.md`
 - Fail closed on invalid contract YAML, incompatible `schema_version`, missing required files/headings, INDEX≠contract, too-old `skills_stamp`
 - Refresh inventory and `source: cli` findings on `check` while preserving `source: skill`
-- Refresh managed skills/rules/AGENTS block on `upgrade-skills` without wiping canon document content
+- Refresh managed skills/rules/`AGENTS.md`/`CLAUDE.md` overlays on `upgrade-skills` without wiping canon document content
 - On `upgrade-skills`, idempotently migrate existing repos onto the `future_plans/INDEX.md` skeleton (contract section + templates entries, INDEX table row, index file) without overwriting existing initiative prose or templates, and bump `skills_stamp`
 - On existing canon, `init` preserves canon prose; skills refresh only with `--force-skills` / upgrade path
 - Validate `future_plans/*.md` (except `INDEX.md`) via an INDEX-driven zone instead of per-file contract rows: exempt from the orphan check; each file must have a `future_plans/INDEX.md` Initiatives row; each must carry required `FUTURE_PLAN` headings
@@ -30,11 +30,11 @@ MVP package `doc-canon@0.1.0` (Node ≥20, ESM). Entry: `bin/doc-canon.js` → c
 
 | Command | Behavior |
 | --- | --- |
-| `init` | Scaffold `docs/canon/`, templates, default contract (including required `future_plans/INDEX.md`), skills, pointer rule, AGENTS block; `--yes`, `--force-skills`, `--root` |
-| `validate` | Schema + structure; exit ≠0 on errors; need not write report |
+| `init` | Scaffold `docs/canon/`, templates, default contract (including required `future_plans/INDEX.md`), dual skill trees (`.cursor` + `.claude`), Cursor pointer rule, short `AGENTS.md` block, full-body `CLAUDE.md`; `--yes`, `--force-skills`, `--root` |
+| `validate` | Schema + structure; exit ≠0 on errors; need not write report; does not require presence of IDE overlay paths on disk (stamp-only for managed-asset currency) |
 | `check` | validate + inventory + merge CLI findings into `.doc-canon/report.json` |
 | `report` | Print last report.json to stdout (read-only) |
-| `upgrade-skills` | Refresh managed assets from installed package; idempotently ensure `future_plans/INDEX.md` skeleton on pre-existing canons; bump `skills_stamp` |
+| `upgrade-skills` | Refresh Cursor + Claude managed overlays from installed package; idempotently ensure `future_plans/INDEX.md` skeleton on pre-existing canons; bump `skills_stamp` |
 | `index` | Build/update a local BM25 index for `docs/canon/**/*.md`; one-shot exits ≠0 if a watch is running; `--watch` polls (default 2000 ms, `--interval <ms>`, min 200) and keeps artifacts in sync; `--stop` stops a running watch via its pid file; `--root` |
 | `search <query>` | Search the existing index and print a ranked context pack; human output on stdout; `--json`; `--max-hits <N>` (default 10); `--snippet-lines <N>` (default 4); `--root <path>` |
 
@@ -58,7 +58,7 @@ Artifacts: `.doc-canon/inventory.json`, `.doc-canon/report.json`, `.doc-canon/in
 
 ## Open questions
 
-- None for MVP freeze; Claude Code overlay deferred.
+- None for MVP freeze; Claude Code marketplace / plugin packaging remains out of scope (dual-write overlay is in scope).
 
 ## Related canon
 

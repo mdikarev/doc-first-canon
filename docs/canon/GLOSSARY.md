@@ -37,7 +37,7 @@ User decision that application code is wrong; skill writes an Open coding task a
 Non-empty bootstrap: inventory and legacy docs are import sources; agreed facts are written into canon templates; after validate, only `docs/canon/` is SoT.
 
 ### Managed assets
-Skills, pointer rule, and `AGENTS.md` block copied/refreshed by `init` / `upgrade-skills` from the installed CLI package.
+Skills (identical trees under `.cursor/skills/` and `.claude/skills/`), Cursor pointer rule (`.cursor/rules/doc-canon.mdc`), short `AGENTS.md` managed block, and full pointer-rule body in `CLAUDE.md` (YAML frontmatter stripped), copied/refreshed by `init` / `upgrade-skills` from the installed CLI package.
 
 ### Working set
 The small list of canon/artifact paths an agent intends to use for the current task. Discover via `doc-canon search` first (pack paths and snippet stubs); fall back to INDEX (and CLI inventory/report when needed) when search fails closed. Build the set before deep-reading file bodies.
