@@ -14,9 +14,25 @@ Never silently pick a side. Never edit application code from canon skills.
 
 ## Open
 
-<!-- No open discrepancies at freeze time. -->
+<!-- No open discrepancies. -->
 
 ## Resolved
+
+### D-006: GLOSSARY Working set discovery lags search-first Scout
+- **status:** resolved
+- **decision:** docs_stale
+- **canon_paths:** `docs/canon/GLOSSARY.md`, `docs/canon/SKILLS.md`, `docs/canon/ARCHITECTURE.md`
+- **code_paths:** (docs↔docs; retrieval behavior also in `src/commands/search.ts`, `src/search/search.ts`)
+- **evidence:** User chose docs_stale. Updated `GLOSSARY.md` Working set to try-search-first with INDEX fallback, matching `SKILLS.md` / `ARCHITECTURE.md`; `doc-canon validate` succeeded in the same session.
+- **finding_ids:** `F-006`
+
+### D-005: ARCHITECTURE CLI commands bullet omits shipped `search`
+- **status:** resolved
+- **decision:** docs_stale
+- **canon_paths:** `docs/canon/ARCHITECTURE.md`
+- **code_paths:** `src/cli.ts`, `src/commands/search.ts`
+- **evidence:** User chose docs_stale. Added `search` to the Building blocks CLI commands bullet; `doc-canon validate` succeeded in the same session.
+- **finding_ids:** `F-005`
 
 ### D-004: P0b future_plans status lags absorbed BM25 index
 - **status:** resolved

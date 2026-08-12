@@ -40,7 +40,7 @@ Non-empty bootstrap: inventory and legacy docs are import sources; agreed facts 
 Skills, pointer rule, and `AGENTS.md` block copied/refreshed by `init` / `upgrade-skills` from the installed CLI package.
 
 ### Working set
-The small list of canon/artifact paths an agent intends to use for the current task, discovered via INDEX (and CLI inventory/report when needed) before deep-reading file bodies.
+The small list of canon/artifact paths an agent intends to use for the current task. Discover via `doc-canon search` first (pack paths and snippet stubs); fall back to INDEX (and CLI inventory/report when needed) when search fails closed. Build the set before deep-reading file bodies.
 
 ### Scout
 Phase that builds a working-set manifest (`path`, `role`, short why-in-set stub) without loading full file bodies or inventing structure.
