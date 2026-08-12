@@ -22,6 +22,7 @@ describe("doc-canon cli commands", () => {
       "check",
       "report",
       "index",
+      "search",
     ]) {
       assert.match(r.stdout, new RegExp(`\\b${cmd}\\b`), `missing ${cmd}`);
     }
@@ -35,6 +36,7 @@ describe("doc-canon cli commands", () => {
       "check",
       "report",
       "index",
+      "search",
     ]) {
       const r = spawnSync("node", [bin, cmd, "--help"], {
         cwd: root,

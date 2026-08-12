@@ -81,5 +81,27 @@ program
       process.exitCode = await indexCanon(opts.root, opts);
     },
   );
+program
+  .command("search")
+  .description("Search canon BM25 index and emit a bounded context pack")
+  .argument("<query>", "search query")
+  .option("--root <path>", "target repo root", ".")
+  .option("--json", "emit Pack JSON on stdout")
+  .option("--max-hits <n>", "max ranked documents", "10")
+  .option("--snippet-lines <n>", "lines per snippet window", "4")
+  .action(
+    async (
+      query: string,
+      opts: {
+        root: string;
+        json?: boolean;
+        maxHits?: string;
+        snippetLines?: string;
+      },
+    ) => {
+      const { searchCanonCli } = await import("./commands/search.js");
+      process.exitCode = await searchCanonCli(opts.root, query, opts);
+    },
+  );
 
 await program.parseAsync();
