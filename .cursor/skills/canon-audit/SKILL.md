@@ -19,7 +19,7 @@ description: Audit canon semantics, resolve divergence, and maintain discrepancy
 3. **Try search first:** run `doc-canon search "<topic>"` from user intent and seed the working set from pack paths and snippet stubs. If search fails closed, hint `doc-canon index` and fall back to INDEX-first Scout. If `index_stale`, surface the warning and continue; Expand when thin.
 4. **Scout:** from search results (or `INDEX.md` fallback), contract, fresh inventory/report, build a working-set manifest (`path`, `role`, short free-form `stub`). Include likely evidence paths for claims you will make. Do not preload every markdown file.
 5. **Expand gate:** briefly show the working set (paths + stubs) and verdict **sufficient** or **need more** (which paths, why). Doubt → expand until claims can be evidence-backed. Free-form brevity; multiple expands are fine; silent under-read is not.
-6. Only after **sufficient**, deep-read the approved set (inventory, report, canon, and code evidence paths). Do not rely on model memory.
+6. Only after **sufficient**, deep-read the approved set (inventory, report — apply Open findings for LLM context, canon, and code evidence paths). Do not rely on model memory.
 7. Perform the semantic checks:
    - coverage of required contract paths and INDEX entries;
    - orphans, while recognizing the CLI already checks them;
