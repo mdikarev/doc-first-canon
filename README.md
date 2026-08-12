@@ -60,7 +60,7 @@ All commands accept `--root <path>` (default: current directory) to target a rep
 
 ### init
 
-Scaffold `docs/canon/`, mandatory templates, default contract, and managed Cursor skills/rules/AGENTS block.
+Scaffold `docs/canon/`, mandatory templates, default contract, and managed Cursor + Claude overlays (`.cursor/skills`, `.claude/skills`, `.cursor/rules/doc-canon.mdc`, short `AGENTS.md` block, full-body `CLAUDE.md`).
 
 ```bash
 doc-canon init
@@ -98,7 +98,7 @@ doc-canon report --root /path/to/repo
 
 ### upgrade-skills
 
-Refresh managed skills, rules, and the AGENTS block without touching canon content. Also migrates existing repos onto the required `future_plans/INDEX.md` skeleton when missing.
+Refresh managed skills, Cursor rule, `AGENTS.md`, and `CLAUDE.md` overlays without touching canon content. Also migrates existing repos onto the required `future_plans/INDEX.md` skeleton when missing.
 
 ```bash
 doc-canon upgrade-skills
@@ -132,7 +132,7 @@ doc-canon search "topic" --root /path/to/repo
 
 Managed skills (`canon-bootstrap`, `canon-write`, `canon-audit`, `canon-contract`, `canon-future-plan`) invoke `doc-canon` subprocesses. **`doc-canon` must be on PATH** (e.g. via `npm link`, global install, or CI `npm install -g .`).
 
-Claude Code–specific packaging is planned for a later release; MVP targets Cursor skills and rules.
+`init` / `upgrade-skills` install identical skill trees under `.cursor/skills/` and `.claude/skills/`. Cursor always-on guidance is `.cursor/rules/doc-canon.mdc` plus the short `AGENTS.md` block; Claude Code uses full pointer-rule body in `CLAUDE.md` and does **not** load `.cursor/rules/`.
 
 ## Spec and acceptance
 
@@ -213,7 +213,7 @@ npm link   # опционально: добавить doc-canon в PATH для �
 
 ### init
 
-Создаёт каркас `docs/canon/`, обязательные шаблоны, контракт по умолчанию и управляемые Cursor skills/rules/блок AGENTS.
+Создаёт каркас `docs/canon/`, обязательные шаблоны, контракт по умолчанию и управляемые оверлеи Cursor + Claude (`.cursor/skills`, `.claude/skills`, `.cursor/rules/doc-canon.mdc`, короткий блок `AGENTS.md`, полный body в `CLAUDE.md`).
 
 ```bash
 doc-canon init
@@ -251,7 +251,7 @@ doc-canon report --root /path/to/repo
 
 ### upgrade-skills
 
-Обновление управляемых skills, rules и блока AGENTS без изменения содержимого канона. Также мигрирует существующие репозитории на обязательный каркас `future_plans/INDEX.md`, если его ещё нет.
+Обновление управляемых skills, Cursor rule, `AGENTS.md` и `CLAUDE.md` без изменения содержимого канона. Также мигрирует существующие репозитории на обязательный каркас `future_plans/INDEX.md`, если его ещё нет.
 
 ```bash
 doc-canon upgrade-skills
@@ -285,7 +285,7 @@ doc-canon search "topic" --root /path/to/repo
 
 Управляемые skills (`canon-bootstrap`, `canon-write`, `canon-audit`, `canon-contract`, `canon-future-plan`) вызывают subprocess `doc-canon`. **`doc-canon` должен быть в PATH** (например, через `npm link`, глобальную установку или `npm install -g .` в CI).
 
-Отдельная упаковка для Claude Code планируется в следующем релизе; MVP ориентирован на Cursor skills и rules.
+`init` / `upgrade-skills` ставят одинаковые деревья skills в `.cursor/skills/` и `.claude/skills/`. Always-on для Cursor — `.cursor/rules/doc-canon.mdc` и короткий блок `AGENTS.md`; Claude Code читает полный body pointer-rule из `CLAUDE.md` и **не** загружает `.cursor/rules/`.
 
 ## Спецификация и acceptance
 

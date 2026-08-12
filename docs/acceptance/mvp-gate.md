@@ -14,8 +14,9 @@ Result: PASS
 1. **Build and bootstrap — PASS**
    - `npm run build` completed successfully.
    - `init --yes` produced a valid `docs/canon/` tree.
-   - The four managed skills, `.cursor/rules/doc-canon.mdc`, and `AGENTS.md` were present.
+   - Five managed skills (including `canon-future-plan`) were present under both `.cursor/skills/` and `.claude/skills/`, plus `.cursor/rules/doc-canon.mdc`, short `AGENTS.md` block, and full-body managed `CLAUDE.md`.
    - An immediate `validate` returned `Canon is valid.`
+   - *(Historical note: earlier MVP runs recorded four Cursor-only skills; checklist wording updated for dual-write overlay.)*
 2. **Required and extra headings — PASS**
    - Renaming `## Purpose` in `OVERVIEW.md` made `validate` exit 1 with
      `OVERVIEW.md is missing required headings: Purpose`.

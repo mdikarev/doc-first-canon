@@ -48,6 +48,9 @@ These human-run checklists cover the MVP agent flows. Automated skill execution 
 - [ ] Confirm the installed Cursor rule is always-on and points agents to `docs/canon/INDEX.md`.
 - [ ] Confirm `AGENTS.md` contains exactly one block bounded by `<!-- doc-canon:start -->` and `<!-- doc-canon:end -->`.
 - [ ] Confirm existing content outside those markers is preserved.
+- [ ] Confirm `.claude/skills/` mirrors managed skills (same names as `.cursor/skills/`).
+- [ ] Confirm `CLAUDE.md` has exactly one `doc-canon` marker pair and includes the full pointer-rule body (e.g. Feature-change order), not only the short AGENTS sentence.
+- [ ] Confirm `.cursor/rules/doc-canon.mdc` remains Cursor-only guidance (Claude Code does not load it).
 - [ ] Confirm the pointer rule / `AGENTS` block mention starting at `INDEX.md`, building a small working set, and expanding when unsure (guidance only—not a required chat ritual for coding agents).
 - [ ] Confirm the pointer rule / `AGENTS` block state canon-first feature-change order (`canon-write` before application code; optional project-local spec/plan; substantial wait; application code; closing `canon-audit`; coding agents do not edit canon themselves).
 

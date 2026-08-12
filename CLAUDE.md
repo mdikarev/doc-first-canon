@@ -1,0 +1,25 @@
+<!-- doc-canon:start -->
+# doc-canon context rule
+
+For design and development, the context source of truth is `docs/canon/`. Try `doc-canon search "<topic>"` first; on fail-closed fall back to `docs/canon/INDEX.md`, select only relevant indexed sections, and build a small **working set** before deep reads. If the working set is doubtful, **expand**; do not silently under-read or invent structure to save tokens. Do not preload the entire canon.
+
+`docs/canon/future_plans/` is part of the canon for **future system shape** (initiatives). It is not the behavioral source of truth for current behavior. Do not store development tasks, checklists, or coding-agent prompts there; use roadmap/issues/`DISCREPANCIES.md` for execution work. After an initiative is realized, absorb outcomes into living canon sections.
+
+## Feature-change order (canon-first)
+
+For **new or changed functionality** (behavior / public contract), do **not** start application code first. Order:
+
+1. Update living canon via **`canon-write`** (invoke the skill, or stop and ask the user to run it). Coding agents must not edit `docs/canon/**` themselves.
+2. Optionally write or sync a **project-local** design/plan artifact when the change is large (multi-module, non-obvious design, or handoff). Do not assume a fixed path such as `docs/superpowers/specs/`.
+3. After a **substantial** canon change, wait for explicit user go-ahead before coding. After a spot section sync, you may proceed.
+4. Implement application code against the updated canon (and optional plan).
+5. Close with **`canon-audit`** on the affected topic (spot `canon-write` does not guarantee sibling-section sync; the closing audit catches that and docs↔code drift).
+
+**Exceptions** (skip canon-first, including the closing audit): pure bugfix with intended behavior unchanged; `code_stale` (canon already correct); non-behavioral edits (typos, tests, refactor without contract change).
+
+Post-hoc sync (`canon-write` / `check` / `canon-audit` after drift) remains valid and does not replace this order for intentional feature work. Coding agents follow working-set discipline without a mandatory chat ritual of listing the set every turn.
+
+On docs↔code divergence, do not silently pick a side. Present the evidence and escalate through the canon skills and `docs/canon/DISCREPANCIES.md`. Canon skills never modify application code.
+
+This rule sets context priority; it does not replace other domain rules in the repository.
+<!-- doc-canon:end -->
