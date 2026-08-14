@@ -2,13 +2,14 @@
   "name": "doc-canon",
   "version": "0.1.0",
   "description": "Deterministic canon CLI for agent documentation",
+  "license": "MIT",
   "type": "module",
   "bin": { "doc-canon": "./bin/doc-canon.js" },
   "exports": {
     "./index-reader": "./dist/index/reader.js",
     "./search": "./dist/search/search.js"
   },
-  "files": ["dist", "embedded", "bin"],
+  "files": ["dist", "embedded", "bin", "CHANGELOG.md"],
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "test": "tsx --test tests/**/*.test.ts",
