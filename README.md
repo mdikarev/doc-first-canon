@@ -114,13 +114,18 @@ doc-canon upgrade-skills --root /path/to/repo
 Bring an **existing** canon up to this CLI: create missing required files/templates listed in **that repo’s** `CANON_CONTRACT.md`, add missing INDEX Sections rows, then run `upgrade-skills`. Does not rewrite section prose and does not add default sections the contract omitted. Empty repos should use `init`, not `migrate`.
 
 ```bash
+# global install (doc-canon on PATH):
 doc-canon migrate
 doc-canon migrate --root /path/to/repo
+
+# one-shot npx (no global install):
+npx doc-canon migrate --root .
 ```
 
 ### When to use upgrade-skills vs migrate
 
-- After `npm install -g doc-canon@…` (or a newer `npx`): run **`migrate`** on each target repo.
+- After **`npm install -g doc-canon@…`**: run **`doc-canon migrate`** on each target repo.
+- After a **one-shot `npx doc-canon@…`**: run **`npx doc-canon migrate --root .`** (bare `doc-canon` is not on PATH).
 - If the contract is already `schema_version: 1` and you only need managed overlays / `skills_stamp`: **`upgrade-skills`** is enough.
 - `schema_version` other than `1` fails closed; this CLI does not rewrite contract YAML.
 
@@ -310,13 +315,18 @@ doc-canon upgrade-skills --root /path/to/repo
 Подтянуть **существующий** канон до этого CLI: создать отсутствующие обязательные файлы/шаблоны, перечисленные в `CANON_CONTRACT.md` **целевого** репозитория, добавить отсутствующие строки Sections в INDEX, затем выполнить `upgrade-skills`. Не переписывает прозу секций и не добавляет секции по умолчанию, которых нет в контракте. Пустые репозитории должны использовать `init`, а не `migrate`.
 
 ```bash
+# глобальная установка (doc-canon в PATH):
 doc-canon migrate
 doc-canon migrate --root /path/to/repo
+
+# one-shot npx (без глобальной установки):
+npx doc-canon migrate --root .
 ```
 
 ### Когда использовать upgrade-skills vs migrate
 
-- После `npm install -g doc-canon@…` (или более нового `npx`): запускайте **`migrate`** в каждом целевом репозитории.
+- После **`npm install -g doc-canon@…`**: запускайте **`doc-canon migrate`** в каждом целевом репозитории.
+- После **one-shot `npx doc-canon@…`**: запускайте **`npx doc-canon migrate --root .`** (голый `doc-canon` не в PATH).
 - Если контракт уже `schema_version: 1` и нужны только управляемые оверлеи / `skills_stamp`: достаточно **`upgrade-skills`**.
 - `schema_version` отличный от `1` завершается fail-closed; этот CLI не переписывает YAML контракта.
 

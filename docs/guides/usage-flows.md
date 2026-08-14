@@ -134,11 +134,17 @@ doc-canon report
 
 ### Steps
 
-1. Install the CLI (`npm install -g doc-canon` or a newer `npx`).
+1. Install the CLI — choose one:
+   - **Global (on PATH):** `npm install -g doc-canon`
+   - **One-shot (no PATH):** skip global install; use `npx doc-canon …` in step 2
 2. From the target repo root:
 
 ```bash
+# global install:
 doc-canon migrate --root .
+
+# one-shot npx:
+npx doc-canon migrate --root .
 ```
 
 **Expected:** `Canon is valid.` (or equivalent success message); exit code 0. A second run must not rewrite planted section prose.
@@ -313,11 +319,17 @@ doc-canon report
 
 ### Шаги
 
-1. Установите CLI (`npm install -g doc-canon` или более новый `npx`).
+1. Установите CLI — выберите один вариант:
+   - **Глобально (в PATH):** `npm install -g doc-canon`
+   - **One-shot (без PATH):** пропустите глобальную установку; в шаге 2 используйте `npx doc-canon …`
 2. Из корня целевого репозитория:
 
 ```bash
+# глобальная установка:
 doc-canon migrate --root .
+
+# one-shot npx:
+npx doc-canon migrate --root .
 ```
 
 **Ожидается:** `Canon is valid.` (или эквивалентное сообщение об успехе); код выхода 0. Повторный запуск не должен переписывать уже посаженную прозу секций.
