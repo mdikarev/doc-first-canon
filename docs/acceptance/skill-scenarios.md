@@ -115,3 +115,12 @@ These human-run checklists cover the MVP agent flows. Automated skill execution 
 ## Post-write runs index
 
 - [ ] After a successful substantive `docs/canon/**` write via a managed skill, confirm the skill runs one-shot `doc-canon index` (or surfaces watch-lock failure without fighting the lock).
+
+## Install from npm and migrate
+
+- [ ] Install via `npx doc-canon --help` or `npm install -g doc-canon` (not clone + `npm link` as the only path).
+- [ ] On a throwaway repo with `init`, delete a required section file listed in its contract, run `doc-canon migrate`, confirm the file returns from the named template and `validate` exits 0.
+- [ ] Confirm planted prose in another section is unchanged.
+- [ ] Confirm a second `migrate` does not rewrite that prose.
+- [ ] Confirm a contract that omits a default-kit section does not get that file created.
+- [ ] Confirm `schema_version: 99` exits non-zero and does not restore deleted files.

@@ -126,13 +126,53 @@ doc-canon report
 - Assuming `check` “closes” open discrepancies.
 - Skipping `validate` after canon edits during a `docs_stale` resolution.
 
+## Upgrade an existing canon
+
+**When to use:** The installed CLI is newer than the target repo’s overlays/`skills_stamp`, or required files listed in the contract are missing.
+
+**CLI vs skill:** `doc-canon migrate` (or `upgrade-skills` alone if you only need managed assets).
+
+### Steps
+
+1. Install the CLI (`npm install -g doc-canon` or a newer `npx`).
+2. From the target repo root:
+
+```bash
+doc-canon migrate --root .
+```
+
+**Expected:** `Canon is valid.` (or equivalent success message); exit code 0. A second run must not rewrite planted section prose.
+
+### Common mistakes
+
+- Using `migrate` instead of `init` on a repo with no canon.
+- Expecting `migrate` to bump `schema_version`.
+- Failing CI on open discrepancies.
+
+## Adopter CI
+
+**When to use:** The adopter wants a PR gate.
+
+**CLI vs skill:** Use `doc-canon validate` (structure only). `check` is optional. Never fail the gate on Open `DISCREPANCIES.md` entries.
+
+### Steps
+
+1. Copy the YAML example from the README **Adopter CI** section into the *adopter* repository (not this one).
+2. Confirm the workflow runs `doc-canon validate` (optionally `check`) and does not fail on open discrepancies.
+
+**Expected:** PRs are gated on structural validity only; open discrepancies do not fail the build.
+
+### Common mistakes
+
+- Failing CI because `DISCREPANCIES.md` has Open entries.
+
 ## Also see
 
 - Design: [`../superpowers/specs/2026-08-07-doc-first-canon-design.md`](../superpowers/specs/2026-08-07-doc-first-canon-design.md)
 - Skill acceptance scenarios: [`../acceptance/skill-scenarios.md`](../acceptance/skill-scenarios.md)
-- README command reference (including `upgrade-skills`) and Agent skills (`canon-contract`)
+- README command reference (including `upgrade-skills` and `migrate`) and Agent skills (`canon-contract`)
 
-For refreshing managed skills without touching canon content, use `doc-canon upgrade-skills` (see README Usage). For new template kinds, use skill `canon-contract`.
+For refreshing managed skills without touching canon content, use `doc-canon upgrade-skills` (see README Usage). To bring an existing canon up to this CLI (missing required files/INDEX rows, then overlays), use `doc-canon migrate`. For new template kinds, use skill `canon-contract`.
 
 ---
 
@@ -265,10 +305,50 @@ doc-canon report
 - Считать, что `check` «закрывает» open discrepancies.
 - Пропускать `validate` после правок канона при `docs_stale`.
 
+## Обновить существующий канон
+
+**Когда использовать:** Установленный CLI новее оверлеев/`skills_stamp` целевого репозитория, или в контракте перечислены обязательные файлы, которых нет на диске.
+
+**CLI vs skill:** `doc-canon migrate` (или только `upgrade-skills`, если нужны лишь управляемые ассеты).
+
+### Шаги
+
+1. Установите CLI (`npm install -g doc-canon` или более новый `npx`).
+2. Из корня целевого репозитория:
+
+```bash
+doc-canon migrate --root .
+```
+
+**Ожидается:** `Canon is valid.` (или эквивалентное сообщение об успехе); код выхода 0. Повторный запуск не должен переписывать уже посаженную прозу секций.
+
+### Типичные ошибки
+
+- Использовать `migrate` вместо `init` в репозитории без канона.
+- Ожидать, что `migrate` поднимет `schema_version`.
+- Валить CI из-за открытых discrepancies.
+
+## CI для adopter-репозитория
+
+**Когда использовать:** Adopter хочет gate на PR.
+
+**CLI vs skill:** Используйте `doc-canon validate` (только структура). `check` опционален. Никогда не валите gate из-за Open записей в `DISCREPANCIES.md`.
+
+### Шаги
+
+1. Скопируйте YAML-пример из секции README **CI для adopter-репозитория** в *adopter*-репозиторий (не в этот).
+2. Убедитесь, что workflow запускает `doc-canon validate` (опционально `check`) и не падает на открытых discrepancies.
+
+**Ожидается:** PR проверяются только на структурную валидность; открытые discrepancies сборку не валят.
+
+### Типичные ошибки
+
+- Валить CI из-за Open записей в `DISCREPANCIES.md`.
+
 ## Также смотрите
 
 - Дизайн: [`../superpowers/specs/2026-08-07-doc-first-canon-design.md`](../superpowers/specs/2026-08-07-doc-first-canon-design.md)
 - Acceptance-сценарии skills: [`../acceptance/skill-scenarios.md`](../acceptance/skill-scenarios.md)
-- Справочник команд README (включая `upgrade-skills`) и Agent skills (`canon-contract`)
+- Справочник команд README (включая `upgrade-skills` и `migrate`) и Agent skills (`canon-contract`)
 
-Чтобы обновить управляемые skills без изменения содержимого канона: `doc-canon upgrade-skills` (см. Usage в README). Для новых видов шаблонов: skill `canon-contract`.
+Чтобы обновить управляемые skills без изменения содержимого канона: `doc-canon upgrade-skills` (см. Usage в README). Чтобы подтянуть существующий канон до этого CLI (отсутствующие обязательные файлы/строки INDEX, затем оверлеи): `doc-canon migrate`. Для новых видов шаблонов: skill `canon-contract`.

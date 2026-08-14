@@ -20,14 +20,18 @@ MVP does not include IDE UIs, automatic code patches, or CI/git hooks as the eve
 
 ## Install
 
-From this repository (or after publish):
+```bash
+npm install -g doc-canon
+# or one-shot:
+npx doc-canon --help
+```
+
+From this repository (development):
 
 ```bash
 npm install
 npm link   # optional: put doc-canon on PATH for local development
 ```
-
-After install, `doc-canon` is available via `npx doc-canon` or the linked binary.
 
 ## Quick start flows
 
@@ -105,6 +109,23 @@ doc-canon upgrade-skills
 doc-canon upgrade-skills --root /path/to/repo
 ```
 
+### migrate
+
+Bring an **existing** canon up to this CLI: create missing required files/templates listed in **that repo’s** `CANON_CONTRACT.md`, add missing INDEX Sections rows, then run `upgrade-skills`. Does not rewrite section prose and does not add default sections the contract omitted. Empty repos should use `init`, not `migrate`.
+
+```bash
+doc-canon migrate
+doc-canon migrate --root /path/to/repo
+```
+
+### When to use upgrade-skills vs migrate
+
+- After `npm install -g doc-canon@…` (or a newer `npx`): run **`migrate`** on each target repo.
+- If the contract is already `schema_version: 1` and you only need managed overlays / `skills_stamp`: **`upgrade-skills`** is enough.
+- `schema_version` other than `1` fails closed; this CLI does not rewrite contract YAML.
+
+Soft coupling: changes to managed skills/rules bump **both** npm version and `skills_stamp`. A CLI-only bugfix may bump npm patch without a stamp bump. Validate still fails closed on a too-old stamp (`upgrade-skills` / `migrate` to refresh).
+
 ### index
 
 Build or refresh the local BM25 index over `docs/canon/**/*.md` (writes `.doc-canon/index-manifest.json` and `.doc-canon/bm25-index.json`). One-shot exits non-zero if a watch process is already running.
@@ -134,6 +155,26 @@ Managed skills (`canon-bootstrap`, `canon-write`, `canon-audit`, `canon-contract
 
 `init` / `upgrade-skills` install identical skill trees under `.cursor/skills/` and `.claude/skills/`. Cursor always-on guidance is `.cursor/rules/doc-canon.mdc` plus the short `AGENTS.md` block; Claude Code uses full pointer-rule body in `CLAUDE.md` and does **not** load `.cursor/rules/`.
 
+## Adopter CI
+
+Recommended gate is `doc-canon validate` (structure only). `check` is optional. Do **not** fail CI on open `DISCREPANCIES.md` entries.
+
+```yaml
+# example for an adopter repository — not used in the doc-canon repo itself
+name: canon
+on: [push, pull_request]
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm install -g doc-canon
+      - run: doc-canon validate
+```
+
 ## Spec and acceptance
 
 - Design spec: [`docs/superpowers/specs/2026-08-07-doc-first-canon-design.md`](docs/superpowers/specs/2026-08-07-doc-first-canon-design.md)
@@ -145,6 +186,8 @@ Managed skills (`canon-bootstrap`, `canon-write`, `canon-audit`, `canon-contract
 npm run build
 npm test
 node bin/doc-canon.js --help
+DRY_RUN=1 npm run release    # test, build, validate, pack-check; no publish
+# after a real publish, tag/push git separately if you want a GitHub tag
 ```
 
 ---
@@ -173,14 +216,18 @@ Ad-hoc документация для агентов устаревает от�
 
 ## Установка
 
-Из этого репозитория (или после публикации):
+```bash
+npm install -g doc-canon
+# или одноразово:
+npx doc-canon --help
+```
+
+Из этого репозитория (разработка):
 
 ```bash
 npm install
 npm link   # опционально: добавить doc-canon в PATH для локальной разработки
 ```
-
-После установки `doc-canon` доступен через `npx doc-canon` или через linked binary.
 
 ## Быстрый старт по флоу
 
@@ -258,6 +305,23 @@ doc-canon upgrade-skills
 doc-canon upgrade-skills --root /path/to/repo
 ```
 
+### migrate
+
+Подтянуть **существующий** канон до этого CLI: создать отсутствующие обязательные файлы/шаблоны, перечисленные в `CANON_CONTRACT.md` **целевого** репозитория, добавить отсутствующие строки Sections в INDEX, затем выполнить `upgrade-skills`. Не переписывает прозу секций и не добавляет секции по умолчанию, которых нет в контракте. Пустые репозитории должны использовать `init`, а не `migrate`.
+
+```bash
+doc-canon migrate
+doc-canon migrate --root /path/to/repo
+```
+
+### Когда использовать upgrade-skills vs migrate
+
+- После `npm install -g doc-canon@…` (или более нового `npx`): запускайте **`migrate`** в каждом целевом репозитории.
+- Если контракт уже `schema_version: 1` и нужны только управляемые оверлеи / `skills_stamp`: достаточно **`upgrade-skills`**.
+- `schema_version` отличный от `1` завершается fail-closed; этот CLI не переписывает YAML контракта.
+
+Мягкая связка: изменения управляемых skills/rules поднимают **и** npm-версию, **и** `skills_stamp`. Багфикс только CLI может поднять npm patch без bump stamp. Validate по-прежнему fail-closed на слишком старом stamp (`upgrade-skills` / `migrate`, чтобы обновить).
+
 ### index
 
 Сборка или обновление локального BM25-индекса по `docs/canon/**/*.md` (пишет `.doc-canon/index-manifest.json` и `.doc-canon/bm25-index.json`). One-shot завершается с ненулевым кодом, если уже запущен watch.
@@ -287,6 +351,26 @@ doc-canon search "topic" --root /path/to/repo
 
 `init` / `upgrade-skills` ставят одинаковые деревья skills в `.cursor/skills/` и `.claude/skills/`. Always-on для Cursor — `.cursor/rules/doc-canon.mdc` и короткий блок `AGENTS.md`; Claude Code читает полный body pointer-rule из `CLAUDE.md` и **не** загружает `.cursor/rules/`.
 
+## CI для adopter-репозитория
+
+Рекомендуемый gate — `doc-canon validate` (только структура). `check` опционален. **Не** валите CI из-за открытых записей в `DISCREPANCIES.md`.
+
+```yaml
+# пример для adopter-репозитория — в самом репозитории doc-canon не используется
+name: canon
+on: [push, pull_request]
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm install -g doc-canon
+      - run: doc-canon validate
+```
+
 ## Спецификация и acceptance
 
 - Спецификация дизайна: [`docs/superpowers/specs/2026-08-07-doc-first-canon-design.md`](docs/superpowers/specs/2026-08-07-doc-first-canon-design.md)
@@ -298,4 +382,6 @@ doc-canon search "topic" --root /path/to/repo
 npm run build
 npm test
 node bin/doc-canon.js --help
+DRY_RUN=1 npm run release    # test, build, validate, pack-check; без publish
+# после реального publish тег/push git отдельно, если нужен GitHub tag
 ```
