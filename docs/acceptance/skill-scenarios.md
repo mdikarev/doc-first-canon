@@ -119,7 +119,7 @@ These human-run checklists cover the MVP agent flows. Automated skill execution 
 ## Install from npm and migrate
 
 - [ ] Install via `npx doc-canon --help` or `npm install -g doc-canon` (not clone + `npm link` as the only path).
-- [ ] On a throwaway repo with `init`, delete a required section file listed in its contract, run `doc-canon migrate`, confirm the file returns from the named template and `validate` exits 0.
+- [ ] On a throwaway repo with `init`, delete a required section file listed in its contract, run `doc-canon migrate --root .` (after global install) or `npx doc-canon migrate --root .` (one-shot npx; bare `doc-canon` is not on PATH), confirm the file returns from the named template and `validate` exits 0.
 - [ ] Confirm planted prose in another section is unchanged.
 - [ ] Confirm a second `migrate` does not rewrite that prose.
 - [ ] Confirm a contract that omits a default-kit section does not get that file created.
