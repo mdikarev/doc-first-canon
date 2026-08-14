@@ -1,16 +1,16 @@
 # P3 — Production hardening
 
-- **Status:** implementing
+- **Status:** absorbed
 - **Focus:** Adopter-ready first public release (distribution, upgrade/migrate, adopter CI guidance).
 - **Depends on:** Stable MVP behavior; P0–P1 absorbed; Claude dual-write overlay already shipped
 - **Unblocks:** External adopters, gated repos, non-Cursor agents
-- **Design:** [`docs/superpowers/specs/2026-08-12-adopter-ready-release-design.md`](../../superpowers/specs/2026-08-12-adopter-ready-release-design.md)
+- **Design:** [`docs/superpowers/specs/2026-08-12-adopter-ready-release-design.md`](../../superpowers/specs/2026-08-12-adopter-ready-release-design.md); close-out: [`docs/superpowers/specs/2026-08-14-p3-release-closeout-design.md`](../../superpowers/specs/2026-08-14-p3-release-closeout-design.md)
 
 ## Intent
 
 Ship the first public, adopter-ready `doc-canon` checkpoint: install from npm, bring an existing canon current with `migrate`, and run a documented adopter CI recipe — without conflating that work with the efficiency track or with dogfood CI in this product repo.
 
-The Claude Code **universal dual-write** overlay is already shipped. Absorb that slice into living OVERVIEW/CLI/SKILLS/README when those sections already match. Remaining P3 is done when public publish, `migrate`, and docs land; then absorb this initiative.
+The Claude Code **universal dual-write** overlay is absorbed into living OVERVIEW/CLI/SKILLS/README. Public npm `0.1.0`, `migrate`, and adopter CI docs have landed; this initiative is absorbed.
 
 ## In scope
 
@@ -34,9 +34,7 @@ The Claude Code **universal dual-write** overlay is already shipped. Absorb that
 
 ## Absorbs into
 
-Likely: `OVERVIEW.md` (scope/success), `CLI.md` (`migrate` and upgrade guidance), `ARCHITECTURE.md`, `GLOSSARY.md`, `SKILLS.md`, `README.md`, release and adopter-CI docs.
-
-Claude dual-write absorbs into living OVERVIEW/CLI/SKILLS/README when those already match. Remaining checkpoint outcomes absorb when public npm `0.1.x`, `migrate`, and adopter docs land.
+`OVERVIEW.md` (scope/success), `CLI.md` (`migrate` and upgrade guidance), `ARCHITECTURE.md`, `GLOSSARY.md`, `SKILLS.md`, `README.md`, `docs/guides/usage-flows.md`, `docs/acceptance/skill-scenarios.md`.
 
 ## Open questions
 

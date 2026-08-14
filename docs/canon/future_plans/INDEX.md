@@ -28,6 +28,6 @@ Design rationale: [`docs/superpowers/specs/2026-08-09-production-path-roadmap-de
 | 0b | BM25 index | absorbed | [p0b-bm25-index.md](p0b-bm25-index.md) |
 | 1 | Retrieval search & context pack | absorbed | [p1-retrieval-and-context-pack.md](p1-retrieval-and-context-pack.md) |
 | 2 | Pluggable extractors | draft | [p2-pluggable-extractors.md](p2-pluggable-extractors.md) |
-| 3 | Production hardening | implementing | [p3-production-hardening.md](p3-production-hardening.md) |
+| 3 | Production hardening | absorbed | [p3-production-hardening.md](p3-production-hardening.md) |
 
-P0, P0c, P0b, and P1 are absorbed. P2 (pluggable extractors) remains draft; P3 is `implementing` for the adopter-ready first public release checkpoint (Claude dual-write already shipped).
+P0, P0c, P0b, P1, and P3 are absorbed. P2 (pluggable extractors) remains draft.
