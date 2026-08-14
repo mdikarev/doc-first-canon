@@ -113,7 +113,7 @@ export function assertContractSchema(raw: unknown): Contract {
     const seen =
       schemaVersion === undefined ? "missing" : String(schemaVersion);
     throw new Error(
-      `Unsupported schema_version ${seen}; upgrade doc-canon to ${PACKAGE_VERSION} or migrate CANON_CONTRACT`,
+      `Unsupported schema_version ${seen}; this CLI (${PACKAGE_VERSION}) supports schema_version ${DEFAULT_SCHEMA_VERSION} only. See README Upgrade`,
     );
   }
 

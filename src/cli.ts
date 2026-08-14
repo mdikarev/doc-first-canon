@@ -40,6 +40,23 @@ program
     }
   });
 program
+  .command("migrate")
+  .description(
+    "Bring an existing canon up to this CLI (required gaps, then upgrade-skills)",
+  )
+  .option("--root <path>", "target repo root", ".")
+  .action(async (opts: { root: string }) => {
+    try {
+      const { migrateCanon } = await import("./commands/migrate.js");
+      process.exitCode = await migrateCanon(opts.root);
+    } catch (error) {
+      console.error(
+        `error: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      process.exitCode = 1;
+    }
+  });
+program
   .command("validate")
   .description("Schema + structure validation")
   .option("--root <path>", "target repo root", ".")

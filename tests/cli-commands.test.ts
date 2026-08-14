@@ -18,6 +18,7 @@ describe("doc-canon cli commands", () => {
     for (const cmd of [
       "init",
       "upgrade-skills",
+      "migrate",
       "validate",
       "check",
       "report",
@@ -32,6 +33,7 @@ describe("doc-canon cli commands", () => {
     for (const cmd of [
       "init",
       "upgrade-skills",
+      "migrate",
       "validate",
       "check",
       "report",

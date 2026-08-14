@@ -35,5 +35,13 @@ describe("doc-canon cli stub", () => {
     );
     assert.equal(upgrade.status, 0);
     assert.match(upgrade.stdout, /--root <path>/);
+
+    const migrate = spawnSync(
+      "npx",
+      ["tsx", "src/cli.ts", "migrate", "--help"],
+      { cwd: root, encoding: "utf8" },
+    );
+    assert.equal(migrate.status, 0);
+    assert.match(migrate.stdout, /--root <path>/);
   });
 });
