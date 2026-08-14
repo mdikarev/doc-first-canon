@@ -12,7 +12,7 @@ Own the deterministic core of `doc-canon`: scaffold, structural validation, inve
 
 ## Current state
 
-MVP package `doc-canon@0.1.0` (Node ≥20, ESM). Entry: `bin/doc-canon.js` → compiled `dist/`. Commands: `init`, `validate`, `check`, `report`, `upgrade-skills`, `migrate`, `index`, `search`. All commands accept `--root <path>` (default: cwd).
+MVP package `doc-canon@0.1.1` (Node ≥20, ESM). Entry: `bin/doc-canon.js` → compiled `dist/`. Commands: `init`, `validate`, `check`, `report`, `upgrade-skills`, `migrate`, `index`, `search`. All commands accept `--root <path>` (default: cwd).
 
 ## Responsibilities
 

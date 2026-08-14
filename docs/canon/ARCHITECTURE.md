@@ -53,7 +53,7 @@ Two layers: a deterministic **CLI** (`doc-canon`) owns schema, scaffold, structu
 
 ## Tech & constraints
 
-- Node.js ≥20, TypeScript ESM package `doc-canon` 0.1.0
+- Node.js ≥20, TypeScript ESM package `doc-canon` 0.1.1
 - Dependencies: `commander`, `yaml`, `micromatch`
 - Unknown/incompatible major `schema_version` or too-old `skills_stamp` → validate fails closed
 - Extra template headings allowed; missing required headings fail validate

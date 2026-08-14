@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.1
+
+- README and usage flows describe Cursor and Claude Code as default managed hosts (not Cursor-only)
+
 ## 0.1.0
 
 First public release.

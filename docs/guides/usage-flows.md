@@ -4,13 +4,13 @@
 
 Journey-oriented walkthroughs for `doc-canon`. For a command reference, see the [README](../../README.md).
 
-**Preconditions (all flows):** Node.js ≥20; `doc-canon` on `PATH` (skills invoke it as a subprocess); Cursor for managed skills after `init`.
+**Preconditions (all flows):** Node.js ≥20; `doc-canon` on `PATH` (skills invoke it as a subprocess); Cursor or Claude Code for managed skills after `init`.
 
 ## Empty project
 
 **When to use:** New or empty repository with no `docs/canon/` yet.
 
-**CLI vs skill:** `doc-canon init` only scaffolds templates, default contract, managed Cursor skills/rules, and the `AGENTS.md` managed block. Interview and filling mandatory docs is `canon-bootstrap`.
+**CLI vs skill:** `doc-canon init` only scaffolds templates, default contract, managed Cursor + Claude Code overlays, and the `AGENTS.md` / `CLAUDE.md` managed blocks. Interview and filling mandatory docs is `canon-bootstrap`.
 
 ### Steps
 
@@ -22,9 +22,9 @@ doc-canon init --yes
 # or: doc-canon init
 ```
 
-**Expected:** `docs/canon/` with default contract and templates; Cursor skills (`canon-bootstrap`, `canon-write`, `canon-audit`, `canon-contract`); `.cursor/rules/doc-canon.mdc`; `AGENTS.md` managed block between `<!-- doc-canon:start -->` and `<!-- doc-canon:end -->`.
+**Expected:** `docs/canon/` with default contract and templates; identical skill trees under `.cursor/skills/` and `.claude/skills/` (`canon-bootstrap`, `canon-write`, `canon-audit`, `canon-contract`, `canon-future-plan`); `.cursor/rules/doc-canon.mdc`; short `AGENTS.md` managed block and full-body `CLAUDE.md` between `<!-- doc-canon:start -->` and `<!-- doc-canon:end -->`.
 
-3. In Cursor, run skill **`canon-bootstrap`**. Answer the short purpose/scope interview. The skill fills mandatory documents and refreshes `INDEX.md`.
+3. In Cursor or Claude Code, run skill **`canon-bootstrap`**. Answer the short purpose/scope interview. The skill fills mandatory documents and refreshes `INDEX.md`.
 4. Confirm with:
 
 ```bash
@@ -190,13 +190,13 @@ For refreshing managed skills without touching canon content, use `doc-canon upg
 
 Пошаговые сценарии для `doc-canon`. Справочник команд — в [README](../../README.md).
 
-**Предусловия (все флоу):** Node.js ≥20; `doc-canon` в `PATH` (skills вызывают его как subprocess); Cursor для управляемых skills после `init`.
+**Предусловия (все флоу):** Node.js ≥20; `doc-canon` в `PATH` (skills вызывают его как subprocess); Cursor или Claude Code для управляемых skills после `init`.
 
 ## Пустой проект
 
 **Когда использовать:** Новый или пустой репозиторий без `docs/canon/`.
 
-**CLI vs skill:** `doc-canon init` только создаёт каркас шаблонов, контракт по умолчанию, управляемые Cursor skills/rules и блок в `AGENTS.md`. Интервью и заполнение обязательных документов — `canon-bootstrap`.
+**CLI vs skill:** `doc-canon init` только создаёт каркас шаблонов, контракт по умолчанию, управляемые оверлеи Cursor + Claude Code и блоки в `AGENTS.md` / `CLAUDE.md`. Интервью и заполнение обязательных документов — `canon-bootstrap`.
 
 ### Шаги
 
@@ -208,9 +208,9 @@ doc-canon init --yes
 # или: doc-canon init
 ```
 
-**Ожидается:** `docs/canon/` с контрактом и шаблонами по умолчанию; Cursor skills (`canon-bootstrap`, `canon-write`, `canon-audit`, `canon-contract`); `.cursor/rules/doc-canon.mdc`; управляемый блок `AGENTS.md` между `<!-- doc-canon:start -->` и `<!-- doc-canon:end -->`.
+**Ожидается:** `docs/canon/` с контрактом и шаблонами по умолчанию; одинаковые деревья skills в `.cursor/skills/` и `.claude/skills/` (`canon-bootstrap`, `canon-write`, `canon-audit`, `canon-contract`, `canon-future-plan`); `.cursor/rules/doc-canon.mdc`; короткий блок `AGENTS.md` и полный body в `CLAUDE.md` между `<!-- doc-canon:start -->` и `<!-- doc-canon:end -->`.
 
-3. В Cursor запустите skill **`canon-bootstrap`**. Ответьте на короткое интервью о purpose/scope. Skill заполнит обязательные документы и обновит `INDEX.md`.
+3. В Cursor или Claude Code запустите skill **`canon-bootstrap`**. Ответьте на короткое интервью о purpose/scope. Skill заполнит обязательные документы и обновит `INDEX.md`.
 4. Проверьте:
 
 ```bash

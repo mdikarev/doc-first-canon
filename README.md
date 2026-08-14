@@ -2,7 +2,7 @@
 
 [English](#doc-canon) · [Русский](#doc-canon-ru)
 
-Deterministic CLI for agent documentation canon: scaffold, validate, report, index, and search structured docs under `docs/canon` with managed skills and rules.
+Deterministic CLI for agent documentation canon: scaffold, validate, report, index, and search structured docs under `docs/canon` with managed skills for **Cursor** and **Claude Code**.
 
 ## Why
 
@@ -14,7 +14,7 @@ Ad-hoc agent docs drift from code, contradict each other, and diverge in shape w
 2. Treat `docs/canon/` as the source of truth for agent context; when docs and code disagree, the user decides which is stale.
 3. Let skills edit documentation automatically; never patch application code — emit tasks for coding agents instead.
 4. Keep document structure stable across LLMs via in-repo templates and a per-project contract.
-5. Ship Cursor first; keep the CLI IDE-agnostic so other agents can plug in later.
+5. Ship Cursor and Claude Code overlays by default; keep the CLI IDE-agnostic so additional agents can plug in later.
 
 MVP does not include IDE UIs, automatic code patches, or CI/git hooks as the everyday sync trigger. Details: [`docs/canon/OVERVIEW.md`](docs/canon/OVERVIEW.md).
 
@@ -41,7 +41,7 @@ Short recipes. Full walkthroughs: [`docs/guides/usage-flows.md`](docs/guides/usa
 
 1. Install and ensure `doc-canon` is on `PATH`
 2. `doc-canon init --yes` (or interactive `doc-canon init`)
-3. In Cursor, run skill `canon-bootstrap` (purpose/scope interview, fill canon)
+3. In Cursor or Claude Code, run skill `canon-bootstrap` (purpose/scope interview, fill canon)
 4. `doc-canon validate` (must pass)
 
 ### Existing project
@@ -203,7 +203,7 @@ DRY_RUN=1 npm run release    # test, build, validate, pack-check; no publish
 
 [English](#doc-canon) · [Русский](#doc-canon-ru)
 
-Детерминированный CLI для канона агентской документации: создание каркаса, валидация, отчёты, индекс и поиск по структурированным документам в `docs/canon` с управляемыми skills и rules.
+Детерминированный CLI для канона агентской документации: создание каркаса, валидация, отчёты, индекс и поиск по структурированным документам в `docs/canon` с управляемыми skills для **Cursor** и **Claude Code**.
 
 ## Зачем
 
@@ -215,7 +215,7 @@ Ad-hoc документация для агентов устаревает от�
 2. Считать `docs/canon/` источником истины для агентского контекста; при расхождении docs и кода пользователь решает, что устарело.
 3. Дать skills автоматически править документацию; никогда не патчить код приложения — вместо этого писать задачи для coding-агентов.
 4. Держать структуру документов стабильной между разными LLM через шаблоны в репозитории и per-project контракт.
-5. Сначала Cursor; CLI оставить IDE-agnostic, чтобы позже подключать других агентов.
+5. Поставлять оверлеи Cursor и Claude Code по умолчанию; CLI оставить IDE-agnostic, чтобы позже подключать других агентов.
 
 В MVP нет IDE UI, автоматических патчей кода и CI/git hooks как повседневного триггера синхронизации. Подробности: [`docs/canon/OVERVIEW.md`](docs/canon/OVERVIEW.md).
 
@@ -242,7 +242,7 @@ npm link   # опционально: добавить doc-canon в PATH для �
 
 1. Установите и убедитесь, что `doc-canon` есть в `PATH`
 2. `doc-canon init --yes` (или интерактивный `doc-canon init`)
-3. В Cursor запустите skill `canon-bootstrap` (интервью purpose/scope, заполнение канона)
+3. В Cursor или Claude Code запустите skill `canon-bootstrap` (интервью purpose/scope, заполнение канона)
 4. `doc-canon validate` (должно пройти)
 
 ### Существующий проект
