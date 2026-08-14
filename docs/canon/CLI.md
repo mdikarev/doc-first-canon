@@ -6,13 +6,13 @@ Own the deterministic core of `doc-canon`: scaffold, structural validation, inve
 
 ## Scope
 
-**Covers:** commands `init`, `validate`, `check`, `report`, `upgrade-skills`, `index`, `search`; contract parse/schema; heading and INDEX agreement checks; ignore-aware inventory; CLI finding merge; embedding default templates/skills/rules into target repos; build/update a local BM25 index over `docs/canon/**/*.md` (`index`), including poll-based `--watch` (default 2000 ms, `--interval`) and `--stop`, writing `.doc-canon/index-manifest.json` + `.doc-canon/bm25-index.json`; one-shot `index` exits ≠0 if a watch process is running; search that index and return a bounded context pack without auto-reindexing.
+**Covers:** commands `init`, `validate`, `check`, `report`, `upgrade-skills`, `migrate`, `index`, `search`; contract parse/schema; heading and INDEX agreement checks; ignore-aware inventory; CLI finding merge; embedding default templates/skills/rules into target repos; required-gap ensure on existing canons (`migrate`); build/update a local BM25 index over `docs/canon/**/*.md` (`index`), including poll-based `--watch` (default 2000 ms, `--interval`) and `--stop`, writing `.doc-canon/index-manifest.json` + `.doc-canon/bm25-index.json`; one-shot `index` exits ≠0 if a watch process is running; search that index and return a bounded context pack without auto-reindexing.
 
 **Excludes:** interview, semantic audit judgements, discrepancy dialogue, and any application-code edits (those belong to skills or coding agents).
 
 ## Current state
 
-MVP package `doc-canon@0.1.0` (Node ≥20, ESM). Entry: `bin/doc-canon.js` → compiled `dist/`. All commands accept `--root <path>` (default: cwd).
+MVP package `doc-canon@0.1.0` (Node ≥20, ESM). Entry: `bin/doc-canon.js` → compiled `dist/`. Commands: `init`, `validate`, `check`, `report`, `upgrade-skills`, `migrate`, `index`, `search`. All commands accept `--root <path>` (default: cwd).
 
 ## Responsibilities
 
@@ -25,6 +25,7 @@ MVP package `doc-canon@0.1.0` (Node ≥20, ESM). Entry: `bin/doc-canon.js` → c
 - Validate `future_plans/*.md` (except `INDEX.md`) via an INDEX-driven zone instead of per-file contract rows: exempt from the orphan check; each file must have a `future_plans/INDEX.md` Initiatives row; each must carry required `FUTURE_PLAN` headings
 - On `upgrade-skills`, strip obsolete optional `future-p*` contract section rows for initiatives under `future_plans/`, keeping the `future_plans/INDEX.md` section and on-disk initiative files untouched
 - After stripping obsolete initiative contract rows, any initiative file still on disk must appear in `future_plans/INDEX.md` Initiatives or `validate` fails: `upgrade-skills` does not auto-add Initiatives rows, so the user or `canon-future-plan` must reconcile the table
+- `migrate` does not rewrite section prose, initiative files, or `DISCREPANCIES.md`; `future_plans` contract-skeleton ensure stays on `upgrade-skills`
 
 ## Interfaces
 
@@ -35,6 +36,7 @@ MVP package `doc-canon@0.1.0` (Node ≥20, ESM). Entry: `bin/doc-canon.js` → c
 | `check` | validate + inventory + merge CLI findings into `.doc-canon/report.json` |
 | `report` | Print last report.json to stdout (read-only) |
 | `upgrade-skills` | Refresh Cursor + Claude managed overlays from installed package; idempotently ensure `future_plans/INDEX.md` skeleton on pre-existing canons; bump `skills_stamp` |
+| `migrate` | Require existing canon + parseable `CANON_CONTRACT.md` (else fail closed; that path is `init`); reject `schema_version` other than `1` before writes (no YAML rewrite); create missing **required** section files and listed templates from the **target contract** (never overwrite; never inject default-kit sections); add missing INDEX Sections rows for contract sections; then run `upgrade-skills`. Flags: `--root` only. |
 | `index` | Build/update a local BM25 index for `docs/canon/**/*.md`; one-shot exits ≠0 if a watch is running; `--watch` polls (default 2000 ms, `--interval <ms>`, min 200) and keeps artifacts in sync; `--stop` stops a running watch via its pid file; `--root` |
 | `search <query>` | Search the existing index and print a ranked context pack; human output on stdout; `--json`; `--max-hits <N>` (default 10); `--snippet-lines <N>` (default 4); `--root <path>` |
 

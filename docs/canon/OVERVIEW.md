@@ -18,7 +18,7 @@ Ad-hoc agent docs drift from code, contradict each other, and diverge in shape w
 
 ### In scope
 
-- CLI: `init`, `validate`, `check`, `report`, `upgrade-skills`, `index`, `search`
+- CLI: `init`, `validate`, `check`, `report`, `upgrade-skills`, `migrate`, `index`, `search`
 - Per-repo canon tree, templates, and `CANON_CONTRACT.md`
 - `future_plans/INDEX.md`: required, scaffolded canon subtree for directional post-MVP initiatives (not behavioral SoT, not a task tracker); `upgrade-skills` migrates existing repos onto it
 - Managed skills (`canon-bootstrap`, `canon-write`, `canon-audit`, `canon-contract`, `canon-future-plan`) dual-written to `.cursor/skills/` and `.claude/skills/`; Cursor pointer rule; short `AGENTS.md` managed block; full pointer-rule body in `CLAUDE.md`
@@ -33,6 +33,7 @@ Ad-hoc agent docs drift from code, contradict each other, and diverge in shape w
 - Deep multi-language AST as the primary audit engine
 - Automatic application-code patches
 - Multiple canons per monorepo; git hooks / CI as the everyday sync trigger (MVP is human-invoked)
+- Dogfood CI in this product repo as everyday sync; adopter CI is documented `validate`, not a required MVP hook
 
 ## Success signals
 
@@ -40,6 +41,7 @@ Ad-hoc agent docs drift from code, contradict each other, and diverge in shape w
 - Different LLMs keep the same required document shapes via in-repo templates
 - `validate` / `check` fail closed on structural breakage; semantic conflicts stay open until the user decides
 - Skills invoke `doc-canon` on PATH and never edit application code
+- An adopter can install from npm (`npx` / global) and bring an existing canon current with `migrate`
 
 ## Future plans (product feature)
 

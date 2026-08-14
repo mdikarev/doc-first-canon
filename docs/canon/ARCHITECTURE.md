@@ -17,7 +17,7 @@ Two layers: a deterministic **CLI** (`doc-canon`) owns schema, scaffold, structu
 ## Building blocks
 
 - **CLI entry & shared** (`src/cli.ts`, `src/paths.ts`, `src/version.ts`) — commander wiring, root/`.doc-canon` path helpers, package/`skills_stamp` constants
-- **CLI commands** (`src/commands/*`) — `init`, `upgrade-skills`, `validate`, `check`, `report`, `index`, `search`
+- **CLI commands** (`src/commands/*`) — `init`, `upgrade-skills`, `migrate`, `validate`, `check`, `report`, `index`, `search`
 - **Contract** (`src/contract/*`) — parse and schema-check the YAML machine block in `CANON_CONTRACT.md`
 - **Validate** (`src/validate/*`) — required files, headings, INDEX↔contract agreement, stamp checks
 - **Agnostic ignore** (`src/agnostic/*`) — default exclude globs plus contract `policies.ignore` matching (via `micromatch`)
@@ -25,6 +25,7 @@ Two layers: a deterministic **CLI** (`doc-canon`) owns schema, scaffold, structu
 - **Report** (`src/report/*`) — merge CLI findings; preserve `source: skill`
 - **Scaffold / embedded** (`src/scaffold/*`, `embedded/**`) — default templates, skills, pointer rule, short `AGENTS.md` block, full-body `CLAUDE.md` upsert
 - **Future plans skeleton** (`src/scaffold/ensure-future-plans.ts`) — idempotently ensures `future_plans/INDEX.md`, its templates, and the contract/INDEX rows exist; `init` creates a fresh required section, `upgrade-skills` migrates existing repos onto it without touching existing initiative prose
+- **Required-gap ensure** (`src/scaffold/ensure-required-gaps.ts`) — creates missing required files/templates and INDEX rows vs the target contract only
 - **Future plans validate zone** — `future_plans/*.md` other than `INDEX.md` are exempt from the "not listed in contract" orphan check; validate instead parses the Initiatives table in `future_plans/INDEX.md` (File column) and requires INDEX↔disk agreement plus required `FUTURE_PLAN` headings on each linked file. Initiatives are **not** per-file contract sections — only `future-plans-index` stays a registered, required section; root `INDEX.md` Sections never list individual initiative files.
 - **Agent skills** (dual-copied into `.cursor/skills/` and `.claude/skills/`) — bootstrap, write, audit, contract, future-plan
 - **Index sync** (`src/index/*`) — hash-driven logical rebuild of a local BM25 index over `docs/canon/**/*.md`: unchanged content hashes are a no-op, any create/update/delete triggers a full rebuild from all current docs (no posting-level incremental updates); poll-based watch (`doc-canon index --watch`, default 2000 ms, `--interval`) with a pid-locked single instance and `--stop`; a thin stable reader facade (`openCanonIndex` from `doc-canon/index-reader`) lets `searchCanon` consume the dual `.doc-canon/index-manifest.json` + `.doc-canon/bm25-index.json` artifacts without ad-hoc JSON parsing
@@ -39,8 +40,9 @@ Two layers: a deterministic **CLI** (`doc-canon`) owns schema, scaffold, structu
 5. **Audit / resolve** — `canon-audit` semantic pass + user decision; apply order: successful apply → set `decision` → Open→Resolved when appropriate.
 6. **Everyday sync** — human-invoked post-hoc `canon-write` / `canon-audit` after meaningful changes.
 7. **Upgrade managed assets** — `upgrade-skills` refreshes dual skill trees, Cursor rule, `AGENTS.md`, and `CLAUDE.md`, ensures the `future_plans/INDEX.md` skeleton (contract entry, INDEX row, templates, index file) exists for repos scaffolded before it was required, and bumps `skills_stamp`, without wiping canon content.
-8. **Future plans validate** — for `future_plans/*.md` (except `INDEX.md`): not orphans; must have a matching `future_plans/INDEX.md` Initiatives row; must carry required `FUTURE_PLAN` headings; root `INDEX.md` Sections stay contract-only.
-9. **Retrieve canon context** — `openCanonIndex` → `searchCanon` (`doc-canon/search`) → CLI/skills. Ranking uses the P0b artifacts, while snippets come from live files. P1 owns retrieval and the pack, not index construction, artifact IO, hashes, or watch behavior.
+8. **Migrate** — precheck schema `1` → gap-fill → `upgrade-skills` (overlays + future_plans skeleton + stamp + validate).
+9. **Future plans validate** — for `future_plans/*.md` (except `INDEX.md`): not orphans; must have a matching `future_plans/INDEX.md` Initiatives row; must carry required `FUTURE_PLAN` headings; root `INDEX.md` Sections stay contract-only.
+10. **Retrieve canon context** — `openCanonIndex` → `searchCanon` (`doc-canon/search`) → CLI/skills. Ranking uses the P0b artifacts, while snippets come from live files. P1 owns retrieval and the pack, not index construction, artifact IO, hashes, or watch behavior.
 
 ## Boundaries & non-responsibilities
 
