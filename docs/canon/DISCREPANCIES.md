@@ -18,6 +18,14 @@ Never silently pick a side. Never edit application code from canon skills.
 
 ## Resolved
 
+### D-008: OVERVIEW fixed initiative range P0–P3 lags added P4/P5
+- **status:** resolved
+- **decision:** docs_stale
+- **canon_paths:** `docs/canon/OVERVIEW.md`, `docs/canon/future_plans/INDEX.md`
+- **code_paths:** (docs↔docs; retrieval of canon paths only)
+- **evidence:** User chose docs_stale. OVERVIEW claimed initiatives "P0–P3" while `future_plans/INDEX.md` lists P0–P5 (P2, P4, P5 draft). Reworded OVERVIEW to point at the INDEX without a fixed range; `doc-canon validate` succeeded in the same session.
+- **finding_ids:** `F-009`
+
 ### D-007: CLI.md stale-index warning omits `--json` pack signal
 - **status:** resolved
 - **decision:** docs_stale
