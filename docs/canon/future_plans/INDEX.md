@@ -29,5 +29,7 @@ Design rationale: [`docs/superpowers/specs/2026-08-09-production-path-roadmap-de
 | 1 | Retrieval search & context pack | absorbed | [p1-retrieval-and-context-pack.md](p1-retrieval-and-context-pack.md) |
 | 2 | Pluggable extractors | draft | [p2-pluggable-extractors.md](p2-pluggable-extractors.md) |
 | 3 | Production hardening | absorbed | [p3-production-hardening.md](p3-production-hardening.md) |
+| 4 | BM25 scoring | draft | [p4-bm25-scoring.md](p4-bm25-scoring.md) |
+| 5 | Glossary-aware search | draft | [p5-glossary-aware-search.md](p5-glossary-aware-search.md) |
 
-P0, P0c, P0b, P1, and P3 are absorbed. P2 (pluggable extractors) remains draft.
+P0, P0c, P0b, P1, and P3 are absorbed. P2 (pluggable extractors), P4 (BM25 scoring), and P5 (glossary-aware search) remain draft.
