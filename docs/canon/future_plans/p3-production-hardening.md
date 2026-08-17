@@ -28,7 +28,6 @@ The Claude Code **universal dual-write** overlay is absorbed into living OVERVIE
 - Prose rewrite in CLI (section bodies, initiatives, or `DISCREPANCIES.md`)
 - Schema-version rewriter / auto-migrate across unsupported `schema_version` jumps
 - Claude Code marketplace / plugin packaging
-- P2 pluggable extractors
 - IDE / plugin UI
 - Skills editing application code
 
