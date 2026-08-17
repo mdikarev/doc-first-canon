@@ -38,7 +38,7 @@ const TEMPLATE_HEADINGS: Record<(typeof TEMPLATE_IDS)[number], string[]> = {
   ARCHITECTURE: ["Architecture", "Summary", "System context", "Building blocks", "Key flows", "Boundaries & non-responsibilities", "Tech & constraints", "Related canon"],
   GLOSSARY: ["Glossary", "How to use", "Terms", "Naming conventions", "Related canon"],
   DISCREPANCIES: ["Discrepancies", "How to use", "Open", "Resolved", "Template for new entries"],
-  CANON_CONTRACT: ["Canon Contract", "Purpose", "How agents must use this file", "Machine contract", "Change policy"],
+  CANON_CONTRACT: ["Canon Contract", "Purpose", "How agents must use this file", "Naming conventions", "Machine contract", "Change policy"],
   SECTION: ["Purpose", "Scope", "Current state", "Rules & invariants", "Key details", "Open questions", "Related canon"],
   ENTITY: ["Purpose", "Scope", "Current state", "Identity & fields", "Lifecycle", "Invariants", "Relations", "Open questions", "Related canon"],
   MODULE: ["Purpose", "Scope", "Current state", "Responsibilities", "Interfaces", "Dependencies", "Invariants", "Open questions", "Related canon"],
