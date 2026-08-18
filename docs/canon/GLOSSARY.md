@@ -84,6 +84,30 @@ A bounded retrieval result containing the query, index identity and freshness, w
 ### index_stale
 A non-fatal search warning that one or more indexed document hashes differ from the live canon corpus. Search serves the Pack with exit 0, surfaces the warning, and does not auto-reindex.
 
+### Source root
+A discovered or configured directory holding the project's source code to be indexed by `code-index build`; found via explicit config, manifest detection (`package.json`, `go.mod`, `*.csproj`/`*.sln`, `Cargo.toml`, `project.godot`, `pyproject.toml`/`setup.py`/`setup.cfg`), or extension-based fallback under the VCS root.
+
+### Symbol
+A named code unit (class, interface, enum, function, method, property, module, const, type, …) extracted from source and normalized into the shared `{ name, kind, signature, file, line, endLine, scope }` model; no per-language output formats are exposed to consumers.
+
+### Extractor
+Per-language tree-sitter WASM pipeline that parses a source file and normalizes its syntax into the shared symbol model; all languages share one extraction discipline with no external processes.
+
+### Anchor
+A same-file syntactic reference from a usage of a symbol to its declaration, resolved by the CST without cross-file name resolution.
+
+### code-index-manifest
+`.doc-canon/code-index-manifest.json`: deterministic, byte-identical code AST index manifest (`schema_version`, `corpus`, `grammar_versions`, `roots`, per-file `hash`/`language`/`symbols`); has no `index_id`/`built_at`, so identical input produces an identical artifact. `grammar_versions` divergence triggers a full rebuild.
+
+### code-ast-index
+`.doc-canon/code-ast-index.json`: serialized symbols and syntactic references (anchors, import/export edges, in-scope bindings) for the discovered source roots, sharing its companion `code-index-manifest`.
+
+### code_index_stale
+A non-fatal freshness signal for the code AST index: one or more indexed source hashes differ from the live tree. Reported independently of the canon `index_stale`.
+
+### code_index_missing
+A fail-closed code-index state: no code AST index artifact exists, so code-side retrieval cannot proceed; a hint to run `doc-canon code-index build` is surfaced.
+
 ## Naming conventions
 
 - Section files use `UPPER_SNAKE` or clear `Title.md` paths registered in the contract (`OVERVIEW.md`, `CLI.md`, …).

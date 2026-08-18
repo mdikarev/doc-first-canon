@@ -29,6 +29,7 @@ Two layers: a deterministic **CLI** (`doc-canon`) owns schema, scaffold, structu
 - **Future plans validate zone** — `future_plans/*.md` other than `INDEX.md` are exempt from the "not listed in contract" orphan check; validate instead parses the Initiatives table in `future_plans/INDEX.md` (File column) and requires INDEX↔disk agreement plus required `FUTURE_PLAN` headings on each linked file. Initiatives are **not** per-file contract sections — only `future-plans-index` stays a registered, required section; root `INDEX.md` Sections never list individual initiative files.
 - **Agent skills** (dual-copied into `.cursor/skills/` and `.claude/skills/`) — bootstrap, write, audit, contract, future-plan
 - **Index sync** (`src/index/*`) — hash-driven logical rebuild of a local BM25 index over `docs/canon/**/*.md`: unchanged content hashes are a no-op, any create/update/delete triggers a full rebuild from all current docs (no posting-level incremental updates); poll-based watch (`doc-canon index --watch`, default 2000 ms, `--interval`) with a pid-locked single instance and `--stop`; a thin stable reader facade (`openCanonIndex` from `doc-canon/index-reader`) lets `searchCanon` consume the dual `.doc-canon/index-manifest.json` + `.doc-canon/bm25-index.json` artifacts without ad-hoc JSON parsing
+- **Code AST index** (`src/code-index/*`) — the code-side probe, a separate artifact from the canon BM25 index: source-root discovery (VCS root up-search, manifest-driven roots for the six supported languages, extension fallback; explicit `.doc-canon/code-index.json` config > manifests > extension scan), a uniform tree-sitter WASM extraction pipeline (`@vscode/tree-sitter-wasm`, pinned) normalized into a shared `{ name, kind, signature, file, line, endLine, scope }` model, and syntactic references (same-file anchors, import/export edges, in-scope local bindings); deterministic byte-identical dual artifact `.doc-canon/code-index-manifest.json` + `.doc-canon/code-ast-index.json` read via an `openCodeIndex` reader-facade (same dual-artifact pattern as `openCanonIndex`); hash-driven freshness (any create/update/delete or `grammar_versions` divergence triggers a full rebuild) with poll-based watch and a separate pid-lock; freshness is reported independently (`code_index_stale` → warn, `code_index_missing` → fail closed)
 - **Retrieval** (`searchCanon` from `doc-canon/search`) — opens the dual index artifacts through `openCanonIndex`, ranks indexed documents, and reads live canon files for bounded snippet windows; the thin `doc-canon search` CLI and skills consume the resulting context pack
 
 ## Key flows
@@ -43,6 +44,7 @@ Two layers: a deterministic **CLI** (`doc-canon`) owns schema, scaffold, structu
 8. **Migrate** — precheck schema `1` → gap-fill → `upgrade-skills` (overlays + future_plans skeleton + stamp + validate).
 9. **Future plans validate** — for `future_plans/*.md` (except `INDEX.md`): not orphans; must have a matching `future_plans/INDEX.md` Initiatives row; must carry required `FUTURE_PLAN` headings; root `INDEX.md` Sections stay contract-only.
 10. **Retrieve canon context** — `openCanonIndex` → `searchCanon` (`doc-canon/search`) → CLI/skills. Ranking uses the P0b artifacts, while snippets come from live files. P1 owns retrieval and the pack, not index construction, artifact IO, hashes, or watch behavior.
+11. **Build code AST index** — `doc-canon code-index build` discovers source roots, parses source files with tree-sitter WASM into the normalized model, and writes the deterministic dual artifact; unchanged hashes are a no-op, any change or `grammar_versions` divergence triggers a full rebuild. `code-index search` and agent rules for code-index-first analysis land with P2b/P2c.
 
 ## Boundaries & non-responsibilities
 
@@ -54,7 +56,7 @@ Two layers: a deterministic **CLI** (`doc-canon`) owns schema, scaffold, structu
 ## Tech & constraints
 
 - Node.js ≥20, TypeScript ESM package `doc-canon` 0.1.1
-- Dependencies: `commander`, `yaml`, `micromatch`
+- Dependencies: `commander`, `yaml`, `micromatch`, `@vscode/tree-sitter-wasm` (code-index extraction)
 - Unknown/incompatible major `schema_version` or too-old `skills_stamp` → validate fails closed
 - Extra template headings allowed; missing required headings fail validate
 - `policies.max_lines` default 400 (hinting / policy as implemented)
