@@ -1,6 +1,6 @@
 # P6a-Go — Go code-refs member-access slice
 
-- **Status:** implementing
+- **Status:** absorbed
 - **Focus:** Go slice of P6: member-access call-site edges for local bindings initialized from composite-literal/pointer structs (`x := &T{}` / `x := T{}` / `var x = T{}`), syntactically, in the Go extractor — unblocks `--refs Type.method` for Go.
 - **Depends on:** P6 (TS/JS v1, absorbed) and P2a-Go (Go extractor, absorbed)
 - **Unblocks:** `--refs Type.method` for Go constructor-backed members; fewer `code_miss` probes
@@ -23,7 +23,7 @@ P6 ships member-access resolution for the TS/JS `new <Type>(...)` pattern. Go co
 
 ## Absorbs into
 
-Likely: `ARCHITECTURE.md` (code AST index — Go member-access), `CLI.md` (`code-index search --refs`), `GLOSSARY.md` (member-access reference — Go pattern).
+Merged: `GLOSSARY.md` (`Member-access reference` term — Go composite/pointer-literal pattern), `CLI.md` (`code-index search --refs Class.method` — Go bindings), `ARCHITECTURE.md` (code AST index — Go member-access edges and same-package post-processing).
 
 ## Open questions
 
