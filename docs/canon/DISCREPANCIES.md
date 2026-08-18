@@ -18,12 +18,20 @@ Never silently pick a side. Never edit application code from canon skills.
 
 ## Resolved
 
+### D-012: ARCHITECTURE understates `.worktrees` default-ignore scope as code discovery only
+- **status:** resolved
+- **decision:** docs_stale
+- **canon_paths:** `docs/canon/ARCHITECTURE.md`
+- **code_paths:** `src/agnostic/ignore.ts`, `src/inventory/build.ts`, `src/code-index/discovery.ts`
+- **evidence:** ARCHITECTURE claimed the `.worktrees` default-ignore addition was "code discovery only", but it was added to the shared `DEFAULT_EXCLUDES` in `src/agnostic/ignore.ts`, which also drives the language-agnostic repo inventory (`src/inventory/build.ts`), so at a root containing `.worktrees` (e.g. the main repo) the inventory omits worktree clones. The canon corpus claim held — `src/index/list.ts` builds the BM25 corpus over `<root>/docs/canon` without ignore filtering — so docs were the stale side. Clarified the wording to state the shared-ignore scope; `doc-canon validate` succeeded in the same session.
+- **finding_ids:** `F-013`
+
 ### D-011: Canon promises import edges; shipped code index carries zero (`resolveImportPath` never substitutes `.js` → `.ts`)
 - **status:** resolved
 - **decision:** code_stale
 - **canon_paths:** `docs/canon/GLOSSARY.md`, `docs/canon/ARCHITECTURE.md`
 - **code_paths:** `src/code-index/extractors/typescript.ts`
-- **evidence:** Canon promised `import` edges in the code AST index; on this repo the shipped index carried zero. The repo's 149 relative imports use the ESM `.js`-extension convention (`from "../index/reader.js"`), and `resolveImportPath` only appended extensions to the specifier — it never substituted `.js` → `.ts` — so every relative import failed to resolve and no import edge was emitted. Resolved by this slice as a bugfix: `resolveImportPath` gains an ESM substitution pass (`.js`→`.ts`, `.jsx`→`.tsx`, `.mjs`→`.mts`, `.cjs`→`.cts`, plus `index.*` fallback) and call-site edges emit `import`-kind edges for identifier usages of imported names; validated by the A+B slice tests and a dogfood rebuild (nonzero import edges on this repo).
+- **evidence:** Canon promised `import` edges in the code AST index; on this repo the shipped index carried zero. The repo's 149 relative imports use the ESM `.js`-extension convention (`from "../index/reader.js"`), and `resolveImportPath` only appended extensions to the specifier — it never substituted `.js` → `.ts` — so every relative import failed to resolve and no import edge was emitted. Resolved by this slice as a bugfix: `resolveImportPath` gains an ESM substitution pass (`.js`→`.ts`, `.jsx`→`.tsx`, `.mjs`→`.mts`, `.cjs`→`.cts`, plus `index.*` fallback) and call-site edges emit `import`-kind edges for identifier usages of imported names; validated by the A+B slice tests and a dogfood rebuild (nonzero import edges on this repo). The closing canon-audit (2026-08-18) confirmed the drift no longer reproduces: the rebuilt index on this worktree carries 1228 import-kind references (previously 0), `resolveImportPath` performs the ESM substitution pass, and the code index is fresh — satisfying the apply-order rule that a `code_stale` entry stays Open until a later audit confirms; status kept Resolved.
 - **finding_ids:** `F-012`
 
 ### D-010: GLOSSARY Source root lists five-language manifest detection as current
