@@ -2,6 +2,18 @@
   "name": "doc-canon",
   "version": "0.3.0",
   "description": "Deterministic canon CLI for agent documentation",
+  "keywords": [
+    "documentation",
+    "canon",
+    "claude",
+    "cursor",
+    "agents",
+    "code-index",
+    "search",
+    "tree-sitter",
+    "bm25",
+    "cli"
+  ],
   "license": "MIT",
   "type": "module",
   "bin": {
