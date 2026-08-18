@@ -6,11 +6,13 @@ export function declarationWindow(
   line: number,
   endLine: number,
   snippetLines: number,
+  body = false,
 ): CodeSearchSnippet | null {
   const lines = content.split("\n");
   const start = Math.max(1, line);
   if (start > lines.length) return null;
-  const end = Math.min(Math.max(endLine, start), start + snippetLines - 1, lines.length);
+  const capped = body ? endLine : Math.min(endLine, start + snippetLines - 1);
+  const end = Math.min(Math.max(capped, start), lines.length);
   if (end < start) return null;
   return { start_line: start, text: lines.slice(start - 1, end).join("\n") };
 }

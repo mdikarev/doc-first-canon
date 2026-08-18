@@ -37,6 +37,7 @@ export type CodeSearchOptions = {
   refs?: string;
   kind?: SymbolKind;
   file?: string;
+  body?: boolean;
 };
 
 export class CodeSearchError extends Error {

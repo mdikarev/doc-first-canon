@@ -157,7 +157,7 @@ export function searchCodeIndex(
       });
       continue;
     }
-    const window = declarationWindow(content, sym.line, sym.endLine, snippetLines);
+    const window = declarationWindow(content, sym.line, sym.endLine, snippetLines, options.body ?? false);
     const n = window === null ? 0 : window.text.split("\n").length;
     hits.push({
       file: sym.file,

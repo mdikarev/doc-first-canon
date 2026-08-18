@@ -155,6 +155,7 @@ codeIndex
   .option("--kind <type>", "filter symbols by SymbolKind")
   .option("--file <glob>", "filter by file glob (micromatch)")
   .option("--refs <name>", "reference mode: syntactic references to name")
+  .option("--body", "show the full declaration body to endLine")
   .action(
     async (
       query: string | undefined,
@@ -166,6 +167,7 @@ codeIndex
         kind?: string;
         file?: string;
         refs?: string;
+        body?: boolean;
       },
     ) => {
       const { codeIndexSearch } = await import("./commands/code-index-search-cmd.js");

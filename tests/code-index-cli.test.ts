@@ -51,4 +51,14 @@ describe("doc-canon code-index cli", () => {
     assert.notEqual(r.status, 0);
     assert.match(r.stderr + r.stdout, /mutually exclusive/);
   });
+
+  it("--body with --refs fails closed", () => {
+    const r = spawnSync(
+      "node",
+      [bin, "code-index", "search", "--refs", "Reader", "--body", "--root", repo],
+      { cwd: repoRoot, encoding: "utf8" },
+    );
+    assert.notEqual(r.status, 0);
+    assert.match(r.stderr + r.stdout, /--body/);
+  });
 });

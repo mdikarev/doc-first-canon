@@ -29,6 +29,7 @@ export type CodeIndexSearchOptions = {
   kind?: string;
   file?: string;
   refs?: string;
+  body?: boolean;
 };
 
 function printHitLines(header: string, snippets: { text: string }[]): void {
@@ -74,6 +75,10 @@ export async function codeIndexSearch(
     console.error(`error: unknown --kind ${opts.kind}`);
     return 1;
   }
+  if (opts.body && opts.refs !== undefined) {
+    console.error("error: --body cannot be combined with --refs");
+    return 1;
+  }
 
   const maxHits = Number(opts.maxHits ?? "10");
   const snippetLines = Number(opts.snippetLines ?? "4");
@@ -93,6 +98,7 @@ export async function codeIndexSearch(
       refs: opts.refs,
       kind: opts.kind as SymbolKind | undefined,
       file: opts.file,
+      body: opts.body,
     });
 
     if (opts.json) {

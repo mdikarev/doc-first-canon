@@ -227,4 +227,12 @@ describe("searchCodeIndex", () => {
     const names = (pack.hits as { name: string }[]).map((h) => h.name);
     assert.ok(names.includes("normalize"));
   });
+
+  it("body option widens the snippet window to endLine", async () => {
+    write(repo, "src/wide.ts", "export function wide(): number {\n  const a = 1;\n  const b = 2;\n  return a + b;\n}");
+    await syncCodeIndex(repo);
+    const pack = searchCodeIndex(repo, "wide", { body: true });
+    const hit = pack.hits[0] as { snippets: { text: string }[] };
+    assert.ok(hit.snippets[0]!.text.split("\n").length >= 5);
+  });
 });
