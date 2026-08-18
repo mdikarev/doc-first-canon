@@ -207,19 +207,34 @@ h.build("q");`;
     );
   });
 
-  it("does not emit member-access edges for factory, namespace, or chained objects", async () => {
+  it("does not emit member-access edges for factory or namespace objects", async () => {
     const text = `import * as NS from "./ns.js";
 export function run(): void {
   const h = openCanonIndex();
   h.score("q");
   const ns = new NS.Bm25Index();
   ns.build();
-  const chained = new Chained();
-  chained.get().run();
 }`;
     const known = new Set(["src/ns.ts", "src/run.ts"]);
     const { references } = await extractFile("src/run.ts", text, known);
     const members = references.filter((r) => r.kind === "import" && r.name.includes("."));
     assert.equal(members.length, 0);
+  });
+
+  it("emits only the resolvable leading link in chained member access", async () => {
+    const text = `export class Chained {
+  get(): Chained { return this; }
+  run(): void {}
+}
+export function run(): void {
+  const chained = new Chained();
+  chained.get().run();
+}`;
+    const { references } = await extractFile("src/run.ts", text, new Set());
+    const members = references.filter((r) => r.kind === "import" && r.name.includes("."));
+    assert.deepEqual(
+      members.map((r) => ({ name: r.name, to: r.to })).sort((a, b) => a.name.localeCompare(b.name)),
+      [{ name: "Chained.get", to: "src/run.ts" }],
+    );
   });
 });
