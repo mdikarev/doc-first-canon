@@ -18,6 +18,14 @@ Never silently pick a side. Never edit application code from canon skills.
 
 ## Resolved
 
+### D-011: Canon promises import edges; shipped code index carries zero (`resolveImportPath` never substitutes `.js` → `.ts`)
+- **status:** resolved
+- **decision:** code_stale
+- **canon_paths:** `docs/canon/GLOSSARY.md`, `docs/canon/ARCHITECTURE.md`
+- **code_paths:** `src/code-index/extractors/typescript.ts`
+- **evidence:** Canon promised `import` edges in the code AST index; on this repo the shipped index carried zero. The repo's 149 relative imports use the ESM `.js`-extension convention (`from "../index/reader.js"`), and `resolveImportPath` only appended extensions to the specifier — it never substituted `.js` → `.ts` — so every relative import failed to resolve and no import edge was emitted. Resolved by this slice as a bugfix: `resolveImportPath` gains an ESM substitution pass (`.js`→`.ts`, `.jsx`→`.tsx`, `.mjs`→`.mts`, `.cjs`→`.cts`, plus `index.*` fallback) and call-site edges emit `import`-kind edges for identifier usages of imported names; validated by the A+B slice tests and a dogfood rebuild (nonzero import edges on this repo).
+- **finding_ids:** `F-012`
+
 ### D-010: GLOSSARY Source root lists five-language manifest detection as current
 - **status:** resolved
 - **decision:** docs_stale

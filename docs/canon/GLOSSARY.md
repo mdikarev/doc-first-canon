@@ -100,7 +100,7 @@ A same-file syntactic reference from a usage of a symbol to its declaration, res
 `.doc-canon/code-index-manifest.json`: deterministic, byte-identical code AST index manifest (`schema_version`, `corpus`, `grammar_versions`, `roots`, per-file `hash`/`language`/`symbols`); has no `index_id`/`built_at`, so identical input produces an identical artifact. `grammar_versions` divergence triggers a full rebuild.
 
 ### code-ast-index
-`.doc-canon/code-ast-index.json`: serialized symbols and syntactic references (anchors, import edges, in-scope bindings) for the discovered source roots, sharing its companion `code-index-manifest`.
+`.doc-canon/code-ast-index.json`: serialized symbols and syntactic references (anchors, import edges, in-scope bindings) for the discovered source roots, sharing its companion `code-index-manifest`. `import` edges resolve ESM `.js`/`.jsx`/`.mjs`/`.cjs` import specifiers to their TS/TSX sources and include call-site edges — identifier usages of imported names emit an `import`-kind edge to the definition file.
 
 ### code_index_stale
 A non-fatal freshness signal for the code AST index: one or more indexed source hashes differ from the live tree. Reported independently of the canon `index_stale`.
@@ -115,7 +115,7 @@ An agent-facing miss report when a code-index probe returns nothing or a thin se
 A bounded code retrieval result (CodePack) containing the query, mode (`symbols` or `refs`), freshness (`fresh`/`stale`), warnings, and symbol or syntactic-reference hits with short snippet windows from live files.
 
 ### Syntactic reference
-A reference edge already carried by the code AST index — same-file `anchor`, `import` edge, or in-scope `binding` — matched syntactically by `--refs` with no name resolution.
+A reference edge already carried by the code AST index — same-file `anchor`, `import` edge, or in-scope `binding` — matched syntactically by `--refs` with no name resolution. `import` edges are cross-file: they resolve ESM `.js`/`.jsx`/`.mjs`/`.cjs` import specifiers to their TS/TSX sources and include call-site edges (identifier usages of imported names emit an `import`-kind edge to the definition file).
 
 ## Naming conventions
 
