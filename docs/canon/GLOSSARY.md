@@ -64,10 +64,10 @@ Canon subtree `docs/canon/future_plans/` for initiatives describing the **future
 Validate behavior for `future_plans/*.md` other than `INDEX.md`: exempt from the "not listed in contract" orphan check; instead checked against `future_plans/INDEX.md`'s Initiatives table (INDEX↔disk agreement) and required `FUTURE_PLAN` headings. Replaces per-initiative `future-p*` contract rows.
 
 ### index-manifest
-`.doc-canon/index-manifest.json`: BM25 index manifest artifact (`schema_version`, opaque `index_id`, `built_at`, per-doc `hash`/`token_count`) written last as the commit marker after a successful `bm25-index` write.
+`.doc-canon/index-manifest.json`: BM25 index manifest artifact (`schema_version`, opaque `index_id`, `built_at`, per-doc `hash`/`token_count`, `tokenizer_version`) written last as the commit marker after a successful `bm25-index` write.
 
 ### bm25-index
-`.doc-canon/bm25-index.json`: serialized Okapi BM25 data (postings/df/doc-length) for the current corpus, sharing `index_id` with its companion `index-manifest`.
+`.doc-canon/bm25-index.json`: serialized Okapi BM25 data (postings/df/doc-length) for the current corpus, `schema_version: 2`, sharing `index_id` with its companion `index-manifest`. An optional per-doc `heading_terms` field carries the tokens of heading lines (`#`–`######`); the reader treats a missing field as no heading terms.
 
 ### index_id
 Opaque string shared by one `index-manifest` + `bm25-index` pair from the same rebuild; a mismatch between the two makes the `openCanonIndex` reader facade fail closed.
@@ -75,11 +75,26 @@ Opaque string shared by one `index-manifest` + `bm25-index` pair from the same r
 ### doc_hash
 Per-document `sha256:<hex>` content hash recorded in `index-manifest`, used to detect create/update/delete and trigger a full BM25 rebuild.
 
+### tokenizer_version
+A constant in `index-manifest.json` identifying the tokenizer semantics (lowercase/split + stemming). A mismatch vs. the current value at build time forces a full BM25 rebuild — `doc_hash` is a content hash and cannot detect a tokenizer change alone. Mirrors `grammar_versions` for the code index.
+
+### Stemmer
+A dependency-free light EN/RU suffix-strip applied to every token inside `tokenize`, so index and query tokenize identically (consistency is required for BM25 matching). EN strips `ing`/`ed`/`ly`/`er`/`est`, maps `ies→y`, and strips `es`/`s`; RU strips `ов`/`ев`/`ами`/`ями`/`ом`/`ем`/`ах`/`ях`/`ый`/`ий`/`ой`/`ая`/`яя`/`ое`/`ее`/`ие`/`ые`/`и`/`а`/`я`/`о`/`е`/`у`/`ю`. Only tokens longer than 3 chars are stemmed; first matching rule wins, single application — so `index`/`indexes`/`indexed`/`indexing` and `индекс`/`индекса`/`индексу` collapse to the same stem.
+
+### Heading weight
+A per-term score multiplier of 1.5 (`HEADING_WEIGHT`) applied when a term is in a doc's heading set — the tokens of markdown heading lines (`#`–`######`), stored as an optional `heading_terms` field in the BM25 state. Heading hits outrank body-only hits for equal otherwise.
+
+### Liveness
+The search downweight of `docs/canon/future_plans/**`: paths starting `future_plans/` get their final score multiplied by 0.5 (`FUTURE_PLANS_WEIGHT`) so living canon (OVERVIEW/CLI/GLOSSARY/ARCHITECTURE) outranks directional plans for conceptual queries. Fixed constant; no `policies` knob.
+
 ### Pack
 A bounded retrieval result containing the query, index identity and freshness, warnings, and ranked canon hits with scores and short snippet windows from live files.
 
 ### searchCanon / search
 `searchCanon` is the public `doc-canon/search` API that ranks canon documents from the local BM25 index and builds a Pack from live-file snippets. `doc-canon search` is its thin human/JSON CLI wrapper.
+
+### Glossary expansion
+Search-time query expansion from `GLOSSARY.md`: a query term equal to a glossary term or one of its synonyms adds that entry's full token set (canonical term tokens + synonym tokens) to the query term set before scoring — additive (OR), never dropping original terms. The glossary is read live at search time via the contract's glossary role (no manifest snapshot); a missing or unparsable glossary fails open to plain search.
 
 ### index_stale
 A non-fatal search warning that one or more indexed document hashes differ from the live canon corpus. Search serves the Pack with exit 0, surfaces the warning, and does not auto-reindex.
