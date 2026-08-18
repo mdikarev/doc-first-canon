@@ -4,10 +4,11 @@ import path from "node:path";
 import micromatch from "micromatch";
 import { openCodeIndex } from "../code-index/reader.js";
 import { isFresh } from "../agnostic/freshness.js";
-import { declarationWindow } from "./snippets.js";
+import { centeredWindow, declarationWindow } from "./snippets.js";
 import {
   CodeSearchError,
   type CodePack,
+  type CodeRefHit,
   type CodeSearchHit,
   type CodeSearchOptions,
 } from "./types.js";
@@ -43,7 +44,8 @@ export function searchCodeIndex(
   query: string,
   options: CodeSearchOptions = {},
 ): CodePack {
-  const effective = query.trim();
+  const refsMode = options.refs !== undefined;
+  const effective = (refsMode ? options.refs! : query).trim();
   if (!effective) {
     throw new CodeSearchError("empty_query", "query must be non-empty");
   }
@@ -66,6 +68,53 @@ export function searchCodeIndex(
   const fresh = isFresh(handle.manifest.files, live);
   const freshness = fresh ? "fresh" : "stale";
   const warnings = fresh ? [] : ["code_index_stale"];
+
+  if (refsMode) {
+    const refs = handle
+      .references()
+      .filter((r) => r.name === effective)
+      .sort((a, b) => {
+        if (a.from < b.from) return -1;
+        if (a.from > b.from) return 1;
+        return a.line - b.line;
+      })
+      .slice(0, maxHits);
+
+    const hits: CodeRefHit[] = [];
+    let usedLines = 0;
+    for (const ref of refs) {
+      const abs = path.join(root, ...ref.from.split("/"));
+      let content: string;
+      try {
+        content = fs.readFileSync(abs, "utf8");
+      } catch {
+        hits.push({
+          file: ref.from,
+          line: ref.line,
+          refKind: ref.kind,
+          name: ref.name,
+          from: ref.from,
+          to: ref.to,
+          snippets: [],
+        });
+        continue;
+      }
+      const window = centeredWindow(content, ref.line, snippetLines);
+      const n = window === null ? 0 : window.text.split("\n").length;
+      hits.push({
+        file: ref.from,
+        line: ref.line,
+        refKind: ref.kind,
+        name: ref.name,
+        from: ref.from,
+        to: ref.to,
+        snippets: window !== null && usedLines + n <= DEFAULTS.maxSnippetLinesTotal ? [window] : [],
+      });
+      if (window !== null) usedLines += n;
+    }
+
+    return { query: effective, mode: "refs", freshness, warnings, hits };
+  }
 
   const symbols = handle
     .symbols()

@@ -141,4 +141,43 @@ describe("searchCodeIndex", () => {
     const b = JSON.stringify(searchCodeIndex(repo, "Reader"));
     assert.equal(a, b);
   });
+
+  it("refs mode matches syntactically and orders by file, line", () => {
+    const pack = searchCodeIndex(repo, "", { refs: "Reader" });
+    assert.equal(pack.mode, "refs");
+    assert.ok(pack.hits.length >= 1);
+    const importHit = pack.hits.find((h) => h.refKind === "import");
+    assert.ok(importHit);
+    assert.equal(importHit.name, "Reader");
+    assert.equal(importHit.from, "src/main.ts");
+    assert.equal(importHit.to, "src/reader.ts");
+    assert.equal(importHit.file, "src/main.ts");
+    const sorted = pack.hits.map((h) => `${h.file}:${h.line}`);
+    assert.deepEqual(sorted, [...sorted].sort());
+  });
+
+  it("refs mode is case-sensitive and exact", () => {
+    const lower = searchCodeIndex(repo, "", { refs: "reader" });
+    assert.deepEqual(lower.hits, []);
+    const partial = searchCodeIndex(repo, "", { refs: "Reade" });
+    assert.deepEqual(partial.hits, []);
+  });
+
+  it("refs mode returns a centered snippet window", async () => {
+    write(repo, "src/caller.ts", "import { Reader } from './reader';\n// fill\n// fill\n// fill\n// fill\n");
+    await syncCodeIndex(repo);
+    const pack = searchCodeIndex(repo, "", { refs: "Reader", snippetLines: 3 });
+    const hit = pack.hits.find((h) => h.file === "src/caller.ts");
+    assert.ok(hit);
+    assert.equal(hit.snippets.length, 1);
+    assert.ok(hit.snippets[0]!.text.includes("import { Reader }"));
+  });
+
+  it("throws empty_query in refs mode with an empty refs name", () => {
+    assert.throws(() => searchCodeIndex(repo, "", { refs: "   " }), (e: unknown) => {
+      assert.ok(e instanceof CodeSearchError);
+      assert.equal(e.code, "empty_query");
+      return true;
+    });
+  });
 });
