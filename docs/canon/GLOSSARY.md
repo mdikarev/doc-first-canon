@@ -108,6 +108,9 @@ A non-fatal freshness signal for the code AST index: one or more indexed source 
 ### code_index_missing
 A fail-closed code-index state: no code AST index artifact exists, so code-side retrieval cannot proceed; a hint to run `doc-canon code-index build` is surfaced.
 
+### code_miss
+An agent-facing miss report when a code-index probe returns nothing or a thin set: the agent reads source as evidence and notes `code_miss: <query> -> source:<path>`, mirroring the canon's visible Expand gate. Code-index-first analysis applies to the five covered languages (TypeScript/JavaScript, Go, C#, Rust, Python); uncovered languages go straight to source.
+
 ### Code pack
 A bounded code retrieval result (CodePack) containing the query, mode (`symbols` or `refs`), freshness (`fresh`/`stale`), warnings, and symbol or syntactic-reference hits with short snippet windows from live files.
 

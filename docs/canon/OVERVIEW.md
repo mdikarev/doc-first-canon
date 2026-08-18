@@ -27,6 +27,7 @@ Ad-hoc agent docs drift from code, contradict each other, and diverge in shape w
 - Deterministic AST index over discovered source roots via `doc-canon code-index build` (separate `.doc-canon/code-index-manifest.json` + `.doc-canon/code-ast-index.json`; optional poll `--watch`) — the code-side probe, distinct from the canon documentation index
 - Bounded context packs via public `searchCanon` (`doc-canon/search`) and the human/JSON `doc-canon search` CLI, with ranked paths, scores, and live-file snippets
 - Bounded code packs via public `searchCodeIndex` (`doc-canon/code-search`) and the human/JSON `code-index search` CLI, with substring symbol hits (`--kind`/`--file` filters), syntactic `--refs` mode, and live-file snippet windows
+- Code-index-first analysis discipline for covered languages: the pointer rule, `AGENTS.md` block, and canon skills require trying `code-index search` before whole-file source reads; empty/thin results fall back to source with a `code_miss` note (quality over thrift)
 - Human-in-the-loop discrepancy workflow (skills never patch application code)
 
 ### Out of scope
