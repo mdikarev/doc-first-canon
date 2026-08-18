@@ -108,6 +108,12 @@ A non-fatal freshness signal for the code AST index: one or more indexed source 
 ### code_index_missing
 A fail-closed code-index state: no code AST index artifact exists, so code-side retrieval cannot proceed; a hint to run `doc-canon code-index build` is surfaced.
 
+### Code search pack
+A bounded code retrieval result (CodePack) containing the query, mode (`symbols` or `refs`), freshness (`fresh`/`stale`), warnings, and symbol or syntactic-reference hits with short snippet windows from live files.
+
+### Syntactic reference
+A reference edge already carried by the code AST index — same-file `anchor`, `import`/`export` edge, or in-scope `binding` — matched syntactically by `--refs` with no name resolution.
+
 ## Naming conventions
 
 - Section files use `UPPER_SNAKE` or clear `Title.md` paths registered in the contract (`OVERVIEW.md`, `CLI.md`, …).

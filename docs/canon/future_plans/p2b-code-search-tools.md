@@ -1,9 +1,10 @@
 # P2b — Code search tools
 
-- **Status:** draft
+- **Status:** implementing
 - **Focus:** A CLI search interface over the P2a code AST index: query by symbol name, type, file, and cross-symbol references; emit bounded results (path/line/kind/short snippet) rather than whole files; freshness policy at search time.
 - **Depends on:** P2a (code AST index construction)
 - **Unblocks:** P2c (code analysis rules) — rules can only require index-first analysis once search exists
+- **Design:** [`docs/superpowers/specs/2026-08-18-p2b-code-search-tools-design.md`](../../superpowers/specs/2026-08-18-p2b-code-search-tools-design.md) — SoT for the `code-index search` surface
 
 ## Intent
 
