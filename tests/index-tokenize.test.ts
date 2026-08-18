@@ -13,4 +13,7 @@ describe("tokenize", () => {
     assert.deepEqual(tokenize("   "), []);
     assert.deepEqual(tokenize("---"), []);
   });
+  it("stems tokens identically for index and query", () => {
+    assert.deepEqual(tokenize("Indexing indexed indexes"), ["index", "index", "index"]);
+  });
 });
