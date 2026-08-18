@@ -2,7 +2,9 @@ import fs from "node:fs";
 import path from "node:path";
 import { isFresh } from "../agnostic/freshness.js";
 import { openCanonIndex } from "../index/reader.js";
+import { tokenize } from "../index/tokenize.js";
 import { extractSnippetWindows } from "./snippets.js";
+import { expandGlossaryQuery, loadGlossary } from "./glossary.js";
 import {
   SearchError,
   type PackHit,
@@ -57,7 +59,9 @@ export function searchCanon(
   const freshness = fresh ? "fresh" : "stale";
   const warnings = fresh ? [] : ["index_stale"];
 
-  const ranked = handle.score(trimmed).slice(0, maxHits);
+  const glossary = loadGlossary(root);
+  const effective = expandGlossaryQuery(trimmed, glossary);
+  const ranked = handle.score(effective).slice(0, maxHits);
   const hits: PackHit[] = [];
   let usedLines = 0;
 

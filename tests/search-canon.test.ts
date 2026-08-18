@@ -78,4 +78,42 @@ describe("searchCanon", () => {
     const pack = searchCanon(root, "retrieval", { maxHits: 1 });
     assert.equal(pack.hits.length, 1);
   });
+
+  it("glossary expansion makes SoT find source-of-truth docs", async () => {
+    fs.writeFileSync(
+      path.join(root, "docs", "canon", "CANON_CONTRACT.md"),
+      `# Canon Contract
+
+## Machine contract
+
+\`\`\`yaml
+schema_version: 1
+cli_compat: ">=0.1.0"
+skills_stamp: "0.1.0"
+sections:
+  - { id: glossary, path: GLOSSARY.md, role: glossary, required: true, template: GLOSSARY }
+templates:
+  - { id: GLOSSARY, path: templates/GLOSSARY.md }
+policies:
+  max_lines: 400
+  ignore: []
+\`\`\`
+`,
+    );
+    fs.writeFileSync(
+      path.join(root, "docs", "canon", "GLOSSARY.md"),
+      `# Glossary
+## Terms
+### SoT
+source of truth
+`,
+    );
+    fs.writeFileSync(
+      path.join(root, "docs", "canon", "plain.md"),
+      "source of truth retrieval",
+    );
+    await syncCanonIndex(root);
+    const pack = searchCanon(root, "SoT");
+    assert.ok(pack.hits.some((h) => h.path.endsWith("plain.md")));
+  });
 });
