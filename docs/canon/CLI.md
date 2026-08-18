@@ -12,7 +12,7 @@ Own the deterministic core of `doc-canon`: scaffold, structural validation, inve
 
 ## Current state
 
-MVP package `doc-canon@0.1.1` (Node ≥20, ESM). Entry: `bin/doc-canon.js` → compiled `dist/`. Commands: `init`, `validate`, `check`, `report`, `upgrade-skills`, `migrate`, `index`, `search`; `code-index build` / `code-index search` ship with the P2a/P2b initiatives (tree-sitter WASM extraction over discovered source roots, and search over that code AST index). All commands accept `--root <path>` (default: cwd).
+MVP package `doc-canon@0.1.1` (Node ≥20, ESM). Entry: `bin/doc-canon.js` → compiled `dist/`. Commands: `init`, `validate`, `check`, `report`, `upgrade-skills`, `migrate`, `index`, `search`, plus the `code-index` subcommands `build` (tree-sitter WASM extraction over discovered source roots) and `search` (search over that code AST index). All commands accept `--root <path>` (default: cwd).
 
 ## Responsibilities
 
@@ -48,7 +48,7 @@ Artifacts: `.doc-canon/inventory.json`, `.doc-canon/report.json`, `.doc-canon/in
 
 `search` fails with exit ≠0 for an empty or whitespace-only query and for a missing or corrupt index; index failures include a hint to run `doc-canon index`. A stale index is served with exit 0 and an `index_stale` signal: human mode prints a warning on stderr; `--json` includes `warnings` (and `freshness`) in the Pack on stdout with no stderr warning. Zero hits also exit 0. `search` never auto-reindexes.
 
-`code-index search` fails with exit ≠0 for an empty query, a missing/corrupt code index (hint to run `doc-canon code-index build`), invalid flags, and `--refs` combined with a positional query / `--kind` / `--file`. A stale code index is served with exit 0 and a `code_index_stale` warning (human mode on stderr; `--json` carries `warnings` + `freshness`). Zero hits exit 0. `code-index search` never auto-reindexes.
+`code-index search` fails with exit ≠0 for an empty query, an empty `--refs` name, a missing/corrupt code index (hint to run `doc-canon code-index build`), invalid flags, and `--refs` combined with a positional query / `--kind` / `--file`. A stale code index is served with exit 0 and a `code_index_stale` warning (human mode on stderr; `--json` carries `warnings` + `freshness`). Zero hits exit 0. `code-index search` never auto-reindexes.
 
 ## Dependencies
 

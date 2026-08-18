@@ -18,7 +18,7 @@ Ad-hoc agent docs drift from code, contradict each other, and diverge in shape w
 
 ### In scope
 
-- CLI: `init`, `validate`, `check`, `report`, `upgrade-skills`, `migrate`, `index`, `search`, `code-index build`
+- CLI: `init`, `validate`, `check`, `report`, `upgrade-skills`, `migrate`, `index`, `search`, `code-index build`, `code-index search`
 - Per-repo canon tree, templates, and `CANON_CONTRACT.md`
 - `future_plans/INDEX.md`: required, scaffolded canon subtree for directional post-MVP initiatives (not behavioral SoT, not a task tracker); `upgrade-skills` migrates existing repos onto it
 - Managed skills (`canon-bootstrap`, `canon-write`, `canon-audit`, `canon-contract`, `canon-future-plan`) dual-written to `.cursor/skills/` and `.claude/skills/`; Cursor pointer rule; short `AGENTS.md` managed block; full pointer-rule body in `CLAUDE.md`
@@ -26,6 +26,7 @@ Ad-hoc agent docs drift from code, contradict each other, and diverge in shape w
 - Local BM25 index over `docs/canon/**/*.md` via `doc-canon index` (manifest + bm25 artifacts under `.doc-canon/`; optional poll `--watch`)
 - Deterministic AST index over discovered source roots via `doc-canon code-index build` (separate `.doc-canon/code-index-manifest.json` + `.doc-canon/code-ast-index.json`; optional poll `--watch`) — the code-side probe, distinct from the canon documentation index
 - Bounded context packs via public `searchCanon` (`doc-canon/search`) and the human/JSON `doc-canon search` CLI, with ranked paths, scores, and live-file snippets
+- Bounded code packs via public `searchCodeIndex` (`doc-canon/code-search`) and the human/JSON `code-index search` CLI, with substring symbol hits (`--kind`/`--file` filters), syntactic `--refs` mode, and live-file snippet windows
 - Human-in-the-loop discrepancy workflow (skills never patch application code)
 
 ### Out of scope

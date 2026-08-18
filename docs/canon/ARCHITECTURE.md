@@ -45,7 +45,7 @@ Two layers: a deterministic **CLI** (`doc-canon`) owns schema, scaffold, structu
 8. **Migrate** — precheck schema `1` → gap-fill → `upgrade-skills` (overlays + future_plans skeleton + stamp + validate).
 9. **Future plans validate** — for `future_plans/*.md` (except `INDEX.md`): not orphans; must have a matching `future_plans/INDEX.md` Initiatives row; must carry required `FUTURE_PLAN` headings; root `INDEX.md` Sections stay contract-only.
 10. **Retrieve canon context** — `openCanonIndex` → `searchCanon` (`doc-canon/search`) → CLI/skills. Ranking uses the P0b artifacts, while snippets come from live files. P1 owns retrieval and the pack, not index construction, artifact IO, hashes, or watch behavior.
-11. **Build code AST index** — `doc-canon code-index build` discovers source roots, parses source files with tree-sitter WASM into the normalized model, and writes the deterministic dual artifact; unchanged hashes are a no-op, any change or `grammar_versions` divergence triggers a full rebuild. `code-index search` (P2b) queries that artifact at search time; agent rules for code-index-first analysis land with P2c.
+11. **Build code AST index** — `doc-canon code-index build` discovers source roots, parses source files with tree-sitter WASM into the normalized model, and writes the deterministic dual artifact; unchanged hashes are a no-op, any change or `grammar_versions` divergence triggers a full rebuild. `code-index search` queries that artifact at search time; agent rules for code-index-first analysis land with P2c.
 
 ## Boundaries & non-responsibilities
 
