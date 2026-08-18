@@ -1112,6 +1112,13 @@ describe("doc-canon code-index search cli", () => {
     assert.match(r.stdout, /no hits/);
   });
 
+  it("--file glob matching nothing exits 0 with 'no hits'", () => {
+    assert.equal(run(["code-index", "build", "--root", repo]).status, 0);
+    const r = run(["code-index", "search", "Reader", "--root", repo, "--file", "zzz/*.ts"]);
+    assert.equal(r.status, 0, r.stderr + r.stdout);
+    assert.match(r.stdout, /no hits/);
+  });
+
   it("is byte-deterministic across two invocations", () => {
     assert.equal(run(["code-index", "build", "--root", repo]).status, 0);
     const a = run(["code-index", "search", "Reader", "--root", repo, "--json"]);
