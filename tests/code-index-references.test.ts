@@ -156,4 +156,70 @@ export function run(): void {
       [{ name: "openReader", to: "src/reader.ts" }],
     );
   });
+
+  it("emits member-access edges for constructor-backed imported bindings", async () => {
+    const text = `import { Bm25Index } from "./bm25.js";
+export function run(): void {
+  const h = new Bm25Index();
+  h.build("q");
+  const v = h.score;
+}`;
+    const known = new Set(["src/index/bm25.ts", "src/index/run.ts"]);
+    const { references } = await extractFile("src/index/run.ts", text, known);
+    const members = references
+      .filter((r) => r.kind === "import" && r.name.includes("."))
+      .sort((a, b) => a.name.localeCompare(b.name));
+    assert.deepEqual(
+      members.map((r) => ({ name: r.name, to: r.to, from: r.from })),
+      [
+        { name: "Bm25Index.build", to: "src/index/bm25.ts", from: "src/index/run.ts" },
+        { name: "Bm25Index.score", to: "src/index/bm25.ts", from: "src/index/run.ts" },
+      ],
+    );
+  });
+
+  it("emits member-access edges for same-file class constructors", async () => {
+    const text = `export class Reader {
+  score(q: string): number { return q.length; }
+}
+export function run(): void {
+  const r = new Reader();
+  r.score("q");
+}`;
+    const { references } = await extractFile("src/reader.ts", text, new Set());
+    const members = references.filter((r) => r.kind === "import" && r.name === "Reader.score");
+    assert.deepEqual(
+      members.map((r) => ({ name: r.name, to: r.to })),
+      [{ name: "Reader.score", to: "src/reader.ts" }],
+    );
+  });
+
+  it("resolves aliased constructors to canonical member names", async () => {
+    const text = `import { Bm25Index as BM } from "./bm25.js";
+const h = new BM();
+h.build("q");`;
+    const known = new Set(["src/index/bm25.ts", "src/index/run.ts"]);
+    const { references } = await extractFile("src/index/run.ts", text, known);
+    const members = references.filter((r) => r.kind === "import" && r.name.includes("."));
+    assert.deepEqual(
+      members.map((r) => ({ name: r.name, to: r.to })),
+      [{ name: "Bm25Index.build", to: "src/index/bm25.ts" }],
+    );
+  });
+
+  it("does not emit member-access edges for factory, namespace, or chained objects", async () => {
+    const text = `import * as NS from "./ns.js";
+export function run(): void {
+  const h = openCanonIndex();
+  h.score("q");
+  const ns = new NS.Bm25Index();
+  ns.build();
+  const chained = new Chained();
+  chained.get().run();
+}`;
+    const known = new Set(["src/ns.ts", "src/run.ts"]);
+    const { references } = await extractFile("src/run.ts", text, known);
+    const members = references.filter((r) => r.kind === "import" && r.name.includes("."));
+    assert.equal(members.length, 0);
+  });
 });

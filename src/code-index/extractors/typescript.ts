@@ -361,6 +361,78 @@ function collectCallSiteEdges(
   visit(root);
 }
 
+function collectConstructorBindings(root: Node): Map<string, string> {
+  const bindings = new Map<string, string>();
+  const visit = (node: Node): void => {
+    if (node.type === "lexical_declaration") {
+      for (const child of node.namedChildren) {
+        if (child.type !== "variable_declarator") continue;
+        const name = child.childForFieldName("name")?.text;
+        const value = child.childForFieldName("value");
+        if (name && value?.type === "new_expression") {
+          const ctor = value.childForFieldName("constructor");
+          if (ctor?.type === "identifier") bindings.set(name, ctor.text);
+        }
+      }
+    }
+    for (const c of node.namedChildren) visit(c);
+  };
+  visit(root);
+  return bindings;
+}
+
+const MEMBER_PROPERTY_TYPES = new Set([
+  "property_identifier",
+  "identifier",
+  "private_property_identifier",
+]);
+
+function collectMemberAccessEdges(
+  root: Node,
+  ctx: WalkCtx,
+  constructorBindings: Map<string, string>,
+  importedNames: Map<string, { to: string; canonical: string }>,
+): void {
+  const symbolNames = new Set(ctx.symbols.map((s) => s.name));
+  const visit = (node: Node): void => {
+    if (node.type === "member_expression") {
+      const object = node.childForFieldName("object");
+      const property = node.childForFieldName("property");
+      if (
+        object &&
+        object.type === "identifier" &&
+        property &&
+        MEMBER_PROPERTY_TYPES.has(property.type)
+      ) {
+        const binding = object.text;
+        const ctorName = constructorBindings.get(binding);
+        if (ctorName !== undefined) {
+          const imported = importedNames.get(ctorName);
+          if (imported !== undefined) {
+            ctx.references.push({
+              kind: "import",
+              from: ctx.file,
+              to: imported.to,
+              name: `${imported.canonical}.${property.text}`,
+              line: node.startPosition.row + 1,
+            });
+          } else if (symbolNames.has(ctorName)) {
+            ctx.references.push({
+              kind: "import",
+              from: ctx.file,
+              to: ctx.file,
+              name: `${ctorName}.${property.text}`,
+              line: node.startPosition.row + 1,
+            });
+          }
+        }
+      }
+    }
+    for (const c of node.namedChildren) visit(c);
+  };
+  visit(root);
+}
+
 function collectBindingNames(root: Node): Set<string> {
   const names = new Set<string>();
   const visit = (node: Node): void => {
@@ -426,6 +498,8 @@ export async function extractFile(
     collectAnchorAndBindingRefs(tree.rootNode, ctxRefs);
     const importedNames = collectImportedNames(tree.rootNode, ctxRefs);
     collectCallSiteEdges(tree.rootNode, ctxRefs, importedNames);
+    const constructorBindings = collectConstructorBindings(tree.rootNode);
+    collectMemberAccessEdges(tree.rootNode, ctxRefs, constructorBindings, importedNames);
     ctxRefs.references.sort(
       (a, b) =>
         a.from.localeCompare(b.from) ||
