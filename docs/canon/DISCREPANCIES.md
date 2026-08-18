@@ -18,6 +18,22 @@ Never silently pick a side. Never edit application code from canon skills.
 
 ## Resolved
 
+### D-010: GLOSSARY Source root lists five-language manifest detection as current
+- **status:** resolved
+- **decision:** docs_stale
+- **canon_paths:** `docs/canon/GLOSSARY.md`
+- **code_paths:** `src/code-index/discovery.ts`
+- **evidence:** User chose docs_stale. `discoverManifestRoots` detects only `package.json` (shipped TypeScript/JavaScript slice 1); Go, C#, Rust, and Python manifests land with their future slices (ARCHITECTURE already qualifies them as separate slices). Clarified GLOSSARY Source root to state package.json for the shipped slice and the rest with future slices; `doc-canon validate` succeeded in the same session.
+- **finding_ids:** `F-011`
+
+### D-009: ARCHITECTURE/GLOSSARY claim import/export edges; slice 1 emits only import edges
+- **status:** resolved
+- **decision:** docs_stale
+- **canon_paths:** `docs/canon/ARCHITECTURE.md`, `docs/canon/GLOSSARY.md`
+- **code_paths:** `src/code-index/extractors/typescript.ts`, `src/code-index/types.ts`
+- **evidence:** User chose docs_stale. `ReferenceKind` is `anchor | import | binding` and the extractor handles `import_statement` only (slice-1 scope); no export edges exist. Changed "import/export edges" → "import edges" in ARCHITECTURE building block and GLOSSARY code-ast-index; `doc-canon validate` succeeded in the same session.
+- **finding_ids:** `F-010`
+
 ### D-008: OVERVIEW fixed initiative range P0–P3 lags added P4/P5
 - **status:** resolved
 - **decision:** docs_stale

@@ -85,7 +85,7 @@ A bounded retrieval result containing the query, index identity and freshness, w
 A non-fatal search warning that one or more indexed document hashes differ from the live canon corpus. Search serves the Pack with exit 0, surfaces the warning, and does not auto-reindex.
 
 ### Source root
-A discovered or configured directory holding the project's source code to be indexed by `code-index build`; found via explicit config, manifest detection (`package.json`, `go.mod`, `*.csproj`/`*.sln`, `Cargo.toml`, `pyproject.toml`/`setup.py`/`setup.cfg`), or extension-based fallback under the VCS root.
+A discovered or configured directory holding the project's source code to be indexed by `code-index build`; found via explicit config, manifest detection (currently `package.json` for the shipped TypeScript/JavaScript slice; Go, C#, Rust, and Python manifests land with their future slices), or extension-based fallback under the VCS root.
 
 ### Symbol
 A named code unit (class, interface, enum, function, method, property, module, const, type, …) extracted from source and normalized into the shared `{ name, kind, signature, file, line, endLine, scope }` model; no per-language output formats are exposed to consumers.
@@ -100,7 +100,7 @@ A same-file syntactic reference from a usage of a symbol to its declaration, res
 `.doc-canon/code-index-manifest.json`: deterministic, byte-identical code AST index manifest (`schema_version`, `corpus`, `grammar_versions`, `roots`, per-file `hash`/`language`/`symbols`); has no `index_id`/`built_at`, so identical input produces an identical artifact. `grammar_versions` divergence triggers a full rebuild.
 
 ### code-ast-index
-`.doc-canon/code-ast-index.json`: serialized symbols and syntactic references (anchors, import/export edges, in-scope bindings) for the discovered source roots, sharing its companion `code-index-manifest`.
+`.doc-canon/code-ast-index.json`: serialized symbols and syntactic references (anchors, import edges, in-scope bindings) for the discovered source roots, sharing its companion `code-index-manifest`.
 
 ### code_index_stale
 A non-fatal freshness signal for the code AST index: one or more indexed source hashes differ from the live tree. Reported independently of the canon `index_stale`.
