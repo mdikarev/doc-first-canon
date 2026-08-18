@@ -23,5 +23,6 @@ description: Bootstrap or import a repository's documentation canon.
    - Propose extra sections, interview the user, and use the contract workflow for confirmed structural changes.
    - Extract agreed facts into files created from registered templates, then refresh `INDEX.md`.
 5. Run `doc-canon validate`. After it succeeds, import sources outside `docs/canon/` are not SoT. Do not delete or silently update those legacy files.
-6. After init, confirm `future_plans/INDEX.md` exists. Do not invent initiatives unless the user asks.
-7. Surface docs↔code conflicts for user resolution; never silently merge or choose a side.
+6. Build the retrieval indexes: run `doc-canon index` (canon BM25) and, when covered source exists, `doc-canon code-index build`. Later goal steps prefer `doc-canon search` / `code-index search` when the indexes exist; on empty/thin probe results, read source as evidence and note the miss (`code_miss: <query> -> source:<path>`).
+7. After init, confirm `future_plans/INDEX.md` exists. Do not invent initiatives unless the user asks.
+8. Surface docs↔code conflicts for user resolution; never silently merge or choose a side.
