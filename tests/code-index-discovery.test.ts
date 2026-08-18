@@ -186,4 +186,12 @@ describe("code-index discovery", () => {
       "src/index.ts",
     ]);
   });
+
+  it("default ignore excludes .worktrees", () => {
+    write(repo, "package.json", "{}");
+    write(repo, "src/index.ts", "export const x = 1;");
+    write(repo, ".worktrees/feat/src/other.ts", "export const y = 1;");
+    const { vcsRoot, roots } = discoverSourceRoots(repo, {});
+    assert.deepEqual(listSourceFiles(vcsRoot, roots, []), ["src/index.ts"]);
+  });
 });

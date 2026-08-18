@@ -6,6 +6,7 @@ const DEFAULT_EXCLUDES = [
   "dist",
   "build",
   ".doc-canon",
+  ".worktrees",
 ] as const;
 
 export const DEFAULT_IGNORE_GLOBS = DEFAULT_EXCLUDES.flatMap((name) => [
