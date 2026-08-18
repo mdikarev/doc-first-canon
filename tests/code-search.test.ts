@@ -300,3 +300,104 @@ func main() {
     assert.equal(hit.line, 4);
   });
 });
+
+describe("searchCodeIndex (csharp refs)", () => {
+  let repo: string;
+  beforeEach(async () => {
+    repo = makeRepo();
+    write(repo, "src/App/App.csproj", "<Project Sdk=\"Microsoft.NET.Sdk\" />");
+    write(
+      repo,
+      "src/App/Reader.cs",
+      `namespace App
+{
+    public class Reader
+    {
+        public int Score(string q) { return q.Length; }
+    }
+}
+`,
+    );
+    write(
+      repo,
+      "src/App/Program.cs",
+      `namespace App
+{
+    public class Program
+    {
+        static void Main()
+        {
+            var r = new Reader();
+            var n = r.Score("q");
+        }
+    }
+}
+`,
+    );
+    await syncCodeIndex(repo);
+  });
+  afterEach(() => fs.rmSync(repo, { recursive: true, force: true }));
+
+  it("refs mode matches same-file constructor-backed member-access edges", async () => {
+    write(
+      repo,
+      "src/App/Program.cs",
+      `namespace App
+{
+    public class Program
+    {
+        static void Main()
+        {
+            var r = new Reader();
+            var n = r.Score("q");
+        }
+    }
+
+    public class Reader
+    {
+        public int Score(string q) { return q.Length; }
+    }
+}
+`,
+    );
+    await syncCodeIndex(repo);
+    const pack = searchCodeIndex(repo, "", { refs: "Reader.Score" });
+    assert.equal(pack.mode, "refs");
+    const hit = pack.hits.find(
+      (h) => h.refKind === "import" && h.name === "Reader.Score",
+    ) as CodeRefHit;
+    assert.ok(hit, "expected a Reader.Score member-access hit");
+    assert.equal(hit.from, "src/App/Program.cs");
+    assert.equal(hit.to, "src/App/Program.cs");
+    assert.equal(hit.line, 8);
+  });
+
+  it("refs mode resolves same-namespace types across files", async () => {
+    const pack = searchCodeIndex(repo, "", { refs: "Reader.Score" });
+    const hit = pack.hits.find(
+      (h) => h.refKind === "import" && h.name === "Reader.Score",
+    ) as CodeRefHit;
+    assert.ok(hit, "expected a Reader.Score same-namespace hit");
+    assert.equal(hit.from, "src/App/Program.cs");
+    assert.equal(hit.to, "src/App/Reader.cs");
+    assert.equal(hit.line, 8);
+  });
+
+  it("refs mode does not cross namespaces", async () => {
+    write(
+      repo,
+      "src/Other/Reader.cs",
+      `namespace Other
+{
+    public class Reader
+    {
+        public int Score(string q) { return q.Length; }
+    }
+}
+`,
+    );
+    await syncCodeIndex(repo);
+    const pack = searchCodeIndex(repo, "", { refs: "Reader.Score" });
+    assert.equal(pack.hits.filter((h) => h.refKind === "import" && h.name === "Reader.Score").length, 1);
+  });
+});

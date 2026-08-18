@@ -8,6 +8,7 @@ import { discoverSourceRoots, listSourceFiles } from "./discovery.js";
 import { extractFile, grammarForFile } from "./extractors/index.js";
 import { GRAMMAR_VERSIONS } from "./grammar-versions.js";
 import { saveCodeIndexPair, tryLoadCodeIndexManifest } from "./io.js";
+import { CROSS_FILE_RESOLVERS } from "./resolvers/index.js";
 import type { CodeAstIndex, CodeIndexManifest, CodeReference, CodeSymbol, CodeSyncResult, UnresolvedMember } from "./types.js";
 
 export function computeFingerprint(relHashes: Array<[string, string]>): string {
@@ -17,54 +18,6 @@ export function computeFingerprint(relHashes: Array<[string, string]>): string {
     .join("\n");
   const hex = createHash("sha256").update(lines, "utf8").digest("hex");
   return `sha256:${hex}`;
-}
-
-export function resolveGoSamePackageReferences(
-  unresolved: UnresolvedMember[],
-  symbols: CodeSymbol[],
-): CodeReference[] {
-  if (unresolved.length === 0) return [];
-  const pkgByFile = new Map<string, string>();
-  for (const s of symbols) {
-    if (s.kind === "module") pkgByFile.set(s.file, s.name);
-  }
-  const index = new Map<string, Map<string, CodeSymbol[]>>();
-  for (const s of symbols) {
-    if (s.kind !== "struct" && s.kind !== "interface" && s.kind !== "type") continue;
-    const pkg = pkgByFile.get(s.file);
-    if (!pkg) continue;
-    const dir = s.file.includes("/") ? s.file.slice(0, s.file.lastIndexOf("/")) : "";
-    const key = `${dir}|${pkg}`;
-    let byName = index.get(key);
-    if (!byName) {
-      byName = new Map();
-      index.set(key, byName);
-    }
-    const arr = byName.get(s.name) ?? [];
-    arr.push(s);
-    byName.set(s.name, arr);
-  }
-  const out: CodeReference[] = [];
-  for (const u of unresolved) {
-    const pkg = pkgByFile.get(u.file);
-    if (!pkg) continue;
-    const dir = u.file.includes("/") ? u.file.slice(0, u.file.lastIndexOf("/")) : "";
-    const candidates = index
-      .get(`${dir}|${pkg}`)
-      ?.get(u.typeName)
-      ?.filter((s) => s.file !== u.file) ?? [];
-    const distinct = [...new Map(candidates.map((s) => [s.file, s] as const)).values()];
-    if (distinct.length === 1) {
-      out.push({
-        kind: "import",
-        from: u.file,
-        to: distinct[0].file,
-        name: `${u.typeName}.${u.memberName}`,
-        line: u.line,
-      });
-    }
-  }
-  return out;
 }
 
 export async function syncCodeIndex(root: string): Promise<CodeSyncResult> {
@@ -93,7 +46,7 @@ export async function syncCodeIndex(root: string): Promise<CodeSyncResult> {
 
   const symbols: CodeAstIndex["symbols"] = [];
   const references: CodeAstIndex["references"] = [];
-  const unresolved: UnresolvedMember[] = [];
+  const unresolvedByLanguage = new Map<string, UnresolvedMember[]>();
   const knownFiles = new Set(files);
   const fileMeta: CodeIndexManifest["files"] = {};
   for (const rel of files) {
@@ -103,7 +56,12 @@ export async function syncCodeIndex(root: string): Promise<CodeSyncResult> {
     const extracted = await extractFile(rel, text, knownFiles);
     symbols.push(...extracted.symbols);
     references.push(...extracted.references);
-    if (extracted.unresolvedMembers) unresolved.push(...extracted.unresolvedMembers);
+    if (extracted.unresolvedMembers) {
+      const language = grammarForFile(rel);
+      const bucket = unresolvedByLanguage.get(language) ?? [];
+      bucket.push(...extracted.unresolvedMembers);
+      unresolvedByLanguage.set(language, bucket);
+    }
     fileMeta[rel] = {
       hash,
       language: grammarForFile(rel),
@@ -111,7 +69,10 @@ export async function syncCodeIndex(root: string): Promise<CodeSyncResult> {
     };
   }
 
-  references.push(...resolveGoSamePackageReferences(unresolved, symbols));
+  for (const [language, resolver] of CROSS_FILE_RESOLVERS) {
+    const bucket = unresolvedByLanguage.get(language);
+    if (bucket) references.push(...resolver(bucket, symbols));
+  }
 
   const relHashes = [...hashes.entries()].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
   const fingerprint = computeFingerprint(relHashes);

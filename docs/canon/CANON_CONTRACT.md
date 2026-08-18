@@ -60,6 +60,11 @@ sections:
     role: section
     required: true
     template: MODULE
+  - id: code-index
+    path: CODE_INDEX.md
+    role: section
+    required: true
+    template: MODULE
   - id: future-plans-index
     path: future_plans/INDEX.md
     role: section

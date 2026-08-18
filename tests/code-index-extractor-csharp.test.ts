@@ -95,6 +95,137 @@ public record Point(int X, int Y);
   });
 });
 
+describe("extractFile (csharp) member-access references", () => {
+  it("emits same-file edges for var/explicit new Type() bindings", async () => {
+    const text = `namespace App
+{
+    public class Widget
+    {
+        public int Score { get; set; }
+        public int Get(string q) { return q.Length; }
+    }
+
+    public class Program
+    {
+        static void Main()
+        {
+            var w = new Widget();
+            w.Score = 5;
+            Widget v = new Widget();
+            v.Get("q");
+        }
+    }
+}
+`;
+    const { references } = await extractFile("src/App/Program.cs", text, new Set());
+    const members = references
+      .filter((r) => r.kind === "import" && r.name.includes("."))
+      .sort((a, b) => a.name.localeCompare(b.name));
+    assert.deepEqual(
+      members.map((r) => ({ name: r.name, to: r.to })),
+      [
+        { name: "Widget.Get", to: "src/App/Program.cs" },
+        { name: "Widget.Score", to: "src/App/Program.cs" },
+      ],
+    );
+  });
+
+  it("emits property-read edges", async () => {
+    const text = `namespace App
+{
+    public class Widget
+    {
+        public int Score { get; set; }
+    }
+
+    public class Program
+    {
+        static void Main()
+        {
+            var w = new Widget();
+            int n = w.Score;
+        }
+    }
+}
+`;
+    const { references } = await extractFile("src/App/Program.cs", text, new Set());
+    const members = references.filter((r) => r.kind === "import" && r.name.includes("."));
+    assert.deepEqual(
+      members.map((r) => ({ name: r.name, to: r.to })),
+      [{ name: "Widget.Score", to: "src/App/Program.cs" }],
+    );
+  });
+
+  it("emits no edge for factory-returned bindings or target-typed new()", async () => {
+    const text = `namespace App
+{
+    public class Widget
+    {
+        public int Score { get; set; }
+    }
+
+    public class Program
+    {
+        static Widget Make() { return new Widget(); }
+
+        static void Main()
+        {
+            var w = Make();
+            w.Score = 5;
+            var t = new();
+            t.Score = 1;
+        }
+    }
+}
+`;
+    const { references } = await extractFile("src/App/Program.cs", text, new Set());
+    const members = references.filter((r) => r.kind === "import" && r.name.includes("."));
+    assert.equal(members.length, 0);
+  });
+
+  it("surfaces unresolved candidates in unresolvedMembers", async () => {
+    const text = `namespace App
+{
+    public class Program
+    {
+        static void Main()
+        {
+            var w = new Widget();
+            w.Score = 5;
+        }
+    }
+}
+`;
+    const { unresolvedMembers } = await extractFile("src/App/Program.cs", text, new Set());
+    assert.deepEqual(unresolvedMembers, [
+      { file: "src/App/Program.cs", typeName: "Widget", memberName: "Score", line: 8 },
+    ]);
+  });
+
+  it("emits no edge for namespace-qualified new NS.Type()", async () => {
+    const text = `namespace App
+{
+    public class Widget
+    {
+        public int Score { get; set; }
+    }
+
+    public class Program
+    {
+        static void Main()
+        {
+            var w = new App.Widget();
+            w.Score = 5;
+        }
+    }
+}
+`;
+    const { references } = await extractFile("src/App/Program.cs", text, new Set());
+    const members = references.filter((r) => r.kind === "import" && r.name.includes("."));
+    assert.equal(members.length, 0);
+  });
+});
+
 describe("extractFile (csharp) references", () => {
   it("emits anchors for declared types and bindings for params and locals", async () => {
     const text = `using System;

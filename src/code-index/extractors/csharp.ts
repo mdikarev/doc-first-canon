@@ -1,6 +1,6 @@
 // src/code-index/extractors/csharp.ts
 import { createParser, loadGrammar, type Node } from "../parser.js";
-import type { CodeReference, CodeSymbol, SymbolKind } from "../types.js";
+import type { CodeReference, CodeSymbol, ExtractResult, SymbolKind, UnresolvedMember } from "../types.js";
 
 export function grammarForFile(rel: string): "c-sharp" {
   return "c-sharp";
@@ -187,6 +187,73 @@ function collectBindingNames(root: Node): Set<string> {
   return names;
 }
 
+function collectConstructorBindings(root: Node): Map<string, string> {
+  const bindings = new Map<string, string>();
+  const visit = (node: Node): void => {
+    if (node.type === "variable_declarator") {
+      const name = node.childForFieldName("name");
+      const ctor = node.namedChildren.find((c) => c.type === "object_creation_expression");
+      if (name && ctor) {
+        const type = ctor.childForFieldName("type");
+        if (type?.type === "identifier") bindings.set(name.text, type.text);
+      }
+    }
+    for (const c of node.namedChildren) visit(c);
+  };
+  visit(root);
+  return bindings;
+}
+
+const MEMBER_ACCESS_KIND_NAMES = new Set([
+  "class",
+  "interface",
+  "struct",
+]);
+
+function collectMemberAccessEdges(
+  root: Node,
+  ctx: WalkCtx,
+  constructorBindings: Map<string, string>,
+  unresolved: UnresolvedMember[],
+): void {
+  const typeSymbolNames = new Set(
+    ctx.symbols
+      .filter((s) => MEMBER_ACCESS_KIND_NAMES.has(s.kind))
+      .map((s) => s.name),
+  );
+  const visit = (node: Node): void => {
+    if (node.type === "member_access_expression") {
+      const object = node.childForFieldName("expression");
+      const member = node.childForFieldName("name");
+      if (object?.type === "identifier" && member?.type === "identifier") {
+        const binding = object.text;
+        const typeName = constructorBindings.get(binding);
+        if (typeName !== undefined) {
+          const line = node.startPosition.row + 1;
+          if (typeSymbolNames.has(typeName)) {
+            ctx.references.push({
+              kind: "import",
+              from: ctx.file,
+              to: ctx.file,
+              name: `${typeName}.${member.text}`,
+              line,
+            });
+          } else {
+            unresolved.push({
+              file: ctx.file,
+              typeName,
+              memberName: member.text,
+              line,
+            });
+          }
+        }
+      }
+    }
+    for (const c of node.namedChildren) visit(c);
+  };
+  visit(root);
+}
+
 function collectAnchorAndBindingRefs(root: Node, ctx: WalkCtx): void {
   const symbolNames = new Set(ctx.symbols.map((s) => s.name));
   const bindingNames = collectBindingNames(root);
@@ -211,7 +278,7 @@ export async function extractFile(
   rel: string,
   text: string,
   knownFiles: Set<string>,
-): Promise<{ symbols: CodeSymbol[]; references: CodeReference[] }> {
+): Promise<ExtractResult> {
   const language = await loadGrammar("c-sharp");
   const parser = createParser(language);
   const tree = parser.parse(text);
@@ -236,6 +303,9 @@ export async function extractFile(
       declarationPositions: collectDeclarationPositions(tree.rootNode, rel),
     };
     collectAnchorAndBindingRefs(tree.rootNode, ctxRefs);
+    const constructorBindings = collectConstructorBindings(tree.rootNode);
+    const unresolvedMembers: UnresolvedMember[] = [];
+    collectMemberAccessEdges(tree.rootNode, ctxRefs, constructorBindings, unresolvedMembers);
     ctxRefs.references.sort(
       (a, b) =>
         a.from.localeCompare(b.from) ||
@@ -244,7 +314,7 @@ export async function extractFile(
         a.kind.localeCompare(b.kind) ||
         a.to.localeCompare(b.to),
     );
-    return { symbols: ctx.symbols, references: ctxRefs.references };
+    return { symbols: ctx.symbols, references: ctxRefs.references, unresolvedMembers };
   } finally {
     tree.delete();
   }

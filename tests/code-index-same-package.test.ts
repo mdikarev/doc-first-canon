@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import type { CodeSymbol } from "../src/code-index/types.js";
-import { resolveGoSamePackageReferences } from "../src/code-index/sync.js";
+import { resolveGoSamePackageReferences } from "../src/code-index/resolvers/go.js";
 
 function moduleSym(file: string, pkg: string): CodeSymbol {
   return { name: pkg, kind: "module", signature: `package ${pkg}`, file, line: 1, endLine: 1, scope: "" };
