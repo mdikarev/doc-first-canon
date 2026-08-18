@@ -117,8 +117,9 @@ describe("searchCodeIndex", () => {
     const pack = searchCodeIndex(repo, "main", { file: "src/main.ts" });
     assert.ok(pack.hits.length >= 1);
     assert.ok(pack.hits.every((h) => h.file === "src/main.ts"));
-    const empty = searchCodeIndex(repo, "Reader", { file: "src/main.ts" });
-    assert.deepEqual(empty.hits, []);
+    const filtered = searchCodeIndex(repo, "Reader", { file: "src/main.ts" });
+    assert.ok(filtered.hits.every((h) => h.file === "src/main.ts"));
+    assert.ok(!filtered.hits.some((h) => h.name === "Reader"));
   });
 
   it("caps hits to maxHits", () => {
@@ -209,5 +210,21 @@ describe("searchCodeIndex", () => {
       assert.equal(e.code, "empty_query");
       return true;
     });
+  });
+
+  it("multi-token query matches symbols whose name contains every token", async () => {
+    write(repo, "src/search.ts", "export function searchCodeIndex(root: string): string { return root; }");
+    await syncCodeIndex(repo);
+    const pack = searchCodeIndex(repo, "search code index");
+    const names = (pack.hits as { name: string }[]).map((h) => h.name);
+    assert.ok(names.includes("searchCodeIndex"));
+  });
+
+  it("multi-token query falls back to signature tokens", async () => {
+    write(repo, "src/token.ts", "export function normalize(doc: string): string[] { return doc.split(' '); }");
+    await syncCodeIndex(repo);
+    const pack = searchCodeIndex(repo, "normalize doc");
+    const names = (pack.hits as { name: string }[]).map((h) => h.name);
+    assert.ok(names.includes("normalize"));
   });
 });

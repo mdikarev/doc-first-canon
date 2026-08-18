@@ -6,6 +6,7 @@ import { findVcsRoot } from "../code-index/discovery.js";
 import { openCodeIndex } from "../code-index/reader.js";
 import { isFresh } from "../agnostic/freshness.js";
 import { centeredWindow, declarationWindow } from "./snippets.js";
+import { tokenize } from "../index/tokenize.js";
 import {
   CodeSearchError,
   type CodePack,
@@ -29,14 +30,17 @@ const DEFAULTS = {
   maxSnippetLinesTotal: 120,
 } as const;
 
-type MatchClass = 0 | 1 | 2;
+type MatchClass = 0 | 1 | 2 | 3;
 
-function matchClass(name: string, query: string): MatchClass | null {
+function matchClass(name: string, signature: string, query: string): MatchClass | null {
   const n = name.toLowerCase();
   const q = query.toLowerCase();
   if (n === q) return 0;
   if (n.startsWith(q)) return 1;
-  if (n.includes(q)) return 2;
+  const tokens = [...new Set(tokenize(q))];
+  if (tokens.length === 0) return null;
+  if (tokens.every((t) => n.includes(t))) return 2;
+  if (tokens.every((t) => signature.toLowerCase().includes(t))) return 3;
   return null;
 }
 
@@ -121,12 +125,12 @@ export function searchCodeIndex(
 
   const symbols = handle
     .symbols()
-    .filter((s) => matchClass(s.name, effective) !== null)
+    .filter((s) => matchClass(s.name, s.signature, effective) !== null)
     .filter((s) => options.kind === undefined || s.kind === options.kind)
     .filter((s) => options.file === undefined || micromatch.isMatch(s.file, options.file))
     .sort((a, b) => {
-      const ca = matchClass(a.name, effective)!;
-      const cb = matchClass(b.name, effective)!;
+      const ca = matchClass(a.name, a.signature, effective)!;
+      const cb = matchClass(b.name, b.signature, effective)!;
       if (ca !== cb) return ca - cb;
       if (a.file < b.file) return -1;
       if (a.file > b.file) return 1;
