@@ -45,7 +45,7 @@ Coding agents currently analyze a project by reading source files directly; when
 | Update model | **Logical incremental:** hash diff detects create/update/delete; any change **or** `grammar_versions` divergence → full rebuild from all current files |
 | Watch mechanism | Poll only (`setInterval`); default 2000 ms; `--interval <ms>` (min 200); foreground process; **separate pid file** `.doc-canon/code-index-watch.pid` |
 | Writer concurrency | One-shot `code-index build` refuses if code-index watch pid is alive (exit ≠0) |
-| Artifact consistency | Both files from one rebuild; manifest written **last** as commit marker; reader fail closed on missing/corrupt/schema mismatch |
+| Artifact consistency | Both files from one rebuild; manifest written **last** as commit marker; reader fail closed on missing/corrupt/schema mismatch; shared deterministic `index_fingerprint` (sha256 over sorted `rel:hash`) — mismatch → reader fail closed |
 | Corpus | Discovered source roots under the VCS root, filtered by the ignore set |
 | CLI ownership | `code-index build` with `--root`, `--watch`, `--stop`, `--interval`; `code-index search` lands with P2b |
 | Package export | `doc-canon/code-index-reader` → `openCodeIndex`, shipped in this slice so tests and future P2b share one stable interface |
@@ -114,11 +114,12 @@ P2b later:
 
 ### On-disk artifacts
 
-**`code-index-manifest.json`** (byte-deterministic — no `index_id`, no `built_at`)
+**`code-index-manifest.json`** (byte-deterministic — no `index_id`, no `built_at`; pair consistency is carried by a deterministic `index_fingerprint`)
 
 ```json
 {
   "schema_version": 1,
+  "index_fingerprint": "sha256:<hash over sorted rel:hash entries>",
   "corpus": "src/**",
   "grammar_versions": { "typescript": "0.23.2", "javascript": "0.25.0" },
   "roots": ["src"],
@@ -133,6 +134,7 @@ P2b later:
 ```json
 {
   "schema_version": 1,
+  "index_fingerprint": "sha256:<same value as the manifest>",
   "symbols": [
     { "name": "openCanonIndex", "kind": "function", "signature": "function openCanonIndex(root: string): CanonIndexHandle", "file": "src/index/reader.ts", "line": 15, "endLine": 29, "scope": "" }
   ],
@@ -144,7 +146,7 @@ P2b later:
 }
 ```
 
-**Write order:** build full symbol/reference set → write `code-ast-index.json` (tmp+rename) → write `code-index-manifest.json` with the same hashes/`grammar_versions` (tmp+rename).
+`index_fingerprint` is the byte-deterministic replacement for the canon index's opaque `index_id`: sha256 over the sorted `rel:hash` entries of the rebuilt corpus, present in both files. Mismatch → reader fail closed; identical input → identical fingerprint. **Write order:** build full symbol/reference set → write `code-ast-index.json` (tmp+rename) → write `code-index-manifest.json` with the same `index_fingerprint`/hashes/`grammar_versions` (tmp+rename).
 
 ### Reader facade (P2a public library contract)
 
