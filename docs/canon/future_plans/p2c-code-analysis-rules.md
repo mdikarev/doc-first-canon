@@ -1,6 +1,7 @@
 # P2c — Code analysis rules for agents & skills
 
-- **Status:** draft
+- **Status:** implementing
+- **Design:** [`docs/superpowers/specs/2026-08-18-p2c-code-analysis-rules-design.md`](../../superpowers/specs/2026-08-18-p2c-code-analysis-rules-design.md) — SoT for the agent-facing code-analysis rules and the index-first skill discipline
 - **Focus:** Managed `AGENTS.md` block / pointer rule and coding-agent guidance that require trying the P2b code search first during code analysis, preserving expand-when-thin behavior — plus a token-cost guard proving the index route reads fewer tokens than naive source reads.
 - **Depends on:** P2a (code AST index), P2b (code search tools)
 - **Unblocks:** Cheaper multi-file code analysis; consistent cross-language symbol lookup for coding agents
@@ -30,6 +31,6 @@ Likely: `SKILLS.md` and the managed `AGENTS.md` block / pointer rule (code-index
 
 ## Open questions
 
-- Rule strength: when a code-index search returns nothing or a thin set, is the agent free to read source directly, or must it also report the miss (mirroring the canon's visible Expand gate)?
-- Token-cost guard: how to measure "analysis via index reads fewer tokens" reliably in tests without brittle token-count assertions
-- Whether rules apply per language or globally once extractors cover all five
+- Rule strength: **miss reporting** — agent reads source but must note the miss (`code_miss: <query> -> source:<path>`), mirroring the canon's visible Expand gate (resolved in design)
+- Token-cost guard: **bounded pack vs full files** on a fixture repo — structural comparison of snippet bytes vs full source bytes (resolved in design)
+- Language scope: **global for the five covered languages**; uncovered languages go straight to source (resolved in design)
