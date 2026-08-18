@@ -151,7 +151,7 @@ One extra CST walk per file at build time (constructor map + member accesses) �
 
 1. Canon-first: `canon-write` — GLOSSARY (member-access reference term, alias handling note), CLI.md (`--refs Class.method` now matches), ARCHITECTURE.md (code-index building block: constructor-binding + member-access edges, aliases); via `canon-future-plan`: P6 → `implementing`, add P6a-{go,rust,csharp,python} drafts. Wait for explicit go-ahead after these canon changes.
 2. Implement: alias-inclusive `importedNames` → `collectConstructorBindings` → `collectMemberAccessEdges` in `typescript.ts` — TDD.
-3. Rebuild this repo's index; verify `--refs Bm25Index.build` and `--refs Bm25Index.score` return call sites in `src/search/search.ts`.
+3. Rebuild this repo's index; verify determinism and that the temp-fixture integration test (`--refs Reader.score` on `const r = new Reader(); r.score(...)`) returns the call site. (This repo has no cross-file `new ImportedName(...)` instance pattern — its `new Command()` is a bare-package import and `Bm25Index` is only constructed in its own file — so dogfood proves rebuild determinism, while the integration fixture proves the edges.)
 4. Absorb P6 into living canon; `canon-audit` to close.
 
 ## Relationship to prior artifacts
