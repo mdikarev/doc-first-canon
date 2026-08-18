@@ -90,3 +90,262 @@ describe("syncCodeIndex", () => {
     assert.equal(r.indexed, 1);
   });
 });
+
+const GO_SOURCE = `package reader
+
+type Handle struct {
+	Score int
+}
+
+func (h *Handle) Get() int { return h.Score }
+`;
+
+describe("syncCodeIndex (go)", () => {
+  let repo: string;
+  beforeEach(() => {
+    repo = makeRepo();
+    write(repo, "go.mod", "module example.com/reader\n\ngo 1.22\n");
+    write(repo, "reader.go", GO_SOURCE);
+  });
+  afterEach(() => fs.rmSync(repo, { recursive: true, force: true }));
+
+  it("builds a Go index end-to-end", async () => {
+    const r = await syncCodeIndex(repo);
+    assert.equal(r.status, "updated");
+    assert.equal(r.indexed, 1);
+    const pair = loadCodeIndexPair(repo);
+    assert.equal(pair.manifest.files["reader.go"].language, "go");
+    const handle = openCodeIndex(repo);
+    assert.ok(
+      handle.symbols().some((s) => s.name === "Handle" && s.kind === "struct"),
+    );
+    assert.ok(
+      handle
+        .symbols()
+        .some((s) => s.name === "Get" && s.kind === "method" && s.scope === "Handle"),
+    );
+  });
+
+  it("is byte-deterministic across two builds on identical input", async () => {
+    await syncCodeIndex(repo);
+    const pair1 = loadCodeIndexPair(repo);
+    const ast1 = JSON.stringify(pair1.ast);
+    const r2 = await syncCodeIndex(repo);
+    assert.equal(r2.status, "fresh");
+    const pair2 = loadCodeIndexPair(repo);
+    assert.equal(JSON.stringify(pair2.ast), ast1);
+  });
+
+  it("indexes mixed TS and Go files via the dispatcher", async () => {
+    write(repo, "package.json", "{}");
+    write(repo, "src/index.ts", "export class A {}");
+    const r = await syncCodeIndex(repo);
+    assert.equal(r.status, "updated");
+    assert.equal(r.indexed, 2);
+    const pair = loadCodeIndexPair(repo);
+    assert.equal(pair.manifest.files["reader.go"].language, "go");
+    assert.equal(pair.manifest.files["src/index.ts"].language, "typescript");
+  });
+});
+
+const CS_SOURCE = `namespace App
+{
+    public class Reader
+    {
+        public int Score { get; set; }
+
+        public int Get() { return this.Score; }
+    }
+}
+`;
+
+describe("syncCodeIndex (csharp)", () => {
+  let repo: string;
+  beforeEach(() => {
+    repo = makeRepo();
+    write(repo, "src/App/App.csproj", "<Project Sdk=\"Microsoft.NET.Sdk\" />");
+    write(repo, "src/App/Reader.cs", CS_SOURCE);
+  });
+  afterEach(() => fs.rmSync(repo, { recursive: true, force: true }));
+
+  it("builds a C# index end-to-end", async () => {
+    const r = await syncCodeIndex(repo);
+    assert.equal(r.status, "updated");
+    assert.equal(r.indexed, 1);
+    const pair = loadCodeIndexPair(repo);
+    assert.equal(pair.manifest.files["src/App/Reader.cs"].language, "c-sharp");
+    const handle = openCodeIndex(repo);
+    assert.ok(
+      handle.symbols().some((s) => s.name === "Reader" && s.kind === "class"),
+    );
+    assert.ok(
+      handle.symbols().some((s) => s.name === "Score" && s.kind === "property"),
+    );
+  });
+
+  it("is byte-deterministic across two builds on identical input", async () => {
+    await syncCodeIndex(repo);
+    const pair1 = loadCodeIndexPair(repo);
+    const ast1 = JSON.stringify(pair1.ast);
+    const r2 = await syncCodeIndex(repo);
+    assert.equal(r2.status, "fresh");
+    const pair2 = loadCodeIndexPair(repo);
+    assert.equal(JSON.stringify(pair2.ast), ast1);
+  });
+
+  it("indexes mixed TS, Go, and C# files via the dispatcher", async () => {
+    write(repo, "package.json", "{}");
+    write(repo, "go.mod", "module example.com/x");
+    write(repo, "main.go", "package main\n\nfunc main() {}\n");
+    write(repo, "src/index.ts", "export class A {}");
+    const r = await syncCodeIndex(repo);
+    assert.equal(r.status, "updated");
+    assert.equal(r.indexed, 3);
+    const pair = loadCodeIndexPair(repo);
+    assert.equal(pair.manifest.files["src/App/Reader.cs"].language, "c-sharp");
+    assert.equal(pair.manifest.files["main.go"].language, "go");
+    assert.equal(pair.manifest.files["src/index.ts"].language, "typescript");
+  });
+});
+
+const RS_SOURCE = `mod common;
+
+pub struct Reader {
+    score: u32,
+}
+
+impl Reader {
+    pub fn get(&self) -> u32 {
+        self.score
+    }
+}
+
+pub fn open() -> Reader {
+    Reader { score: 0 }
+}
+`;
+
+describe("syncCodeIndex (rust)", () => {
+  let repo: string;
+  beforeEach(() => {
+    repo = makeRepo();
+    write(repo, "Cargo.toml", "[package]\nname = \"reader\"\nversion = \"0.1.0\"\n");
+    write(repo, "src/reader.rs", RS_SOURCE);
+  });
+  afterEach(() => fs.rmSync(repo, { recursive: true, force: true }));
+
+  it("builds a Rust index end-to-end", async () => {
+    const r = await syncCodeIndex(repo);
+    assert.equal(r.status, "updated");
+    assert.equal(r.indexed, 1);
+    const pair = loadCodeIndexPair(repo);
+    assert.equal(pair.manifest.files["src/reader.rs"].language, "rust");
+    const handle = openCodeIndex(repo);
+    assert.ok(
+      handle.symbols().some((s) => s.name === "Reader" && s.kind === "struct"),
+    );
+    assert.ok(
+      handle
+        .symbols()
+        .some((s) => s.name === "get" && s.kind === "method" && s.scope === "Reader"),
+    );
+  });
+
+  it("is byte-deterministic across two builds on identical input", async () => {
+    await syncCodeIndex(repo);
+    const pair1 = loadCodeIndexPair(repo);
+    const ast1 = JSON.stringify(pair1.ast);
+    const r2 = await syncCodeIndex(repo);
+    assert.equal(r2.status, "fresh");
+    const pair2 = loadCodeIndexPair(repo);
+    assert.equal(JSON.stringify(pair2.ast), ast1);
+  });
+
+  it("indexes mixed TS, Go, C#, and Rust files via the dispatcher", async () => {
+    write(repo, "package.json", "{}");
+    write(repo, "go.mod", "module example.com/x");
+    write(repo, "main.go", "package main\n\nfunc main() {}\n");
+    write(repo, "src/index.ts", "export class A {}");
+    write(repo, "src/App/App.csproj", "<Project Sdk=\"Microsoft.NET.Sdk\" />");
+    write(repo, "src/App/Reader.cs", "namespace App { public class Reader { } }");
+    const r = await syncCodeIndex(repo);
+    assert.equal(r.status, "updated");
+    assert.equal(r.indexed, 4);
+    const pair = loadCodeIndexPair(repo);
+    assert.equal(pair.manifest.files["src/reader.rs"].language, "rust");
+    assert.equal(pair.manifest.files["main.go"].language, "go");
+    assert.equal(pair.manifest.files["src/App/Reader.cs"].language, "c-sharp");
+    assert.equal(pair.manifest.files["src/index.ts"].language, "typescript");
+  });
+});
+
+const PY_SOURCE = `DEFAULT_SCORE = 1
+
+class Reader:
+    def score(self):
+        return DEFAULT_SCORE
+
+def open_reader():
+    return Reader()
+`;
+
+describe("syncCodeIndex (python)", () => {
+  let repo: string;
+  beforeEach(() => {
+    repo = makeRepo();
+    write(repo, "pyproject.toml", "[project]\nname = \"reader\"\n");
+    write(repo, "src/reader.py", PY_SOURCE);
+  });
+  afterEach(() => fs.rmSync(repo, { recursive: true, force: true }));
+
+  it("builds a Python index end-to-end", async () => {
+    const r = await syncCodeIndex(repo);
+    assert.equal(r.status, "updated");
+    assert.equal(r.indexed, 1);
+    const pair = loadCodeIndexPair(repo);
+    assert.equal(pair.manifest.files["src/reader.py"].language, "python");
+    const handle = openCodeIndex(repo);
+    assert.ok(handle.symbols().some((s) => s.name === "reader" && s.kind === "module"));
+    assert.ok(
+      handle.symbols().some((s) => s.name === "Reader" && s.kind === "class"),
+    );
+    assert.ok(
+      handle
+        .symbols()
+        .some((s) => s.name === "score" && s.kind === "method" && s.scope === "Reader"),
+    );
+    assert.ok(
+      handle.symbols().some((s) => s.name === "DEFAULT_SCORE" && s.kind === "const"),
+    );
+  });
+
+  it("is byte-deterministic across two builds on identical input", async () => {
+    await syncCodeIndex(repo);
+    const pair1 = loadCodeIndexPair(repo);
+    const ast1 = JSON.stringify(pair1.ast);
+    const r2 = await syncCodeIndex(repo);
+    assert.equal(r2.status, "fresh");
+    const pair2 = loadCodeIndexPair(repo);
+    assert.equal(JSON.stringify(pair2.ast), ast1);
+  });
+
+  it("indexes all five languages via the dispatcher", async () => {
+    write(repo, "package.json", "{}");
+    write(repo, "go.mod", "module example.com/x");
+    write(repo, "main.go", "package main\n\nfunc main() {}\n");
+    write(repo, "src/index.ts", "export class A {}");
+    write(repo, "src/App/App.csproj", "<Project Sdk=\"Microsoft.NET.Sdk\" />");
+    write(repo, "src/App/Reader.cs", "namespace App { public class Reader { } }");
+    write(repo, "Cargo.toml", "[package]\nname = \"reader\"\n");
+    write(repo, "src/reader.rs", "pub struct Reader {}\n");
+    const r = await syncCodeIndex(repo);
+    assert.equal(r.status, "updated");
+    assert.equal(r.indexed, 5);
+    const pair = loadCodeIndexPair(repo);
+    assert.equal(pair.manifest.files["src/reader.py"].language, "python");
+    assert.equal(pair.manifest.files["src/reader.rs"].language, "rust");
+    assert.equal(pair.manifest.files["main.go"].language, "go");
+    assert.equal(pair.manifest.files["src/App/Reader.cs"].language, "c-sharp");
+    assert.equal(pair.manifest.files["src/index.ts"].language, "typescript");
+  });
+});

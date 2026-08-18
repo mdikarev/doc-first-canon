@@ -64,6 +64,89 @@ describe("code-index discovery", () => {
     assert.deepEqual(files, ["packages/a/a.ts", "src/index.ts"]);
   });
 
+  it("go.mod dir becomes a root", () => {
+    write(repo, "go.mod", "module example.com/reader\n");
+    write(repo, "reader.go", "package reader\n");
+    const { vcsRoot, roots } = discoverSourceRoots(repo, {});
+    assert.equal(vcsRoot, repo);
+    assert.deepEqual(roots, [""]);
+    assert.deepEqual(listSourceFiles(vcsRoot, roots, []), ["reader.go"]);
+  });
+
+  it("nested go.mod is a separate root (workspace member)", () => {
+    write(repo, "go.mod", "module example.com/root\n");
+    write(repo, "cmd/tool/go.mod", "module example.com/tool\n");
+    write(repo, "cmd/tool/main.go", "package main\n");
+    write(repo, "reader.go", "package reader\n");
+    const { vcsRoot, roots } = discoverSourceRoots(repo, {});
+    assert.deepEqual(roots, ["", "cmd/tool"]);
+    assert.deepEqual(listSourceFiles(vcsRoot, roots, []), [
+      "cmd/tool/main.go",
+      "reader.go",
+    ]);
+  });
+
+  it(".csproj dir becomes a root", () => {
+    write(repo, "src/App/App.csproj", "<Project Sdk=\"Microsoft.NET.Sdk\" />");
+    write(repo, "src/App/Program.cs", "class Program { }");
+    const { vcsRoot, roots } = discoverSourceRoots(repo, {});
+    assert.equal(vcsRoot, repo);
+    assert.deepEqual(roots, ["src/App"]);
+    assert.deepEqual(listSourceFiles(vcsRoot, roots, []), ["src/App/Program.cs"]);
+  });
+
+  it(".sln dir is a root and nested project files are listed once", () => {
+    write(repo, "App.sln", "");
+    write(repo, "src/App/App.csproj", "<Project />");
+    write(repo, "src/App/Program.cs", "class Program { }");
+    write(repo, "Shared.cs", "class Shared { }");
+    const { vcsRoot, roots } = discoverSourceRoots(repo, {});
+    assert.deepEqual(roots, ["", "src/App"]);
+    assert.deepEqual(listSourceFiles(vcsRoot, roots, []), [
+      "Shared.cs",
+      "src/App/Program.cs",
+    ]);
+  });
+
+  it("Cargo.toml dir becomes a root", () => {
+    write(repo, "Cargo.toml", "[package]\nname = \"x\"\n");
+    write(repo, "src/lib.rs", "fn f() {}");
+    const { vcsRoot, roots } = discoverSourceRoots(repo, {});
+    assert.equal(vcsRoot, repo);
+    assert.deepEqual(roots, [""]);
+    assert.deepEqual(listSourceFiles(vcsRoot, roots, []), ["src/lib.rs"]);
+  });
+
+  it("nested Cargo.toml (workspace member) is a separate root", () => {
+    write(repo, "Cargo.toml", "[workspace]\n");
+    write(repo, "crates/foo/Cargo.toml", "[package]\nname = \"foo\"\n");
+    write(repo, "crates/foo/src/lib.rs", "fn f() {}");
+    write(repo, "src/lib.rs", "fn g() {}");
+    const { vcsRoot, roots } = discoverSourceRoots(repo, {});
+    assert.deepEqual(roots, ["", "crates/foo"]);
+    assert.deepEqual(listSourceFiles(vcsRoot, roots, []), [
+      "crates/foo/src/lib.rs",
+      "src/lib.rs",
+    ]);
+  });
+
+  it("pyproject.toml dir becomes a root", () => {
+    write(repo, "pyproject.toml", "[project]\nname = \"x\"\n");
+    write(repo, "src/x/__init__.py", "");
+    const { vcsRoot, roots } = discoverSourceRoots(repo, {});
+    assert.equal(vcsRoot, repo);
+    assert.deepEqual(roots, [""]);
+    assert.deepEqual(listSourceFiles(vcsRoot, roots, []), ["src/x/__init__.py"]);
+  });
+
+  it("setup.py dir becomes a root", () => {
+    write(repo, "setup.py", "from setuptools import setup\n");
+    write(repo, "x.py", "def f(): pass\n");
+    const { vcsRoot, roots } = discoverSourceRoots(repo, {});
+    assert.equal(vcsRoot, repo);
+    assert.deepEqual(roots, [""]);
+  });
+
   it("extension fallback when no manifest exists", () => {
     write(repo, "src/index.ts", "export const x = 1;");
     write(repo, "README.md", "not code");

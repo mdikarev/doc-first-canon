@@ -5,7 +5,7 @@ import path from "node:path";
 import { contentHash } from "../index/hash.js";
 import { loadCodeIndexConfig } from "./config.js";
 import { discoverSourceRoots, listSourceFiles } from "./discovery.js";
-import { extractFile, grammarForFile } from "./extractors/typescript.js";
+import { extractFile, grammarForFile } from "./extractors/index.js";
 import { GRAMMAR_VERSIONS } from "./grammar-versions.js";
 import { saveCodeIndexPair, tryLoadCodeIndexManifest } from "./io.js";
 import type { CodeAstIndex, CodeIndexManifest, CodeSyncResult } from "./types.js";

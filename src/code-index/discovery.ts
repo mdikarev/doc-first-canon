@@ -17,6 +17,27 @@ export function findVcsRoot(start: string): string {
   }
 }
 
+const SOURCE_ROOT_MANIFEST_FILES: readonly string[] = [
+  "package.json",
+  "go.mod",
+  "Cargo.toml",
+  "pyproject.toml",
+  "setup.py",
+  "setup.cfg",
+];
+const SOURCE_ROOT_MANIFEST_EXTENSIONS: readonly string[] = [".csproj", ".sln"];
+
+function hasManifest(entries: fs.Dirent[]): boolean {
+  return entries.some(
+    (ent) =>
+      ent.isFile() &&
+      (SOURCE_ROOT_MANIFEST_FILES.includes(ent.name) ||
+        SOURCE_ROOT_MANIFEST_EXTENSIONS.some((ext) =>
+          ent.name.toLowerCase().endsWith(ext),
+        )),
+  );
+}
+
 export function discoverManifestRoots(vcsRoot: string): string[] {
   const roots: string[] = [];
   const stack = [""];
@@ -24,10 +45,11 @@ export function discoverManifestRoots(vcsRoot: string): string[] {
     const rel = stack.pop()!;
     const abs = rel === "" ? vcsRoot : path.join(vcsRoot, rel);
     if (isIgnored(rel, [])) continue;
-    if (fs.existsSync(path.join(abs, "package.json"))) {
+    const entries = fs.readdirSync(abs, { withFileTypes: true });
+    if (hasManifest(entries)) {
       roots.push(rel);
     }
-    for (const ent of fs.readdirSync(abs, { withFileTypes: true })) {
+    for (const ent of entries) {
       if (ent.isDirectory()) {
         stack.push(rel === "" ? ent.name : path.posix.join(rel, ent.name));
       }

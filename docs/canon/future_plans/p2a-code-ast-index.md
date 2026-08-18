@@ -1,6 +1,6 @@
 # P2a — Code AST index construction
 
-- **Status:** implementing
+- **Status:** absorbed
 - **Focus:** Code-root discovery, then a deterministic AST index over the discovered source roots in five languages (TypeScript/JavaScript, Go, C#, Rust, Python) as part of the `doc-canon` CLI: a uniform tree-sitter extraction pipeline normalized into a shared symbol/type/signature model, a deterministic hash-driven index artifact, and the same freshness discipline as the canon index — a separate artifact from the canon documentation index. Slice 1 ships TypeScript/JavaScript end-to-end; Go, C#, Rust, and Python follow as separate slices. GDScript was dropped — it is out of scope for this initiative.
 - **Depends on:** P0/P0b/P1 canon retrieval patterns (Scout → Expand → Execute discipline; ignore, hash-rebuild, dual-artifact reader-facade patterns)
 - **Unblocks:** P2b (code search tools), P2c (code analysis rules)

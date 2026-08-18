@@ -1,6 +1,6 @@
 # P2a-C# — C# code AST index slice
 
-- **Status:** draft
+- **Status:** absorbed
 - **Focus:** The C# vertical slice of the P2a code AST index: `*.csproj`/`*.sln` source-root detection and a tree-sitter WASM C# extractor normalized into the shared `{ name, kind, signature, file, line, endLine, scope }` model, reusing the slice-1 pipeline shape (`src/code-index/*`) and its byte-deterministic dual artifact.
 - **Depends on:** P2a slice 1 (TypeScript/JavaScript pipeline in `src/code-index/*`)
 - **Unblocks:** Consistent cross-language symbol lookup for C# repos via the same `doc-canon code-index` surface and `openCodeIndex` reader facade
