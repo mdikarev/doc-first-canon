@@ -1,6 +1,6 @@
 # P6 — Code-refs member-access resolution
 
-- **Status:** implementing
+- **Status:** absorbed
 - **Focus:** Resolve `obj.method()` call-site edges in the code AST index where `obj` is a local binding initialized from `new ImportedName(...)`, syntactically, within P2a's cheap-references tier — unblocks `--refs Class.method`.
 - **Depends on:** P2a (code AST index, absorbed) and the A+B refs slice (call-site edges reuse the `import` kind)
 - **Unblocks:** `--refs Class.method` for constructor-backed members; fewer `code_miss` probes during code analysis
@@ -25,7 +25,7 @@
 
 ## Absorbs into
 
-Likely: `ARCHITECTURE.md` (code AST index building block), `CLI.md` (`code-index search --refs` behavior), `GLOSSARY.md` (member-access reference terms).
+Merged: `GLOSSARY.md` (`Member-access reference` term), `CLI.md` (`code-index search --refs Class.method`), `ARCHITECTURE.md` (code AST index member-access edges in the building-block block).
 
 ## Open questions
 
