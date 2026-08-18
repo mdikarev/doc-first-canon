@@ -32,4 +32,20 @@ describe("code analysis rules", () => {
       assert.match(s, /code-index search|doc-canon search/);
     }
   });
+
+  it("propagates the rule to a target repo via copyManagedAssets", () => {
+    const root = mkdtempSync(join(tmpdir(), "code-analysis-rules-"));
+    try {
+      copyManagedAssets(root);
+      const agents = readFileSync(join(root, "AGENTS.md"), "utf8");
+      assert.match(agents, /code-index search/);
+      assert.match(agents, /code_miss/);
+      const claude = readFileSync(join(root, "CLAUDE.md"), "utf8");
+      assert.match(claude, /## Code analysis order/);
+      assert.match(claude, /code-index search/);
+      assert.match(claude, /code_miss/);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
 });
