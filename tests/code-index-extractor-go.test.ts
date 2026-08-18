@@ -205,4 +205,40 @@ func main() {
       [{ name: "B.M", to: "main.go" }],
     );
   });
+
+  it("does not crash on multi-value returns (no composite literals, no edges)", async () => {
+    const text = `package main
+
+import "fmt"
+
+func main() {
+	a, err := fmt.Println("hi")
+	_ = a
+	_ = err
+}`;
+    const { references } = await extractFile("main.go", text, new Set());
+    const members = references.filter((r) => r.kind === "import" && r.name.includes("."));
+    assert.equal(members.length, 0);
+  });
+
+  it("binds only positional composite-literal names in a mixed multi-value declaration", async () => {
+    const text = `package main
+
+type A struct{ M int }
+
+func main() {
+	x, y := &A{}, someCall()
+	x.M()
+	y.M()
+	_ = y
+	_ = x
+}`;
+    const { references, unresolvedMembers } = await extractFile("main.go", text, new Set());
+    const members = references.filter((r) => r.kind === "import" && r.name.includes("."));
+    assert.deepEqual(
+      members.map((r) => ({ name: r.name, to: r.to })),
+      [{ name: "A.M", to: "main.go" }],
+    );
+    assert.deepEqual(unresolvedMembers, []);
+  });
 });

@@ -310,6 +310,7 @@ function collectCompositeLiteralBindings(root: Node): Map<string, CompositeBindi
       for (let i = 0; i < names.length; i++) {
         const name = names[i];
         if (name.text === "_") continue;
+        if (i >= exprs.length) break;
         const lit = compositeLiteralIn(exprs[i]);
         const type = lit ? literalTypeName(lit) : null;
         if (type) bindings.set(name.text, type);
@@ -326,6 +327,7 @@ function collectCompositeLiteralBindings(root: Node): Map<string, CompositeBindi
       for (let i = 0; i < names.length; i++) {
         const n = names[i];
         if (n.text === "_") continue;
+        if (i >= exprs.length) break;
         const lit = compositeLiteralIn(exprs[i]);
         const type = lit ? literalTypeName(lit) : null;
         if (type) bindings.set(n.text, type);
