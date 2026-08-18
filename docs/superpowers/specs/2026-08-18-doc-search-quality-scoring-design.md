@@ -46,7 +46,7 @@ Tests of the shipped `doc-canon search` (BM25, `src/index/bm25.ts`) show ranking
 | Liveness | In `score()`, multiply the final per-doc score by `FUTURE_PLANS_WEIGHT = 0.5` when the path starts with `future_plans/`. Fixed constant, no schema change, no policies knob. |
 | Glossary source | Live-read `GLOSSARY.md` at search time via the contract's glossary role (same mechanism as `check.ts`), not a snapshot in the manifest. Deterministic (same file → same result), consistent with live snippet reads, corpus is tiny. |
 | Glossary extraction | Reuse the heading walk: `## Terms` (level 2) toggles; `### <term>` (level 3) yields the term; synonyms are the tokens of the term heading text plus the definition body tokens. Multi-word canonical terms (`docs_stale`, `source of truth`) supported. |
-| Query expansion | For each query term, if it equals a glossary term or one of its synonyms, add the canonical term's tokens to the query term set before scoring. Expansion is additive (OR), never drops original terms. |
+| Query expansion | For each query term, if it equals a glossary term or one of its synonyms, add that entry's full token set (canonical term tokens + synonym tokens) to the query term set before scoring. Expansion is additive (OR), never drops original terms. |
 | Glossary boost | No separate boost multiplier — expanded canonical terms carry natural idf weight; docs containing them outrank others. Heading weight and glossary expansion compound multiplicatively (terms in headings of glossary-matching docs get both). |
 | Policies knob | None in v1 — fixed defaults (YAGNI); the canon contract can add a knob later if demand appears. |
 | bm25-index schema | `schema_version: 2` for `bm25-index.json` (shape changes: new optional `heading_terms` field). Reader (`fromJSON`) tolerant of the missing field (treats it as no heading terms). Manifest pair stays internally consistent (shared `index_id`, fail-closed on mismatch). |
@@ -119,7 +119,7 @@ No change: `src/index/list.ts`, `src/index/paths.ts`, `src/index/pid-lock.ts`, `
 
 ### `searchCanon(root, query, opts)` additions
 
-1. Load glossary (live read). If present and query terms match synonyms/terms, build the expanded query-term set (original terms ∪ canonical-term tokens).
+1. Load glossary (live read). If present and query terms match synonyms/terms, build the expanded query-term set (original terms ∪ entry tokens: canonical term + synonyms).
 2. `handle.score(expandedQuery)` as today, with the two score modifications inside `score`.
 3. Snippet extraction, caps, freshness, warnings — unchanged.
 
