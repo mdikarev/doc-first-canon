@@ -36,10 +36,10 @@ The P2a code AST index is inert without a way to probe it. Coding agents current
 | Topic | Choice |
 | --- | --- |
 | Command surface | **`doc-canon code-index search <query>`** — subcommand of `code-index` (P2a already announced it); `--root`, `--json`, `--max-hits <n>` (default 10), `--snippet-lines <n>` (default 4), `--kind <type>`, `--file <glob>`, `--refs` |
-| Library contract | New `src/code-search/` with `searchCodeIndex(root, query, opts) → CodePack`; package export **`doc-canon/code-search`** (mirror of `doc-canon/search`) |
+| Library contract | New `src/code-search/` with `searchCodeIndex(root, query, opts) → CodePack`; `opts.refs?: string` selects refs mode (effective query = trimmed `opts.refs`); package export **`doc-canon/code-search`** (mirror of `doc-canon/search`) |
 | Query model (symbol mode) | Case-insensitive **substring** against symbol `name`; ordering **exact name > prefix > substring**, tie-break by `file`, then `line` (deterministic, no score) |
 | Filters | `--kind` filters by `SymbolKind`; `--file` filters the posix-relative file path via `micromatch` |
-| Reference mode | `--refs <name>`: scan `references` for matching `name`; hits are `{ file, line, refKind, name, from, to }` ordered by `file`, then `line`; purely syntactic (anchor/import/binding) |
+| Reference mode | `--refs <name>`: effective query is the trimmed `--refs` value (positional query forbidden); scan `references` for an exact, case-sensitive `name` match; hits are `{ file: ref.from, line, refKind: ref.kind, name, from, to, snippets }` ordered by `file`, then `line` (stable sort preserves artifact order on ties); purely syntactic (anchor/import/binding) |
 | Pack shape | `{ query, mode: "symbols" \| "refs", freshness: "fresh" \| "stale", warnings: string[], hits }` |
 | Symbol hit | `{ file, line, endLine, kind, name, signature, snippets: [{ start_line, text }] }` |
 | Snippets | Live file read; symbol mode — declaration lines `[line..endLine]` capped at `--snippet-lines`; refs mode — window of `--snippet-lines` lines centered on the reference line |
@@ -78,7 +78,7 @@ doc-canon code-index search <query>
 
 **Invariants**
 
-- Deterministic: identical index + identical query/flags → identical JSON bytes and identical human output
+- Deterministic: identical index + identical live corpus + identical query/flags → identical JSON bytes and identical human output (snippet text comes from live file reads)
 - No LLM, no external processes, no name resolution — purely what the index carries
 - Bounded: max-hits cap, snippet-lines per window, total snippet-line cap across hits
 - Freshness reported independently of the canon index: `code_index_stale` (warn) / `code_index_missing` (fail closed)
@@ -108,12 +108,13 @@ type CodeSearchHit = {
 };
 
 type CodeRefHit = {
-  file: string;    // referencing file (posix relative)
+  file: string;    // = ref.from (referencing file, posix relative)
   line: number;
   refKind: "anchor" | "import" | "binding";
   name: string;
   from: string;
   to: string;
+  snippets: CodeSearchSnippet[];
 };
 
 type CodePack = {
@@ -125,17 +126,17 @@ type CodePack = {
 };
 ```
 
-`CodeSearchError` carries a code (`empty_query` | `code_index_unavailable`) mirroring `SearchError` in `src/search/types.ts`.
+`CodeSearchError` carries a code (`empty_query` | `code_index_missing`) mirroring `SearchError` in `src/search/types.ts`; the fail-closed code name follows P2a's `code_index_missing`.
 
 ## Data flow & CLI
 
 ### `searchCodeIndex(root, query, opts)`
 
-1. Trim query; empty → throw `empty_query` (CLI exits ≠0).
-2. `openCodeIndex(root)`; missing/corrupt/schema mismatch → `code_index_unavailable` with hint `run: doc-canon code-index build` (CLI exit ≠0).
-3. Freshness: compare `manifest.files` hashes against `liveHashes()` (the same `isFresh` logic as `src/search/search.ts`); stale → `freshness: "stale"`, warning `code_index_stale` (stderr in human mode).
+1. Effective query: in refs mode (`opts.refs`) the trimmed `opts.refs` value; otherwise the trimmed positional `query`. Empty effective query → throw `empty_query` (CLI exits ≠0). `CodePack.query` is the effective query in both modes.
+2. `openCodeIndex(root)`; missing/corrupt/schema mismatch → `code_index_missing` with hint `run: doc-canon code-index build` (CLI exit ≠0).
+3. Freshness: compare `manifest.files` hashes against `liveHashes()` (the `isFresh` logic of `src/search/search.ts`, extracted to `src/agnostic/` or duplicated — the plan picks one); stale → `freshness: "stale"`, warning `code_index_stale` (stderr in human mode).
 4. **Symbol mode:** scan `symbols()`; case-insensitive substring match on `name`; apply `--kind` and `--file` filters; bucket by match class (exact name / prefix / substring); within a class order by `file`, then `line`.
-5. **Refs mode (`--refs`):** scan `references()`; exact (case-sensitive) `name` match; order by `file`, then `line`.
+5. **Refs mode (`opts.refs`):** scan `references()`; exact (case-sensitive) match on `ref.name`; hit `file := ref.from`; order by `file`, then `line` (stable sort preserves artifact order on ties).
 6. Cap hits to `max-hits`.
 7. Snippets: read the live file; symbol mode — lines `[line..endLine]` truncated to `snippet-lines` lines; refs mode — `snippet-lines` lines centered on the reference `line`. Enforce the total snippet-line cap across hits (120).
 8. Return `CodePack`.
@@ -167,7 +168,9 @@ src/code-search/search.ts  L33  function  searchCodeIndex
 
 ```
 src/index/reader.ts  L23  anchor  openCanonIndex  → src/index/reader.ts
+    export function openCanonIndex(root: string): CanonIndexHandle {
 src/search/search.ts  L4   import  openCanonIndex  → src/index/reader.ts
+    import { openCanonIndex } from "../index/reader.js";
 ```
 
 ## Error handling
@@ -175,7 +178,7 @@ src/search/search.ts  L4   import  openCanonIndex  → src/index/reader.ts
 | Situation | Behavior |
 | --- | --- |
 | Empty query | `code-index search` fail closed, exit ≠0, `error: query required` |
-| No code index (missing/corrupt/schema mismatch) | Fail closed, exit ≠0, `error: code index unavailable (…); run: doc-canon code-index build` |
+| No code index (missing/corrupt/schema mismatch) | Fail closed, exit ≠0, `error: code index missing (…); run: doc-canon code-index build` |
 | Stale code index | Warning `code_index_stale` on stderr; results still emitted; exit 0 |
 | Invalid `--max-hits` / `--snippet-lines` (< 1) | Fail closed before start, exit ≠0 |
 | Unknown `--kind` value | Fail closed before start, exit ≠0 |
@@ -189,7 +192,7 @@ src/search/search.ts  L4   import  openCanonIndex  → src/index/reader.ts
 
 **Unit:** substring matching and ordering (exact > prefix > substring; file/line tie-break); `--kind` and `--file` filters; refs-mode matching and ordering; pack caps (max-hits, snippet-lines, total-line cap); snippet extraction (declaration-line window in symbol mode, centered window in refs mode); flag validation failures.
 
-**Integration (temp fixtures + built index):** round-trip — search a fixture symbol returns the expected symbol hit with matching file/line/kind/signature; `--refs` over a fixture returns the expected anchor/import/binding sites; edit a source file after `code-index build` → `freshness: "stale"` + `code_index_stale` warning; no index → fail closed with build hint; determinism — identical fixture index + identical query → byte-identical `--json` output across two invocations.
+**Integration (temp fixtures + built index):** round-trip — search a fixture symbol returns the expected symbol hit with matching file/line/kind/signature; `--refs` over a fixture returns the expected anchor/import/binding sites — fixtures must actually produce `import` edges (this repo's own index carries none, so refs-mode import coverage cannot rely on it); edit a source file after `code-index build` → `freshness: "stale"` + `code_index_stale` warning; no index → fail closed with build hint; determinism — identical fixture index + identical live corpus + identical query → byte-identical `--json` output across two invocations.
 
 **CLI:** `code-index search` listed in `--help`; exit codes for empty query, missing index, invalid flags; `--json` shape matches `CodePack`; human output format.
 
@@ -221,8 +224,6 @@ Measured on this repository's own index (2.2 MB `code-ast-index.json`, 2719 symb
 None blocking design. Deferred to implementation plan only:
 
 - Whether `--kind` accepts multiple values (e.g. `function,method`) in v1 or later — default: single value in v1
-- Whether the refs-mode snippet window should also honor `--snippet-lines`' default 4 or a fixed 1-line anchor — default: same `--snippet-lines` as symbol mode
-- Case-sensitivity of `--refs` name matching — default: exact case-sensitive (mirrors the index's stored names)
 
 ## Related
 
