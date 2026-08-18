@@ -1,6 +1,6 @@
 # P2c — Code analysis rules for agents & skills
 
-- **Status:** implementing
+- **Status:** absorbed
 - **Design:** [`docs/superpowers/specs/2026-08-18-p2c-code-analysis-rules-design.md`](../../superpowers/specs/2026-08-18-p2c-code-analysis-rules-design.md) — SoT for the agent-facing code-analysis rules and the index-first skill discipline
 - **Focus:** Managed `AGENTS.md` block / pointer rule and coding-agent guidance that require trying the P2b code search first during code analysis, preserving expand-when-thin behavior — plus a token-cost guard proving the index route reads fewer tokens than naive source reads.
 - **Depends on:** P2a (code AST index), P2b (code search tools)
