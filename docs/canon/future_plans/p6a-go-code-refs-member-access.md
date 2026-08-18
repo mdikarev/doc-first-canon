@@ -1,7 +1,7 @@
 # P6a-Go — Go code-refs member-access slice
 
-- **Status:** draft
-- **Focus:** Go slice of P6: member-access call-site edges for local bindings initialized from composite-literal/pointer structs (`x := &T{}` / `x := T{}`), syntactically, in the Go extractor — unblocks `--refs Type.method` for Go.
+- **Status:** implementing
+- **Focus:** Go slice of P6: member-access call-site edges for local bindings initialized from composite-literal/pointer structs (`x := &T{}` / `x := T{}` / `var x = T{}`), syntactically, in the Go extractor — unblocks `--refs Type.method` for Go.
 - **Depends on:** P6 (TS/JS v1, absorbed) and P2a-Go (Go extractor, absorbed)
 - **Unblocks:** `--refs Type.method` for Go constructor-backed members; fewer `code_miss` probes
 
@@ -11,8 +11,8 @@ P6 ships member-access resolution for the TS/JS `new <Type>(...)` pattern. Go co
 
 ## In scope
 
-- Composite-literal/pointer-literal bindings: `x := &T{}` / `x := T{}` where `T` is a same-file or same-package type — `T.method`-named edges
-- Same-file and same-package resolution only (no cross-package type inference)
+- Composite-literal/pointer-literal bindings: `x := &T{}` / `x := T{}` / `var x = T{}` where `T` is a same-file, imported (qualified `reader.Handle{}` via the import edge map), or same-package type — `T.method`-named edges with the unqualified type name
+- Same-package resolution via a deterministic post-processing pass in `sync.ts` (package identity = directory + package-clause name; single candidate → edge, zero or multiple → drop)
 - Determinism, hash-driven rebuild, schema and CodePack shape unchanged
 
 ## Out of scope
@@ -27,6 +27,4 @@ Likely: `ARCHITECTURE.md` (code AST index — Go member-access), `CLI.md` (`code
 
 ## Open questions
 
-- Whether `:=` short declarations, `var x T`, and `&T{}` forms all count in v1
-- Package-internal `T` resolution when multiple packages share the same name
-- Exact tree-sitter-go node types for composite/pointer literals — locked in extractor tests
+*Resolved by the design spec* (binding forms: `x := &T{}` / `x := T{}` / `var x = T{}` with a composite-literal initializer; `var x T` without an initializer excluded; `&T{}` counts via the `unary_expression` → `composite_literal` form; same-file, qualified-import (`reader.Handle{}` via the import edge map, edge carries the unqualified type), and same-package resolution via the sync post-processing pass; same-package ambiguity — zero or multiple same-named candidates → edge dropped; tree-sitter-go CST shapes locked in extractor tests).
