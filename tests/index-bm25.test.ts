@@ -85,4 +85,15 @@ describe("Bm25Index", () => {
     assert.equal(state.schema_version, 2);
     assert.ok(Array.isArray(state.heading_terms?.["a.md"]));
   });
+
+  it("handles prototype-key tokens like constructor", () => {
+    const idx = Bm25Index.build(
+      [{ path: "a.md", text: "constructor pattern" }],
+      "id-proto",
+    );
+    const hits = idx.score("constructor");
+    assert.equal(hits[0]?.path, "a.md");
+    const again = Bm25Index.fromJSON(idx.toJSON());
+    assert.equal(again.score("constructor")[0]?.path, "a.md");
+  });
 });
