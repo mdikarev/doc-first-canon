@@ -24,6 +24,7 @@ describe("doc-canon cli commands", () => {
       "report",
       "index",
       "search",
+      "code-index",
     ]) {
       assert.match(r.stdout, new RegExp(`\\b${cmd}\\b`), `missing ${cmd}`);
     }

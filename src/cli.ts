@@ -121,4 +121,27 @@ program
     },
   );
 
+const codeIndex = program
+  .command("code-index")
+  .description("Build a deterministic AST index over discovered source roots");
+
+codeIndex
+  .command("build")
+  .description("Build or refresh the code AST index")
+  .option("--root <path>", "target repo root", ".")
+  .option("--watch", "poll and refresh index")
+  .option("--stop", "stop a running --watch process")
+  .option("--interval <ms>", "poll interval for --watch")
+  .action(
+    async (opts: {
+      root: string;
+      watch?: boolean;
+      stop?: boolean;
+      interval?: string;
+    }) => {
+      const { codeIndexBuild } = await import("./commands/code-index-cmd.js");
+      process.exitCode = await codeIndexBuild(opts.root, opts);
+    },
+  );
+
 await program.parseAsync();
