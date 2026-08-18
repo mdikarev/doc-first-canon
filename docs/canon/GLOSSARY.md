@@ -58,7 +58,7 @@ A syntactic `import`-kind reference edge from a member usage (`obj.method()` cal
 CLI command that brings an existing canon up to the installed CLI by filling missing required scaffold from the target contract, then `upgrade-skills`. Not a schema-version rewriter; not `init`.
 
 ### skills_stamp
-Version marker in the contract YAML recording which managed skills stamp was last applied; validate fails if skills are too old relative to CLI expectations. Soft coupling: managed-asset changes bump npm version and stamp; a CLI-only bugfix may bump npm patch only.
+Version marker in the contract YAML recording which managed skills stamp was last applied; validate fails if skills are too old relative to CLI expectations. **Any change to managed assets (`embedded/skills`, `embedded/rules`, `embedded/agents`) must bump `SKILLS_STAMP` in the same change** — enforced by the `SKILLS_STAMP guard` test (templates under `embedded/templates` are not managed assets and need no bump). Soft coupling: managed-asset changes also bump npm version; a CLI-only bugfix may bump npm patch only.
 
 ### Future plans
 Canon subtree `docs/canon/future_plans/` for initiatives describing the **future shape** of the system. Not behavioral SoT for current behavior; not a development task tracker. After realization, absorb into living sections and mark the initiative absorbed or remove it.
