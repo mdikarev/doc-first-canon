@@ -1,6 +1,6 @@
 # P6a-Python — Python code-refs member-access slice
 
-- **Status:** draft
+- **Status:** absorbed
 - **Focus:** Python slice of P6: member-access call-site edges for local bindings initialized from `Type(...)` constructor calls, syntactically — unblocks `--refs Type.method` for Python.
 - **Depends on:** P6 (TS/JS v1, absorbed) and P2a-Python (Python extractor, absorbed)
 - **Unblocks:** `--refs Type.method` for Python constructor-backed members
@@ -21,10 +21,8 @@ Python has no `new` keyword; construction is a bare call `x = Type(...)`. Distin
 
 ## Absorbs into
 
-Likely: `ARCHITECTURE.md`, `CLI.md`, `GLOSSARY.md` (member-access reference — Python pattern).
+Merged: `GLOSSARY.md` (`Member-access reference` term — Python bare-call constructor pattern), `CLI.md` (`code-index search --refs Class.method` — Python bindings), `ARCHITECTURE.md` (code AST index — Python member-access edges), `CODE_INDEX.md` (Python per-language row).
 
 ## Open questions
 
-- Whether the capitalized-callee heuristic is reliable enough or should be imported-names-only
-- `from x import Type` alias handling in the Python extractor
-- Exact tree-sitter-python node types — locked in extractor tests
+*Resolved by the design pass* (grounding rule: same-file `class` symbols count regardless of capitalization — kind-grounded, rejecting functions; imported names require PascalCase `/^[A-Z][A-Za-z0-9_]*$/` since import edges carry no kind; `from .module import Type` aliases canonicalized — the edge carries the canonical name; attribute callees (`util.Reader()`), absolute/external imports, and factory functions get no edge; exact tree-sitter-python CST shapes locked in extractor tests — `assignment[left, right=call]`, `call[function=identifier]`, `attribute[object, attribute]`, `aliased_import[name=dotted_name, identifier]`).

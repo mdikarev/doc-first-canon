@@ -89,3 +89,134 @@ result = helper(2)
     assert.ok(!references.some((r) => r.name === "result"));
   });
 });
+
+describe("extractFile (python) member-access references", () => {
+  it("emits same-file edges for class-backed bare-call bindings (incl. lowercase classes)", async () => {
+    const text = `class Reader:
+    def score(self):
+        return 1
+
+class widget:
+    def paint(self):
+        pass
+
+def run():
+    r = Reader()
+    r.score()
+    w = widget()
+    w.paint()
+    return r
+`;
+    const { references } = await extractFile("main.py", text, new Set());
+    const members = references
+      .filter((r) => r.kind === "import" && r.name.includes("."))
+      .sort((a, b) => a.name.localeCompare(b.name));
+    assert.deepEqual(
+      members.map((r) => ({ name: r.name, to: r.to })),
+      [
+        { name: "Reader.score", to: "main.py" },
+        { name: "widget.paint", to: "main.py" },
+      ],
+    );
+  });
+
+  it("emits no edge when the callee is a same-file function, not a class", async () => {
+    const text = `def open():
+    return 1
+
+def run():
+    z = open()
+    return z
+`;
+    const { references } = await extractFile("main.py", text, new Set());
+    const members = references.filter((r) => r.kind === "import" && r.name.includes("."));
+    assert.equal(members.length, 0);
+  });
+
+  it("resolves PascalCase imported names through the import edge map", async () => {
+    const text = `from .common import Reader
+
+def run():
+    r = Reader()
+    r.score()
+    return r
+`;
+    const known = new Set(["src/package/main.py", "src/package/common.py"]);
+    const { references } = await extractFile("src/package/main.py", text, known);
+    const members = references.filter((r) => r.kind === "import" && r.name.includes("."));
+    assert.deepEqual(
+      members.map((r) => ({ name: r.name, to: r.to })),
+      [{ name: "Reader.score", to: "src/package/common.py" }],
+    );
+  });
+
+  it("canonicalizes as-aliased imported names in the edge name", async () => {
+    const text = `from .common import Reader as R
+
+def run():
+    r = R()
+    r.score()
+    return r
+`;
+    const known = new Set(["src/package/main.py", "src/package/common.py"]);
+    const { references } = await extractFile("src/package/main.py", text, known);
+    const members = references.filter((r) => r.kind === "import" && r.name.includes("."));
+    assert.deepEqual(
+      members.map((r) => ({ name: r.name, to: r.to })),
+      [{ name: "Reader.score", to: "src/package/common.py" }],
+    );
+  });
+
+  it("emits no edge for lowercase imported names, attribute callees, or external imports", async () => {
+    const text = `from .common import thing
+from .common import Widget
+import requests
+
+def run():
+    x = thing()
+    x.method()
+    y = Widget.make()
+    y.run()
+    z = requests.get("https://x")
+    z.json()
+    return (x, y, z)
+`;
+    const known = new Set(["src/package/main.py", "src/package/common.py"]);
+    const { references } = await extractFile("src/package/main.py", text, known);
+    const members = references.filter((r) => r.kind === "import" && r.name.includes("."));
+    assert.equal(members.length, 0);
+  });
+
+  it("emits property-read edges for attributes on constructor-backed bindings", async () => {
+    const text = `class Reader:
+    score = 1
+
+def run():
+    r = Reader()
+    return r.score
+`;
+    const { references } = await extractFile("main.py", text, new Set());
+    const members = references.filter((r) => r.kind === "import" && r.name.includes("."));
+    assert.deepEqual(
+      members.map((r) => ({ name: r.name, to: r.to })),
+      [{ name: "Reader.score", to: "main.py" }],
+    );
+  });
+
+  it("emits an edge for a PascalCase imported name even if it is really a function (documented heuristic)", async () => {
+    const text = `from .common import Factory
+
+def run():
+    f = Factory()
+    f.build()
+    return f
+`;
+    const known = new Set(["src/package/main.py", "src/package/common.py"]);
+    const { references } = await extractFile("src/package/main.py", text, known);
+    const members = references.filter((r) => r.kind === "import" && r.name.includes("."));
+    assert.deepEqual(
+      members.map((r) => ({ name: r.name, to: r.to })),
+      [{ name: "Factory.build", to: "src/package/common.py" }],
+    );
+  });
+});

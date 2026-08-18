@@ -260,6 +260,93 @@ function collectAnchorAndBindingRefs(root: Node, ctx: WalkCtx): void {
   visit(root);
 }
 
+const PASCAL_CASE = /^[A-Z][A-Za-z0-9_]*$/;
+
+function collectCanonicalAliases(root: Node): Map<string, string> {
+  const aliases = new Map<string, string>();
+  const visit = (node: Node): void => {
+    if (node.type === "import_from_statement") {
+      const names = node.childForFieldName("name");
+      if (names?.type === "aliased_import") {
+        const canonicalNode = names.childForFieldName("name");
+        const canonical = canonicalNode ? identifiersIn(canonicalNode).pop() : undefined;
+        const alias = names.namedChildren.find((c) => c.type === "identifier");
+        if (canonical && alias) aliases.set(alias.text, canonical);
+      }
+    }
+    for (const c of node.namedChildren) visit(c);
+  };
+  visit(root);
+  return aliases;
+}
+
+function collectImportedNames(references: CodeReference[]): Map<string, string> {
+  const names = new Map<string, string>();
+  for (const r of references) {
+    if (r.kind === "import" && !names.has(r.name)) names.set(r.name, r.to);
+  }
+  return names;
+}
+
+function collectConstructorBindings(
+  root: Node,
+  symbols: CodeSymbol[],
+  importedNames: Map<string, string>,
+  aliases: Map<string, string>,
+  file: string,
+): Map<string, { typeName: string; to: string }> {
+  const classNames = new Set(symbols.filter((s) => s.kind === "class").map((s) => s.name));
+  const bindings = new Map<string, { typeName: string; to: string }>();
+  const visit = (node: Node): void => {
+    if (node.type === "assignment") {
+      const left = node.childForFieldName("left");
+      const right = node.childForFieldName("right");
+      if (left?.type === "identifier" && right?.type === "call") {
+        const callee = right.childForFieldName("function");
+        if (callee?.type === "identifier") {
+          const name = callee.text;
+          if (classNames.has(name)) {
+            bindings.set(left.text, { typeName: name, to: file });
+          } else if (PASCAL_CASE.test(name) && importedNames.has(name)) {
+            const canonical = aliases.get(name) ?? name;
+            bindings.set(left.text, { typeName: canonical, to: importedNames.get(name)! });
+          }
+        }
+      }
+    }
+    for (const c of node.namedChildren) visit(c);
+  };
+  visit(root);
+  return bindings;
+}
+
+function collectMemberAccessEdges(
+  root: Node,
+  ctx: WalkCtx,
+  bindings: Map<string, { typeName: string; to: string }>,
+): void {
+  const visit = (node: Node): void => {
+    if (node.type === "attribute") {
+      const object = node.childForFieldName("object");
+      const attribute = node.childForFieldName("attribute");
+      if (object?.type === "identifier" && attribute?.type === "identifier") {
+        const binding = bindings.get(object.text);
+        if (binding) {
+          ctx.references.push({
+            kind: "import",
+            from: ctx.file,
+            to: binding.to,
+            name: `${binding.typeName}.${attribute.text}`,
+            line: node.startPosition.row + 1,
+          });
+        }
+      }
+    }
+    for (const c of node.namedChildren) visit(c);
+  };
+  visit(root);
+}
+
 export async function extractFile(
   rel: string,
   text: string,
@@ -291,6 +378,16 @@ export async function extractFile(
     };
     collectImportEdges(tree.rootNode, ctxRefs);
     collectAnchorAndBindingRefs(tree.rootNode, ctxRefs);
+    const importedNames = collectImportedNames(ctxRefs.references);
+    const aliases = collectCanonicalAliases(tree.rootNode);
+    const bindings = collectConstructorBindings(
+      tree.rootNode,
+      ctxRefs.symbols,
+      importedNames,
+      aliases,
+      ctxRefs.file,
+    );
+    collectMemberAccessEdges(tree.rootNode, ctxRefs, bindings);
     ctxRefs.references.sort(
       (a, b) =>
         a.from.localeCompare(b.from) ||

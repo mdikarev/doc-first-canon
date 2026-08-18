@@ -483,3 +483,72 @@ fn main() {
     assert.equal(hit.line, 7);
   });
 });
+
+describe("searchCodeIndex (python refs)", () => {
+  let repo: string;
+  beforeEach(async () => {
+    repo = makeRepo();
+    write(repo, "pyproject.toml", '[project]\nname = "app"\nversion = "0.1.0"\n');
+    write(
+      repo,
+      "reader.py",
+      `class Reader:
+    def __init__(self):
+        pass
+
+    def score(self):
+        return 1
+`,
+    );
+    write(
+      repo,
+      "main.py",
+      `from .reader import Reader
+
+
+def run():
+    r = Reader()
+    return r.score()
+`,
+    );
+    await syncCodeIndex(repo);
+  });
+  afterEach(() => fs.rmSync(repo, { recursive: true, force: true }));
+
+  it("refs mode matches Python bare-call constructor member-access edges across files", () => {
+    const pack = searchCodeIndex(repo, "", { refs: "Reader.score" });
+    assert.equal(pack.mode, "refs");
+    const hit = pack.hits.find(
+      (h) => h.refKind === "import" && h.name === "Reader.score",
+    ) as CodeRefHit;
+    assert.ok(hit, "expected a Reader.score member-access hit");
+    assert.equal(hit.from, "main.py");
+    assert.equal(hit.to, "reader.py");
+    assert.equal(hit.line, 6);
+  });
+
+  it("refs mode matches Python same-file class constructor member-access edges", async () => {
+    write(
+      repo,
+      "main.py",
+      `class Reader:
+    def score(self):
+        return 1
+
+
+def run():
+    r = Reader()
+    return r.score()
+`,
+    );
+    await syncCodeIndex(repo);
+    const pack = searchCodeIndex(repo, "", { refs: "Reader.score" });
+    const hit = pack.hits.find(
+      (h) => h.refKind === "import" && h.name === "Reader.score",
+    ) as CodeRefHit;
+    assert.ok(hit, "expected a Reader.score same-file hit");
+    assert.equal(hit.from, "main.py");
+    assert.equal(hit.to, "main.py");
+    assert.equal(hit.line, 8);
+  });
+});

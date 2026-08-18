@@ -32,7 +32,7 @@ The pipeline lives in `src/code-index/*`: source-root discovery (manifest-driven
 | Go | Relative imports (`./`, `../`) resolved to `.go`/`index.go`; non-relative imports skipped | Composite/pointer-literal bindings (`x := &T{}` / `x := T{}` / `var x = T{}`) → `<Type>.<member>` edges (same-file, qualified-import via import edge map) | Same-package pass `resolveGoSamePackageReferences` (directory + package clause; single candidate → edge) |
 | C# | No import edges in v1 (`using` is not file-resolvable without a project model) | `new <Type>(...)` (`object_creation_expression`) → `<Type>.<member>` edges (same-file); `using`/namespace-qualified/target-typed `new()` excluded | Same-namespace pass `resolveCSharpNamespaceReferences` (unique class/interface/struct in another file of the same namespace) |
 | Rust | Relative `use self::...` / `use super::...` resolved to `.rs`/`mod.rs`; bare crate-path `use foo::bar` skipped | Associated-function-constructor bindings (`let`/`const` initialized from `Type::new()` / `Type::default()` — a `scoped_identifier` callee in a `call_expression`) → `<Type>.<member>` edges (same-file, imported-name via the import edge map); crate-relative/external-crate imports, generics, non-`new`/`default` associated fns excluded | None |
-| Python | Relative `from .module import name` resolved to `.py`/`__init__.py`; bare `import x` skipped | None (P6a-Python draft) | None |
+| Python | Relative `from .module import name` resolved to `.py`/`__init__.py`; bare `import x` skipped | Bare-call constructor bindings (`x = Type(...)` — an `assignment` with a `call` right-hand side whose identifier callee is a same-file `class` symbol or a PascalCase imported name from a relative import edge, `as`-aliases canonicalized) → `<Type>.<member>` edges; absolute/external imports, attribute callees (`util.Reader()`), factory functions excluded | None |
 
 ### Cross-file resolution passes
 
@@ -53,7 +53,6 @@ Member-access edges that cannot be resolved to a same-file type surface as `Unre
 ## Open questions
 
 - C# imported-type resolution (`using`, `using`-alias, namespace-qualified `new NS.Type()`, target-typed `new()`, cross-namespace types) needs a project model — tracked as P6a-csharp-2 draft.
-- Python member-access slice remains a draft (P6a-python); Rust (P6a-Rust) is absorbed.
 
 ## Related canon
 
