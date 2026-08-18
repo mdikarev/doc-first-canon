@@ -85,7 +85,7 @@ A bounded retrieval result containing the query, index identity and freshness, w
 A non-fatal search warning that one or more indexed document hashes differ from the live canon corpus. Search serves the Pack with exit 0, surfaces the warning, and does not auto-reindex.
 
 ### Source root
-A discovered or configured directory holding the project's source code to be indexed by `code-index build`; found via explicit config, manifest detection (`package.json`, `go.mod`, `*.csproj`/`*.sln`, `Cargo.toml`, `project.godot`, `pyproject.toml`/`setup.py`/`setup.cfg`), or extension-based fallback under the VCS root.
+A discovered or configured directory holding the project's source code to be indexed by `code-index build`; found via explicit config, manifest detection (`package.json`, `go.mod`, `*.csproj`/`*.sln`, `Cargo.toml`, `pyproject.toml`/`setup.py`/`setup.cfg`), or extension-based fallback under the VCS root.
 
 ### Symbol
 A named code unit (class, interface, enum, function, method, property, module, const, type, …) extracted from source and normalized into the shared `{ name, kind, signature, file, line, endLine, scope }` model; no per-language output formats are exposed to consumers.

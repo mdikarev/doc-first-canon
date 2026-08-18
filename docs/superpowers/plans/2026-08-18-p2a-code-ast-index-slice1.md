@@ -4,6 +4,8 @@
 
 **Goal:** Ship the first vertical slice of the P2a code AST index: `doc-canon code-index build` (+ `--watch`/`--stop`) that discovers TypeScript/JavaScript source roots, extracts symbols and syntactic references via pinned tree-sitter WASM, and writes a byte-deterministic dual artifact with hash-driven freshness.
 
+**Subsequent slices:** Go, C#, Rust, and Python follow as separate vertical slices reusing the slice-1 pipeline shape (`src/code-index/*`). **GDScript is dropped** — out of scope for the whole P2a initiative; do not plan for it. This plan implements slice 1 only.
+
 **Architecture:** Mirror the canon index pipeline (`src/index/*`) in a new `src/code-index/*` layer: discovery → config → listing → tree-sitter WASM extraction into a shared `CodeSymbol`/`CodeReference` model → `syncCodeIndex` (hash diff, full rebuild, atomic dual artifact) → `openCodeIndex` reader facade → CLI command with separate pid-lock watch. Byte-determinism replaces `index_id`/`built_at` with a deterministic `index_fingerprint`.
 
 **Tech Stack:** Node.js ≥20, TypeScript ESM, `commander`, `micromatch`, `@vscode/tree-sitter-wasm` (pinned, CJS interop via `createRequire`).

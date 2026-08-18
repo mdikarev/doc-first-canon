@@ -1,7 +1,7 @@
 # P2a — Code AST index construction
 
 - **Status:** implementing
-- **Focus:** Code-root discovery, then a deterministic AST index over the discovered source roots in six languages (TypeScript/JavaScript, Go, C#, Rust, GDScript, Python) as part of the `doc-canon` CLI: a uniform tree-sitter extraction pipeline normalized into a shared symbol/type/signature model, a deterministic hash-driven index artifact, and the same freshness discipline as the canon index — a separate artifact from the canon documentation index.
+- **Focus:** Code-root discovery, then a deterministic AST index over the discovered source roots in five languages (TypeScript/JavaScript, Go, C#, Rust, Python) as part of the `doc-canon` CLI: a uniform tree-sitter extraction pipeline normalized into a shared symbol/type/signature model, a deterministic hash-driven index artifact, and the same freshness discipline as the canon index — a separate artifact from the canon documentation index. Slice 1 ships TypeScript/JavaScript end-to-end; Go, C#, Rust, and Python follow as separate slices. GDScript was dropped — it is out of scope for this initiative.
 - **Depends on:** P0/P0b/P1 canon retrieval patterns (Scout → Expand → Execute discipline; ignore, hash-rebuild, dual-artifact reader-facade patterns)
 - **Unblocks:** P2b (code search tools), P2c (code analysis rules)
 - **Design:** [`docs/superpowers/specs/2026-08-18-p2a-code-ast-index-design.md`](../../superpowers/specs/2026-08-18-p2a-code-ast-index-design.md) — SoT for slice 1 (TypeScript/JavaScript end-to-end); subsequent language slices reuse the slice-1 pipeline shape
@@ -13,8 +13,8 @@ Coding agents currently analyze a project by reading source files directly, and 
 ## In scope
 
 - **Command surface:** `doc-canon code-index build [--watch] [--stop]` on the existing CLI, mirroring `doc-canon index` (poll-based watch with pid-lock, `--stop`, `--root`). `code-index search` lands with P2b. The code index is a part of `doc-canon` — no separate install.
-- **Code-root discovery:** VCS root (up-search `.git`) as the project boundary; manifest-driven detection (`package.json`, `go.mod`, `*.csproj`/`*.sln`, `Cargo.toml`, `project.godot`, `pyproject.toml`/`setup.py`/`setup.cfg`); the manifest's directory is a source root; sibling manifests are separate roots (monorepo); nested manifests — nearest wins; extension-based fallback scan under the VCS root when no manifest exists. Deterministic precedence: **explicit config > manifests > extension scan**. Default ignore set (`node_modules`, `vendor`, `.venv`, `bin`, `obj`, `target`, `dist`, `build`, `coverage`, `.git`, …) with additive overrides via `.doc-canon/code-index.json` (explicit `roots`, `ignore`, per-root language hints). The CLI works on repos without a canon.
-- **Extraction layer:** tree-sitter WASM grammars for TypeScript/JavaScript, Go, C#, Rust, GDScript, and Python — one uniform CST pipeline, no external processes, no per-language output formats. Shared normalized model: `{ name, kind, signature, file, line, endLine, scope }` with a small kind enum (`class`/`interface`/`trait`/`enum`/`struct`/`function`/`method`/`property`/`module`/`const`/…).
+- **Code-root discovery:** VCS root (up-search `.git`) as the project boundary; manifest-driven detection (`package.json`, `go.mod`, `*.csproj`/`*.sln`, `Cargo.toml`, `pyproject.toml`/`setup.py`/`setup.cfg`); the manifest's directory is a source root; sibling manifests are separate roots (monorepo); nested manifests — nearest wins; extension-based fallback scan under the VCS root when no manifest exists. Deterministic precedence: **explicit config > manifests > extension scan**. Default ignore set (`node_modules`, `vendor`, `.venv`, `bin`, `obj`, `target`, `dist`, `build`, `coverage`, `.git`, …) with additive overrides via `.doc-canon/code-index.json` (explicit `roots`, `ignore`, per-root language hints). The CLI works on repos without a canon.
+- **Extraction layer:** tree-sitter WASM grammars for TypeScript/JavaScript, Go, C#, Rust, and Python — one uniform CST pipeline, no external processes, no per-language output formats. Shared normalized model: `{ name, kind, signature, file, line, endLine, scope }` with a small kind enum (`class`/`interface`/`trait`/`enum`/`struct`/`function`/`method`/`property`/`module`/`const`/…). GDScript is dropped: not part of the extraction layer.
 - **References (v1):** cheap syntactic references only — same-file anchors, import/export/use edges, and in-scope local bindings the CST resolves without name resolution. No cross-symbol, cross-file resolution in v1; that is a deferred, explicitly expensive tier (per-language compiler frontends / language servers; breaks hash-driven determinism), revisited only if P2b shows real demand.
 - **Deterministic index artifact:** `.doc-canon/code-index-manifest.json` + `.doc-canon/code-ast-index.json`, read via an `openCodeIndex` reader-facade (the same dual-artifact pattern as `openCanonIndex` in `src/index/`).
 - **Hash-driven freshness:** unchanged content hashes are a no-op; any create/update/delete triggers a full rebuild from all current files (no posting-level incremental updates). Poll-based watch with pid-lock and `--stop`. Freshness is reported **independently** of the canon index: `code_index_stale` → warn at search time; `code_index_missing` → fail closed with a hint to run `doc-canon code-index build`.
@@ -29,7 +29,7 @@ Coding agents currently analyze a project by reading source files directly, and 
 - Editing source through the index; the index is read-only analysis substrate
 - The canon BM25 index / `doc-canon index` / `doc-canon search`: those index `docs/canon/**` documentation, not code; the code AST index is a separate artifact over the project's discovered source roots
 - Git-diff analysis as the primary change signal
-- Language support beyond the six listed; per-project analyzer configuration beyond `.doc-canon/code-index.json` overrides comes later if the shared model proves inadequate
+- Language support beyond the five listed; GDScript is dropped (out of scope); per-project analyzer configuration beyond `.doc-canon/code-index.json` overrides comes later if the shared model proves inadequate
 - Incremental per-language index updates (full rebuild only, like the canon index)
 
 ## Absorbs into
@@ -40,4 +40,4 @@ Likely: `ARCHITECTURE.md` (code-index building block, dual-artifact pattern reus
 
 - Cross-symbol / cross-file reference resolution stays a deferred, explicitly expensive tier; revisit only if P2b shows real demand
 - Whether `.doc-canon/code-index.json` should also honor an existing canon contract's `policies.ignore` when a canon is present, or stay fully independent of the contract
-- tree-sitter WASM grammar packaging: confirm the six grammars' bundle growth in the published `doc-canon` package is acceptable
+- tree-sitter WASM grammar packaging: confirm the five grammars' bundle growth in the published `doc-canon` package is acceptable

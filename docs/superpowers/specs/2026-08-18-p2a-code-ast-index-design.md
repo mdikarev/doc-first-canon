@@ -5,7 +5,7 @@
 **Initiative:** [`p2a-code-ast-index.md`](../../canon/future_plans/p2a-code-ast-index.md)  
 **Approach:** Source-root discovery → tree-sitter WASM extraction → shared symbol/reference model → byte-deterministic dual artifact + poll watch + reader facade
 
-This spec is the detailed SoT for **P2a, slice 1**: a full end-to-end pipeline for **TypeScript/JavaScript** (discovery → extraction → index → CLI → watch → facade → tests), including References v1 (same-file anchors, import/export edges, in-scope local bindings). Remaining languages (Go, C#, Rust, GDScript, Python) are subsequent vertical slices reusing the slice-1 pipeline shape and are **out of scope here**. Where this spec and the initiative disagree on P2a *details*, this spec wins.
+This spec is the detailed SoT for **P2a, slice 1**: a full end-to-end pipeline for **TypeScript/JavaScript** (discovery → extraction → index → CLI → watch → facade → tests), including References v1 (same-file anchors, import/export edges, in-scope local bindings). Remaining languages (Go, C#, Rust, Python) are subsequent vertical slices reusing the slice-1 pipeline shape and are **out of scope here**. **GDScript is dropped** — out of scope for the whole initiative. Where this spec and the initiative disagree on P2a *details*, this spec wins.
 
 ## Problem
 
@@ -23,7 +23,7 @@ Coding agents currently analyze a project by reading source files directly; when
 ## Non-goals
 
 - CLI search over the index (`code-index search` → P2b), agent/skill code-index-first rules (→ P2c)
-- Languages other than TypeScript/JavaScript in this slice (Go/C#/Rust/GDScript/Python are later slices)
+- Languages other than TypeScript/JavaScript in this slice (Go/C#/Rust/Python are later slices; **GDScript is dropped**)
 - Cross-symbol / cross-file reference resolution (deferred, explicitly expensive tier); type inference; call-graph inference
 - Embeddings / vector retrieval over source; editing source through the index
 - Incremental per-language index updates (full rebuild only, like the canon index)
@@ -36,7 +36,7 @@ Coding agents currently analyze a project by reading source files directly; when
 | Topic | Choice |
 | --- | --- |
 | Decomposition | Vertical slices, **TS/JS first**; P2a stays one initiative, slices live in this spec / the implementation plan |
-| WASM runtime + grammars | **`@vscode/tree-sitter-wasm`** (pinned exact version) — covers TS/JS/Go/C#/Rust/Python; GDScript resolved separately in its own slice |
+| WASM runtime + grammars | **`@vscode/tree-sitter-wasm`** (pinned exact version) — covers TS/JS/Go/C#/Rust/Python; GDScript is dropped |
 | Grammar versioning | **Stamp mechanism:** `GRAMMAR_VERSIONS` constant in `src/code-index/grammar-versions.ts` written into the manifest as `grammar_versions`; divergence → full rebuild (like `skills_stamp`) |
 | Determinism | **Byte-deterministic** manifest: no `index_id`, no `built_at`; identical input + identical grammar versions → identical artifact bytes |
 | Config | `.doc-canon/code-index.json` (explicit `roots`, `ignore`, per-root `languages`); precedence **explicit config > manifests > extension scan** |
@@ -315,7 +315,7 @@ None blocking design. Deferred to implementation plan only:
 
 - Exact tree-sitter node-type names for edge TS constructs (decorators, generics, exported const objects) — locked in extractor tests
 - Whether `--force` rebuild-even-if-fresh is worth a flag (default: no)
-- GDScript wasm packaging strategy (own slice; not this one)
+- GDScript is dropped (out of scope); no packaging strategy needed
 
 ## Related
 
