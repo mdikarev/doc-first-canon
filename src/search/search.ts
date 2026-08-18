@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { isFresh } from "../agnostic/freshness.js";
 import { openCanonIndex } from "../index/reader.js";
 import { extractSnippetWindows } from "./snippets.js";
 import {
@@ -23,21 +24,6 @@ const DEFAULTS = {
   maxWindowsPerHit: 2,
   maxSnippetLinesTotal: 120,
 } as const;
-
-function isFresh(
-  manifestDocs: Record<string, { hash: string }>,
-  live: Record<string, string>,
-): boolean {
-  const manifestPaths = Object.keys(manifestDocs).sort();
-  const livePaths = Object.keys(live).sort();
-  if (manifestPaths.length !== livePaths.length) return false;
-  for (let i = 0; i < manifestPaths.length; i++) {
-    if (manifestPaths[i] !== livePaths[i]) return false;
-    const p = manifestPaths[i]!;
-    if (manifestDocs[p]!.hash !== live[p]) return false;
-  }
-  return true;
-}
 
 export function searchCanon(
   root: string,
