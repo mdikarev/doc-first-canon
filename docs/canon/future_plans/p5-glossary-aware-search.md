@@ -1,6 +1,6 @@
 # P5 — Glossary-aware search
 
-- **Status:** implementing
+- **Status:** absorbed
 - **Focus:** Use `GLOSSARY.md` to boost canonical terms and expand queries with glossary synonyms, improving search recall and term consistency across canon skills.
 - **Depends on:** Stable retrieval/search (P1); P4 scoring provides the weighting seams but is not strictly required
 - **Unblocks:** Fewer thin/off-target packs for terminology-heavy queries; keeps agents and skills using canonical terms
@@ -12,7 +12,7 @@
 ## In scope
 
 - Read glossary terms live from the local `GLOSSARY.md` at search time via the contract's glossary role (reusing the heading extraction already used by `check.ts`); no manifest snapshot (see Decisions)
-- Query-side glossary expansion: query terms matching a glossary term or synonym add that entry's full token set to the query term set before BM25 scoring — additive (OR), never dropping original terms
+- Query-side glossary expansion: query terms matching a heading token unique across all term headings add that entry's full token set to the query term set before BM25 scoring — additive (OR), never dropping original terms
 - Canonical-term weight: expanded terms carry natural idf weight at score time — no separate boost multiplier (see Decisions)
 - Keep the Pack shape and `searchCanon` options unchanged; glossary-aware behavior is always on and fails open when `GLOSSARY.md` is absent
 - Tests: term-synonym expansion (`SoT` → `source of truth`), canonical-term boost ranking, glossary-missing tolerance (fail open to plain search), Pack shape unchanged
@@ -34,7 +34,7 @@ Resolved against the doc-search quality scoring slice ([`2026-08-18-doc-search-q
 
 - **Glossary source:** `GLOSSARY.md` is read live at search time via the contract's glossary role (same mechanism as `check.ts`), not snapshotted in the index manifest — deterministic (same file → same result), consistent with live snippet reads, and the corpus is tiny.
 - **Extraction:** reuse the heading walk — `## Terms` (level 2) toggles; `### <term>` (level 3) yields the term; synonyms are the tokens of the term heading text plus the definition body tokens. Multi-word canonical terms (`docs_stale`, `source of truth`) supported.
-- **Expansion strategy:** for each query term equal to a glossary term or one of its synonyms, add that entry's full token set (canonical term + synonyms) to the query term set. Expansion is additive (OR), never drops original terms.
+- **Expansion strategy (final rule):** a query term triggers expansion only when it equals a **heading token** (a token of a term's canonical `###` heading) unique across all term headings; it then adds that entry's full token set (canonical term + synonyms) to the query term set. Ambiguous/common tokens (in more than one term heading, or only in definition bodies) get no expansion — plain stemming + BM25 handles them. Expansion is additive (OR), never drops original terms.
 - **Boost:** no separate boost multiplier — expanded canonical terms carry natural idf weight, so docs containing them outrank others.
 - **Policies knob:** none in v1 (fixed defaults, YAGNI); the canon contract can add a knob later if demand appears.
 - **P4 interaction:** heading weight and glossary expansion compound multiplicatively — terms in headings of glossary-matching docs get both.

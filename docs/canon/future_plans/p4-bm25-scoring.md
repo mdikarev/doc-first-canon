@@ -1,6 +1,6 @@
 # P4 — BM25 scoring (stemming + heading weights)
 
-- **Status:** implementing
+- **Status:** absorbed
 - **Focus:** Raise BM25 recall/precision so agents deep-read fewer files: light EN/RU stemming plus higher weight for tokens that appear in headings, without changing the Pack shape.
 - **Depends on:** Stable BM25 index (P0b) and retrieval/search pack (P1)
 - **Unblocks:** Cheaper Scout/Expand cycles; cleaner base for glossary-aware search (P5)
@@ -34,7 +34,7 @@ Likely: `ARCHITECTURE.md` (retrieval notes), `CLI.md` (`search`/`index` behavior
 
 Resolved against the doc-search quality scoring slice ([`2026-08-18-doc-search-quality-scoring-design.md`](../../superpowers/specs/2026-08-18-doc-search-quality-scoring-design.md)):
 
-- **Stemming:** a new dependency-free `stem(token)` applies light suffix-strip inside `tokenize` (index and query tokenize identically), so BM25 matching collapses inflectional forms. EN: strip `ing`/`ed`/`ly`/`er`/`est`, `ies→y`, `es`, `s`; RU: strip `ов`/`ев`/`ами`/`ями`/`ом`/`ем`/`ах`/`ях`/`ый`/`ий`/`ой`/`ая`/`яя`/`ое`/`ее`/`ие`/`ые`/`и`/`а`/`я`/`о`/`е`/`у`/`ю`. Only tokens longer than 3 chars are stemmed; first matching rule wins, single rule application (no recursive stripping). `reindex` stays out of reach — prefix morphology is not suffix stripping.
+- **Stemming:** a new dependency-free `stem(token)` applies light suffix-strip inside `tokenize` (index and query tokenize identically), so BM25 matching collapses inflectional forms. EN: strip `ing`/`ed`/`ly`/`er`/`est`, `ies→y`, `es`, `s`; RU: strip `ов`/`ев`/`ами`/`ями`/`ом`/`ем`/`ах`/`ях`/`ый`/`ий`/`ой`/`ая`/`яя`/`ое`/`ее`/`ие`/`ые`/`и`/`ы`/`а`/`я`/`о`/`е`/`у`/`ю`. Only tokens longer than 3 chars are stemmed; first matching rule wins, single rule application (no recursive stripping). `reindex` stays out of reach — prefix morphology is not suffix stripping.
 - **Heading weighting:** per-term score multiplier `HEADING_WEIGHT = 1.5` when the term is in the doc's heading set, stored as an optional `heading_terms` field in the BM25 state. The token-prefix (`h:index`) approach is rejected — it breaks query→heading matching.
 - **Index schema:** `bm25-index.json` bumps to `schema_version: 2`; the reader tolerates a missing `heading_terms` field (treated as no heading terms). The manifest pair stays internally consistent (shared `index_id`, fail-closed on mismatch).
 - **Tokenizer versioning:** `tokenizer_version` is added to `index-manifest.json`; a mismatch vs. the current constant forces a full rebuild (mirrors `grammar_versions` for the code index) — `doc_hash` is a content hash and cannot detect a tokenizer change alone.
