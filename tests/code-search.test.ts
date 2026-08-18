@@ -248,3 +248,55 @@ describe("searchCodeIndex", () => {
     assert.ok(hit.snippets[0]!.text.split("\n").length >= 5);
   });
 });
+
+describe("searchCodeIndex (go refs)", () => {
+  let repo: string;
+  beforeEach(async () => {
+    repo = makeRepo();
+    write(repo, "go.mod", "module example.com/app\n\ngo 1.22\n");
+    write(repo, "main.go", `package main
+
+type Handle struct{}
+
+func (h *Handle) Score(q string) int { return len(q) }
+
+func main() {
+	x := &Handle{}
+	x.Score("q")
+}
+`);
+    await syncCodeIndex(repo);
+  });
+  afterEach(() => fs.rmSync(repo, { recursive: true, force: true }));
+
+  it("refs mode matches Go same-file constructor-backed member-access edges", () => {
+    const pack = searchCodeIndex(repo, "", { refs: "Handle.Score" });
+    assert.equal(pack.mode, "refs");
+    const hit = pack.hits.find(
+      (h) => h.refKind === "import" && h.name === "Handle.Score",
+    ) as CodeRefHit;
+    assert.ok(hit, "expected a Handle.Score member-access hit");
+    assert.equal(hit.from, "main.go");
+    assert.equal(hit.to, "main.go");
+    assert.equal(hit.line, 9);
+  });
+
+  it("refs mode resolves Go same-package types across files", async () => {
+    write(repo, "handle.go", "package main\n\ntype Reader struct{}\n\nfunc (r *Reader) Open() {}\n");
+    write(repo, "main.go", `package main
+func main() {
+	r := &Reader{}
+	r.Open()
+}
+`);
+    await syncCodeIndex(repo);
+    const pack = searchCodeIndex(repo, "", { refs: "Reader.Open" });
+    const hit = pack.hits.find(
+      (h) => h.refKind === "import" && h.name === "Reader.Open",
+    ) as CodeRefHit;
+    assert.ok(hit, "expected a Reader.Open same-package hit");
+    assert.equal(hit.from, "main.go");
+    assert.equal(hit.to, "handle.go");
+    assert.equal(hit.line, 4);
+  });
+});
