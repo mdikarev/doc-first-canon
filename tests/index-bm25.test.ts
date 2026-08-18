@@ -108,4 +108,17 @@ describe("Bm25Index", () => {
     const hits = idx.score("shared");
     assert.equal(hits[0]?.path, "docs/canon/living.md");
   });
+
+  it("does not NaN-drop docs that lack a prototype-key query term", () => {
+    const idx = Bm25Index.build(
+      [
+        { path: "a.md", text: "constructor alpha" },
+        { path: "b.md", text: "alpha only" },
+      ],
+      "id-proto2",
+    );
+    const again = Bm25Index.fromJSON(JSON.parse(JSON.stringify(idx.toJSON())));
+    const hits = again.score("constructor alpha");
+    assert.ok(hits.some((h) => h.path === "b.md"));
+  });
 });

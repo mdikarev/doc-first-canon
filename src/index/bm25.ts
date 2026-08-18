@@ -88,7 +88,7 @@ export class Bm25Index {
     for (const term of queryTerms) {
       let df = 0;
       for (const path of paths) {
-        if ((this.postings[path]?.[term] ?? 0) > 0) df += 1;
+        if (Object.hasOwn(this.postings[path] ?? {}, term)) df += 1;
       }
       dfByTerm.set(term, df);
     }
@@ -99,7 +99,9 @@ export class Bm25Index {
       const headingTerms = this.headingTerms[path] ?? [];
       let score = 0;
       for (const term of queryTerms) {
-        const tf = this.postings[path]?.[term] ?? 0;
+        const tf = Object.hasOwn(this.postings[path] ?? {}, term)
+          ? (this.postings[path]?.[term] ?? 0)
+          : 0;
         if (tf === 0) continue;
         const df = dfByTerm.get(term)!;
         const idf = Math.log(1 + (N - df + 0.5) / (df + 0.5));

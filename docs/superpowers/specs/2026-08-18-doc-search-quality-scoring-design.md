@@ -40,10 +40,10 @@ Tests of the shipped `doc-canon search` (BM25, `src/index/bm25.ts`) show ranking
 
 | Topic | Choice |
 | --- | --- |
-| Stemming | New `src/index/stem.ts`, `stem(token): string`, light suffix-strip, dependency-free. EN: strip `ing/ed/ly/er/est/ies→y/es/s`; RU: strip `ов/ев/ами/ями/ом/ем/ах/ях/ый/ий/ой/ая/яя/ое/ее/ие/ые/и/а/я/о/е/у/ю`. Only stems tokens longer than 3 chars. Applied inside `tokenize` (index and query identical). |
+| Stemming | New `src/index/stem.ts`, `stem(token): string`, light suffix-strip, dependency-free. EN: strip `ing/ed/ly/er/est/ies→y/es/s`; RU: strip `ов/ев/ами/ями/ом/ем/ах/ях/ый/ий/ой/ая/яя/ое/ее/ие/ые/и/ы/а/я/о/е/у/ю`. Only stems tokens longer than 3 chars. Applied inside `tokenize` (index and query identical). |
 | Tokenizer versioning | Add `tokenizer_version` to `index-manifest.json`; mismatch vs current constant forces a full rebuild (mirrors `grammar_bumped` for the code index). `doc_hash` is a content hash and cannot detect a tokenizer change alone. |
 | Heading weighting | Store per-doc `headingTerms` in `Bm25State` (optional field); at score time multiply the per-term contribution by `HEADING_WEIGHT = 1.5` when the term is in the doc's heading set. Rejected token-prefix (`h:index`) approach — it breaks query→heading matching. |
-| Liveness | In `score()`, multiply the final per-doc score by `FUTURE_PLANS_WEIGHT = 0.5` when the path starts with `future_plans/`. Fixed constant, no schema change, no policies knob. |
+| Liveness | In `score()`, multiply the final per-doc score by `FUTURE_PLANS_WEIGHT = 0.5` when the path contains a `future_plans` path segment (`path.split("/").includes("future_plans")`), matching both `future_plans/...` and root-relative `docs/canon/future_plans/...`. Fixed constant, no schema change, no policies knob. |
 | Glossary source | Live-read `GLOSSARY.md` at search time via the contract's glossary role (same mechanism as `check.ts`), not a snapshot in the manifest. Deterministic (same file → same result), consistent with live snippet reads, corpus is tiny. |
 | Glossary extraction | Reuse the heading walk: `## Terms` (level 2) toggles; `### <term>` (level 3) yields the term; synonyms are the tokens of the term heading text plus the definition body tokens. Multi-word canonical terms (`docs_stale`, `source of truth`) supported. |
 | Query expansion | A query term triggers expansion only when it equals a token of a term's **heading** (canonical form) that is unique across all term headings; it then adds that entry's full token set (canonical term + synonyms). Ambiguous/common tokens (appearing in the heading of more than one term, or only in definition bodies) get no expansion — plain stemming + BM25 handles them. Expansion is additive (OR), never drops original terms. Rationale (from dogfood): matching against definition-body tokens makes every common word (`index`, `canon`, `docs`) match many entries and inflates the query to hundreds of terms; heading-uniqueness keeps expansion focused on distinctive canonical terms (`SoT`, `docs_stale`, `code_miss`). |
@@ -75,7 +75,7 @@ searchCanon(root, query)                (src/search/search.ts)
    ├─ expand query terms (synonyms → canonical tokens)
    ├─ handle.score(expandedQuery):
    │     term contribution × 1.5 if term ∈ headingTerms[doc]
-   │     final score × 0.5 if path starts with future_plans/
+    │     final score × 0.5 if the path contains a `future_plans` segment
    └─ bounded pack (shape unchanged)
 ```
 
@@ -106,13 +106,13 @@ No change: `src/index/list.ts`, `src/index/paths.ts`, `src/index/pid-lock.ts`, `
 
 - Apply only to tokens with length > 3 after lowercase.
 - EN: if ends `ies` → `y`; else strip one of `ing`, `ed`, `ly`, `er`, `est`, `es`, `s` when the result length ≥ 4.
-- RU: strip one of the endings `ами`, `ями`, `ов`, `ев`, `ом`, `ем`, `ах`, `ях`, `ый`, `ий`, `ой`, `ая`, `яя`, `ое`, `ее`, `ие`, `ые`, `и`, `а`, `я`, `о`, `е`, `у`, `ю` when the result length ≥ 3.
+- RU: strip one of the endings `ами`, `ями`, `ов`, `ев`, `ом`, `ем`, `ах`, `ях`, `ый`, `ий`, `ой`, `ая`, `яя`, `ое`, `ее`, `ие`, `ые`, `и`, `ы`, `а`, `я`, `о`, `е`, `у`, `ю` when the result length ≥ 3.
 - First matching rule wins; single rule application (no recursive stripping).
 
 ### Glossary expansion (v1)
 
 - Term → synonyms: term = `###` heading text (may contain spaces and `/`, e.g. `searchCanon / search`); synonyms = tokens of the term text plus tokens of the definition paragraph under it.
-- Expansion: query term `t` → if `t` matches any synonym or equals a term, add the term's tokens to the query set. Multi-token canonical terms contribute all their tokens.
+- Expansion: query term `t` → if `t` equals a heading token unique across all term headings, add that entry's full token set (term + synonyms). Multi-token canonical terms contribute all their tokens.
 - Fail-open: missing/unparsable `GLOSSARY.md` or no contract glossary role → plain search (current behavior).
 
 ## Data flow & CLI
@@ -126,7 +126,7 @@ No change: `src/index/list.ts`, `src/index/paths.ts`, `src/index/pid-lock.ts`, `
 ### `score(query)` additions
 
 - Per-term: `contribution = base * (term in headingTerms[path] ? HEADING_WEIGHT : 1)`.
-- Per-doc: `total *= path.startsWith("future_plans/") ? FUTURE_PLANS_WEIGHT : 1`.
+- Per-doc: `total *= path.split("/").includes("future_plans") ? FUTURE_PLANS_WEIGHT : 1`.
 - Ordering unchanged: `score desc, path asc`; ties preserve determinism.
 
 ### CLI surface
