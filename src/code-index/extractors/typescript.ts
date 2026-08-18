@@ -210,6 +210,51 @@ function collectImportEdges(root: Node, ctx: WalkCtx): void {
   visit(root);
 }
 
+function collectImportedNames(
+  root: Node,
+  ctx: WalkCtx,
+): Map<string, { to: string; canonical: string }> {
+  const imported = new Map<string, { to: string; canonical: string }>();
+  const visit = (node: Node): void => {
+    if (node.type === "import_statement") {
+      const sourceNode = node.namedChildren.find((c) => c.type === "string");
+      const source = sourceNode?.text.replace(/['"]/g, "") ?? "";
+      if (source.startsWith("./") || source.startsWith("../")) {
+        const resolved = resolveImportPath(ctx.file, source, ctx.knownFiles);
+        if (resolved) {
+          const visitSpec = (n: Node): void => {
+            if (n.type === "import_specifier") {
+              const name = n.childForFieldName("name")?.text;
+              if (name) {
+                const alias = n.childForFieldName("alias")?.text;
+                imported.set(name, { to: resolved, canonical: name });
+                if (alias && alias !== name) {
+                  imported.set(alias, { to: resolved, canonical: name });
+                }
+              }
+              return;
+            }
+            if (n.type === "namespace_import") {
+              const id = n.namedChildren.find((c) => c.type === "identifier");
+              if (id) imported.set(id.text, { to: resolved, canonical: id.text });
+              return;
+            }
+            if (n.type === "identifier") {
+              imported.set(n.text, { to: resolved, canonical: n.text });
+              return;
+            }
+            for (const c of n.namedChildren) visitSpec(c);
+          };
+          visitSpec(node);
+        }
+      }
+    }
+    for (const c of node.namedChildren) visit(c);
+  };
+  visit(root);
+  return imported;
+}
+
 const ESM_EXT_SOURCES: ReadonlyArray<[string, readonly string[]]> = [
   [".js", [".ts", ".tsx"]],
   [".jsx", [".tsx"]],
@@ -291,7 +336,11 @@ function collectAnchorAndBindingRefs(root: Node, ctx: WalkCtx): void {
   visit(root);
 }
 
-function collectCallSiteEdges(root: Node, ctx: WalkCtx, importedNames: Map<string, string>): void {
+function collectCallSiteEdges(
+  root: Node,
+  ctx: WalkCtx,
+  importedNames: Map<string, { to: string; canonical: string }>,
+): void {
   const visit = (node: Node): void => {
     if (
       (node.type === "identifier" ||
@@ -302,9 +351,9 @@ function collectCallSiteEdges(root: Node, ctx: WalkCtx, importedNames: Map<strin
     ) {
       const name = node.text;
       const line = node.startPosition.row + 1;
-      const to = importedNames.get(name);
-      if (to !== undefined && !ctx.declarationPositions.has(declKey(ctx.file, line, name))) {
-        ctx.references.push({ kind: "import", from: ctx.file, to, name, line });
+      const entry = importedNames.get(name);
+      if (entry !== undefined && !ctx.declarationPositions.has(declKey(ctx.file, line, name))) {
+        ctx.references.push({ kind: "import", from: ctx.file, to: entry.to, name: entry.canonical, line });
       }
     }
     for (const c of node.namedChildren) visit(c);
@@ -375,10 +424,7 @@ export async function extractFile(
     };
     collectImportEdges(tree.rootNode, ctxRefs);
     collectAnchorAndBindingRefs(tree.rootNode, ctxRefs);
-    const importedNames = new Map<string, string>();
-    for (const r of ctxRefs.references) {
-      if (r.kind === "import") importedNames.set(r.name, r.to);
-    }
+    const importedNames = collectImportedNames(tree.rootNode, ctxRefs);
     collectCallSiteEdges(tree.rootNode, ctxRefs, importedNames);
     ctxRefs.references.sort(
       (a, b) =>

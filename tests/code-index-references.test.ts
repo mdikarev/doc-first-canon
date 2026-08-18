@@ -142,4 +142,18 @@ export class Reader {}`;
     const { references } = await extractFile("src/reader.ts", text, new Set());
     assert.equal(references.filter((r) => r.kind === "import").length, 0);
   });
+
+  it("maps aliased import names to their canonical definition", async () => {
+    const text = `import { openReader as open } from "./reader.js";
+export function run(): void {
+  open();
+}`;
+    const known = new Set(["src/reader.ts", "src/run.ts"]);
+    const { references } = await extractFile("src/run.ts", text, known);
+    const callSites = references.filter((r) => r.kind === "import" && r.line > 1);
+    assert.deepEqual(
+      callSites.map((r) => ({ name: r.name, to: r.to })),
+      [{ name: "openReader", to: "src/reader.ts" }],
+    );
+  });
 });
