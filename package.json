@@ -1,6 +1,6 @@
 {
   "name": "doc-canon",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Deterministic canon CLI for agent documentation",
   "license": "MIT",
   "type": "module",
