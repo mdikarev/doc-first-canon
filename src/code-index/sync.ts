@@ -49,7 +49,10 @@ export function resolveGoSamePackageReferences(
     const pkg = pkgByFile.get(u.file);
     if (!pkg) continue;
     const dir = u.file.includes("/") ? u.file.slice(0, u.file.lastIndexOf("/")) : "";
-    const candidates = index.get(`${dir}|${pkg}`)?.get(u.typeName) ?? [];
+    const candidates = index
+      .get(`${dir}|${pkg}`)
+      ?.get(u.typeName)
+      ?.filter((s) => s.file !== u.file) ?? [];
     const distinct = [...new Map(candidates.map((s) => [s.file, s] as const)).values()];
     if (distinct.length === 1) {
       out.push({

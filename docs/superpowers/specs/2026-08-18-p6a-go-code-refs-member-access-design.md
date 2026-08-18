@@ -1,7 +1,7 @@
 # Go code-refs member-access slice (P6a-Go) — Design Spec
 
 **Date:** 2026-08-18  
-**Status:** Draft for review  
+**Status:** Approved (implemented and absorbed)  
 **Scope:** Pilot language slice of P6 (code-refs member-access resolution) for Go: emit member-access call-site edges for local bindings initialized from composite-literal / pointer-literal structs (`x := &T{}` / `x := T{}` / `var x = T{}`), syntactically, in the Go extractor — unblocks `--refs Type.method` for Go.
 **Approach:** In the Go extractor, build a per-file map of binding → struct type name from composite-literal initializers; for each `selector_expression` whose object identifier is such a binding, emit an `import`-kind reference named `<Type>.<member>` targeting the type's file (same-file, imported via the import edge map, or same-package via a post-processing pass in `sync.ts`). No index schema or `CodePack` shape change, no name resolution beyond the package-identity check, hash-driven determinism untouched.
 
@@ -27,6 +27,7 @@ This spec is the SoT for the P6a-Go slice. It builds on the P6 (TS/JS) spec, the
 - Name resolution / type inference / cross-symbol cross-file reference resolution.
 - Constructor-function bindings (`x := NewT()`) — needs type info, not syntactic.
 - Member-access edges for bindings not initialized from a composite literal: function params, reassignment, destructuring, slice/map/array composite literals (`x := []T{...}`, `x := map[K]V{...}`) whose type is not a `type_identifier`/`qualified_type`.
+- Generic composite literals (`x := &Stack[int]{}`) — the literal type node is a `generic_type`, not a `type_identifier`/`qualified_type`, so no edge is emitted (documented limitation).
 - Chained/property-object member access (`h.get().Score()` where the object is not a bare identifier).
 - Caller→callee call graphs or dataflow analysis.
 - Same-package resolution driven by type info; ambiguity among multiple same-named types in one package drops the edge (deterministic).
@@ -127,8 +128,9 @@ Package identity = directory of the file + the name of the file's `module`-kind 
 1. `collectCompositeLiteralBindings(root)`: walk `short_var_declaration` (left `expression_list` → `identifier`; right `expression_list` → `unary_expression` → `composite_literal`, or directly `composite_literal`) and `var_spec` with a `value` `expression_list` → `composite_literal`. Record `binding → { typeText, qualified }` only when the literal's type child is `type_identifier` or `qualified_type`.
 2. `collectMemberAccessEdges(root, ctx, bindings, importedNames, symbols)`: walk `selector_expression`; if `object` is an `identifier` in the binding map and `field` is a `field_identifier`, resolve the type:
    - `type_identifier` + same-file symbol (kind struct/interface/type) → edge `T.member` → `to = ctx.file`;
-   - `qualified_type` (`reader.Handle`) → resolve `reader` through the import edge map → edge `Handle.member` → `to = resolved`;
-   - otherwise → push `{ file, typeName: T, memberName, line }` to `unresolvedMembers`.
+   - `qualified_type` (`reader.Handle`) with the import resolving in `knownFiles` → edge `Handle.member` → `to = resolved`;
+   - `qualified_type` whose relative import target is not in `knownFiles` → no edge, no `unresolvedMembers` entry (documented limitation — pushing it would let the same-package pass emit a false edge when a same-named local type exists);
+   - otherwise (unqualified, no same-file symbol) → push `{ file, typeName: T, memberName, line }` to `unresolvedMembers`.
 3. Sort references unchanged (file, line, name, kind, to); dotted names sort fine under `localeCompare`.
 
 ### Sync flow
@@ -146,6 +148,8 @@ No new flags. `code-index search --refs Type.method` behaves identically; only r
 | Situation | Behavior |
 | --- | --- |
 | Binding type is neither a same-file symbol nor a qualified import, and no same-package candidate exists | No member-access edge (deterministic drop) |
+| Qualified type (`reader.Handle{}`) whose relative import target is not in `knownFiles` | No edge, no `unresolvedMembers` entry (documented limitation — avoids a false same-package edge when a same-named local type exists) |
+| Generic composite literal (`x := &Stack[int]{}`) | No edge — the literal type node is a `generic_type`, not a `type_identifier`/`qualified_type` |
 | Multiple same-named types in the same package | No edge (deterministic drop — documented ambiguity limit) |
 | Chained member access (`h.get().Score()`) / object not a bare identifier | No edge (v1 documented limitation) |
 | Slice/map/array composite literals (`[]T{}`, `map[K]V{}`) | No edge — type child is not `type_identifier`/`qualified_type` |

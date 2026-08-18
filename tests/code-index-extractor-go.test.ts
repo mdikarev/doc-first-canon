@@ -186,4 +186,23 @@ func main() {
       { file: "main.go", typeName: "Handle", memberName: "Score", line: 5 },
     ]);
   });
+
+  it("skips the _ blank identifier in multi-value composite-literal bindings", async () => {
+    const text = `package main
+
+type A struct{ M int }
+type B struct{ M int }
+
+func main() {
+	_, x := &A{}, &B{}
+	x.M()
+	_ = x
+}`;
+    const { references } = await extractFile("main.go", text, new Set());
+    const members = references.filter((r) => r.kind === "import" && r.name.includes("."));
+    assert.deepEqual(
+      members.map((r) => ({ name: r.name, to: r.to })),
+      [{ name: "B.M", to: "main.go" }],
+    );
+  });
 });

@@ -305,19 +305,30 @@ function collectCompositeLiteralBindings(root: Node): Map<string, CompositeBindi
     if (node.type === "short_var_declaration") {
       const left = node.childForFieldName("left");
       const right = node.childForFieldName("right");
-      const name = left?.namedChildren.find((c) => c.type === "identifier");
-      if (name && right) {
-        const lit = compositeLiteralIn(right);
+      const names = (left?.namedChildren ?? []).filter((c) => c.type === "identifier");
+      const exprs = right?.type === "expression_list" ? right.namedChildren : right ? [right] : [];
+      for (let i = 0; i < names.length; i++) {
+        const name = names[i];
+        if (name.text === "_") continue;
+        const lit = compositeLiteralIn(exprs[i]);
         const type = lit ? literalTypeName(lit) : null;
-        if (name.text && type) bindings.set(name.text, type);
+        if (type) bindings.set(name.text, type);
       }
     } else if (node.type === "var_spec") {
       const name = node.childForFieldName("name");
       const value = node.childForFieldName("value");
-      if (name && value) {
-        const lit = compositeLiteralIn(value);
+      if (!name || !value) {
+        for (const c of node.namedChildren) visit(c);
+        return;
+      }
+      const names = name.type === "expression_list" ? name.namedChildren.filter((c) => c.type === "identifier") : [name];
+      const exprs = value.type === "expression_list" ? value.namedChildren : [value];
+      for (let i = 0; i < names.length; i++) {
+        const n = names[i];
+        if (n.text === "_") continue;
+        const lit = compositeLiteralIn(exprs[i]);
         const type = lit ? literalTypeName(lit) : null;
-        if (name.text && type) bindings.set(name.text, type);
+        if (type) bindings.set(n.text, type);
       }
     }
     for (const c of node.namedChildren) visit(c);

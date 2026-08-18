@@ -52,4 +52,23 @@ describe("resolveGoSamePackageReferences", () => {
   it("returns [] for an empty unresolved list", () => {
     assert.deepEqual(resolveGoSamePackageReferences([], []), []);
   });
+
+  it("excludes a candidate symbol in the same file as the unresolved entry", () => {
+    const symbols = [
+      moduleSym("main.go", "app"),
+      moduleSym("handle.go", "app"),
+      typeSym("main.go", "Handle"),
+      typeSym("handle.go", "Handle"),
+    ];
+    const unresolved = [{ file: "main.go", typeName: "Handle", memberName: "Score", line: 4 }];
+    assert.deepEqual(resolveGoSamePackageReferences(unresolved, symbols), [
+      { kind: "import", from: "main.go", to: "handle.go", name: "Handle.Score", line: 4 },
+    ]);
+  });
+
+  it("drops when the only candidate is in the same file as the unresolved entry", () => {
+    const symbols = [moduleSym("main.go", "app"), typeSym("main.go", "Handle")];
+    const unresolved = [{ file: "main.go", typeName: "Handle", memberName: "Score", line: 4 }];
+    assert.deepEqual(resolveGoSamePackageReferences(unresolved, symbols), []);
+  });
 });
