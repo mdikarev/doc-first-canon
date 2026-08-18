@@ -51,4 +51,38 @@ describe("Bm25Index", () => {
     assert.equal(idx.documentCount(), 0);
     assert.deepEqual(idx.score("anything"), []);
   });
+
+  it("heading tokens outrank body-only tokens", () => {
+    const idx = Bm25Index.build(
+      [
+        { path: "a.md", text: "# Index\n\nword" },
+        { path: "b.md", text: "index index index" },
+      ],
+      "id-head",
+    );
+    const hits = idx.score("index");
+    assert.equal(hits[0]?.path, "a.md");
+  });
+
+  it("future_plans docs are downweighted", () => {
+    const idx = Bm25Index.build(
+      [
+        { path: "future_plans/p1.md", text: "shared topic" },
+        { path: "living.md", text: "shared topic" },
+      ],
+      "id-live",
+    );
+    const hits = idx.score("shared");
+    assert.equal(hits[0]?.path, "living.md");
+  });
+
+  it("serializes schema_version 2 with heading_terms", () => {
+    const idx = Bm25Index.build(
+      [{ path: "a.md", text: "# Title\n\nbody" }],
+      "id-schema",
+    );
+    const state = idx.toJSON();
+    assert.equal(state.schema_version, 2);
+    assert.ok(Array.isArray(state.heading_terms?.["a.md"]));
+  });
 });

@@ -53,13 +53,22 @@ function parseBm25(raw: unknown): Bm25State {
   if (!isRecord(raw)) {
     throw new Error("invalid bm25");
   }
-  if (raw.schema_version !== 1) {
+  if (raw.schema_version !== 1 && raw.schema_version !== 2) {
     throw new Error(`unsupported bm25 schema_version: ${raw.schema_version}`);
   }
   if (
     typeof raw.index_id !== "string" ||
     !isRecord(raw.postings) ||
     !isRecord(raw.doc_lengths)
+  ) {
+    throw new Error("invalid bm25");
+  }
+  if (
+    raw.heading_terms !== undefined &&
+    (!isRecord(raw.heading_terms) ||
+      !Object.values(raw.heading_terms).every(
+        (v) => Array.isArray(v) && v.every((s) => typeof s === "string"),
+      ))
   ) {
     throw new Error("invalid bm25");
   }

@@ -83,4 +83,15 @@ describe("syncCanonIndex", () => {
     assert.equal(r.status, "updated");
     assert.ok(loadIndexPair(root).manifest.index_id);
   });
+
+  it("tokenizer_version bump forces rebuild with unchanged files", async () => {
+    await syncCanonIndex(root);
+    const manifestPath = indexManifestPath(root);
+    const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+    manifest.tokenizer_version = "2";
+    fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+    const r = await syncCanonIndex(root);
+    assert.equal(r.status, "updated");
+    assert.equal(loadIndexPair(root).manifest.tokenizer_version, "1");
+  });
 });

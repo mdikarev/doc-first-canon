@@ -7,6 +7,8 @@ import { loadIndexPair, saveIndexPair, tryLoadManifest } from "./io.js";
 import { listCanonMarkdown } from "./list.js";
 import type { IndexDocMeta, IndexManifest } from "./types.js";
 
+export const TOKENIZER_VERSION = "1";
+
 export type SyncResult = {
   status: "fresh" | "updated";
   indexed: number;
@@ -21,23 +23,26 @@ export async function syncCanonIndex(root: string): Promise<SyncResult> {
   }));
   const hashes = new Map(docs.map((doc) => [doc.path, contentHash(doc.text)]));
 
+  let previousManifest: IndexManifest | null = null;
   let previousDocs: Record<string, IndexDocMeta> = {};
   let loadedValidPair = false;
   if (tryLoadManifest(root)) {
     try {
-      previousDocs = loadIndexPair(root).manifest.docs;
+      previousManifest = loadIndexPair(root).manifest;
+      previousDocs = previousManifest.docs;
       loadedValidPair = true;
     } catch {
       // Corrupt or mismatched artifacts are rebuilt from the current corpus.
     }
   }
+  const tokenizerChanged = previousManifest?.tokenizer_version !== TOKENIZER_VERSION;
 
   const changed = [
     ...paths.filter((docPath) => previousDocs[docPath]?.hash !== hashes.get(docPath)),
     ...Object.keys(previousDocs).filter((docPath) => !hashes.has(docPath)),
   ];
 
-  if (loadedValidPair && changed.length === 0) {
+  if (loadedValidPair && !tokenizerChanged && changed.length === 0) {
     return { status: "fresh", indexed: paths.length, changed: [] };
   }
 
@@ -48,6 +53,7 @@ export async function syncCanonIndex(root: string): Promise<SyncResult> {
     index_id: indexId,
     built_at: new Date().toISOString(),
     corpus: "docs/canon/**",
+    tokenizer_version: TOKENIZER_VERSION,
     docs: Object.fromEntries(
       paths.map((docPath) => [
         docPath,

@@ -6,13 +6,16 @@ export type IndexManifest = {
   built_at: string;
   corpus: "docs/canon/**";
   docs: Record<string, IndexDocMeta>;
+  tokenizer_version?: string;
 };
 
 export type Bm25State = {
-  schema_version: 1;
+  schema_version: 2;
   index_id: string;
   /** path → term → tf */
   postings: Record<string, Record<string, number>>;
   /** path → token count */
   doc_lengths: Record<string, number>;
+  /** path → heading tokens */
+  heading_terms?: Record<string, string[]>;
 };

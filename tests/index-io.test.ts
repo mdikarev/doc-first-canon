@@ -25,7 +25,7 @@ describe("index io", () => {
     docs: { "docs/canon/a.md": { hash: "sha256:aa", token_count: 1 } },
   });
   const bm25 = (id: string): Bm25State => ({
-    schema_version: 1,
+    schema_version: 2,
     index_id: id,
     postings: { "docs/canon/a.md": { alpha: 1 } },
     doc_lengths: { "docs/canon/a.md": 1 },
