@@ -291,6 +291,27 @@ function collectAnchorAndBindingRefs(root: Node, ctx: WalkCtx): void {
   visit(root);
 }
 
+function collectCallSiteEdges(root: Node, ctx: WalkCtx, importedNames: Map<string, string>): void {
+  const visit = (node: Node): void => {
+    if (
+      (node.type === "identifier" ||
+        node.type === "type_identifier" ||
+        node.type === "property_identifier" ||
+        node.type === "shorthand_property_identifier") &&
+      !isImportContext(node)
+    ) {
+      const name = node.text;
+      const line = node.startPosition.row + 1;
+      const to = importedNames.get(name);
+      if (to !== undefined && !ctx.declarationPositions.has(declKey(ctx.file, line, name))) {
+        ctx.references.push({ kind: "import", from: ctx.file, to, name, line });
+      }
+    }
+    for (const c of node.namedChildren) visit(c);
+  };
+  visit(root);
+}
+
 function collectBindingNames(root: Node): Set<string> {
   const names = new Set<string>();
   const visit = (node: Node): void => {
@@ -354,6 +375,11 @@ export async function extractFile(
     };
     collectImportEdges(tree.rootNode, ctxRefs);
     collectAnchorAndBindingRefs(tree.rootNode, ctxRefs);
+    const importedNames = new Map<string, string>();
+    for (const r of ctxRefs.references) {
+      if (r.kind === "import") importedNames.set(r.name, r.to);
+    }
+    collectCallSiteEdges(tree.rootNode, ctxRefs, importedNames);
     ctxRefs.references.sort(
       (a, b) =>
         a.from.localeCompare(b.from) ||

@@ -28,12 +28,14 @@ export function run(): number {
       .filter((r) => r.kind === "import")
       .sort((a, b) => (a.name + a.to < b.name + b.to ? -1 : a.name + a.to > b.name + b.to ? 1 : 0));
     assert.deepEqual(
-      imports.map((r) => ({ name: r.name, to: r.to, from: r.from })),
+      imports.map((r) => ({ name: r.name, to: r.to, from: r.from, line: r.line })),
       [
-        { name: "NS", to: "src/ns.ts", from: "src/run.ts" },
-        { name: "Reader", to: "src/reader.ts", from: "src/run.ts" },
-        { name: "def", to: "src/def.ts", from: "src/run.ts" },
-        { name: "openReader", to: "src/reader.ts", from: "src/run.ts" },
+        { name: "NS", to: "src/ns.ts", from: "src/run.ts", line: 2 },
+        { name: "Reader", to: "src/reader.ts", from: "src/run.ts", line: 1 },
+        { name: "Reader", to: "src/reader.ts", from: "src/run.ts", line: 5 },
+        { name: "def", to: "src/def.ts", from: "src/run.ts", line: 3 },
+        { name: "openReader", to: "src/reader.ts", from: "src/run.ts", line: 1 },
+        { name: "openReader", to: "src/reader.ts", from: "src/run.ts", line: 5 },
       ],
     );
   });
@@ -112,5 +114,32 @@ import { c } from "./shim.cjs";`;
     assert.equal(byName.a?.to, "src/dir/index.ts");
     assert.equal(byName.b?.to, "src/util.mts");
     assert.equal(byName.c?.to, "src/shim.cts");
+  });
+
+  it("emits call-site edges for imported-name usages", async () => {
+    const text = `import { openReader } from "./reader.js";
+export function run(): number {
+  const r: Reader = openReader();
+  return openReader().score("q");
+}`;
+    const known = new Set(["src/reader.ts", "src/run.ts"]);
+    const { references } = await extractFile("src/run.ts", text, known);
+    const callSites = references.filter((r) => r.kind === "import" && r.line > 1);
+    assert.deepEqual(
+      callSites.map((r) => ({ name: r.name, to: r.to, line: r.line })),
+      [
+        { name: "openReader", to: "src/reader.ts", line: 3 },
+        { name: "openReader", to: "src/reader.ts", line: 4 },
+      ],
+    );
+  });
+
+  it("does not emit call-site edges for same-file symbols", async () => {
+    const text = `export function openReader(): Reader {
+  return new Reader();
+}
+export class Reader {}`;
+    const { references } = await extractFile("src/reader.ts", text, new Set());
+    assert.equal(references.filter((r) => r.kind === "import").length, 0);
   });
 });
