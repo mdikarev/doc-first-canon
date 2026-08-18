@@ -1,6 +1,6 @@
 # P6 — Code-refs member-access resolution
 
-- **Status:** draft
+- **Status:** implementing
 - **Focus:** Resolve `obj.method()` call-site edges in the code AST index where `obj` is a local binding initialized from `new ImportedName(...)`, syntactically, within P2a's cheap-references tier — unblocks `--refs Class.method`.
 - **Depends on:** P2a (code AST index, absorbed) and the A+B refs slice (call-site edges reuse the `import` kind)
 - **Unblocks:** `--refs Class.method` for constructor-backed members; fewer `code_miss` probes during code analysis
@@ -29,6 +29,4 @@ Likely: `ARCHITECTURE.md` (code AST index building block), `CLI.md` (`code-index
 
 ## Open questions
 
-- Which languages participate in the cheap constructor pattern in v1 (TypeScript/JavaScript first, mirroring the A+B slice; Go/Rust/C#/Python constructors differ syntactically)
-- Whether `Class.method` matching also covers same-file constructors, not just imported types
-- Alias handling (`import { X as Y }; const z = new Y()`); v1 direct names only?
+*Resolved by the design spec* (language scope: TS/JS v1 + per-language drafts; same-file constructors: covered; aliases: covered).

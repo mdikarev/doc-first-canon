@@ -51,6 +51,9 @@ Check that the working set is **sufficient** or **need more** before deep reads.
 ### Feature-change order (canon-first)
 For intentional new or changed behavior: update living canon via `canon-write` first, optionally write/sync a project-local design/plan when the change is large, wait for user go-ahead after substantial canon edits, implement application code, then close with `canon-audit` (semantic pass on the affected topic until open decisions are cleared or unreproduced drift is marked stale). Spot `canon-write` does not guarantee full-canon sibling sync; the closing audit catches that gap. Exceptions: pure bugfix with intended behavior unchanged, `code_stale`, non-behavioral edits. Distinct from post-hoc everyday sync.
 
+### Member-access reference
+A syntactic `import`-kind reference edge from a member usage (`obj.method()` call or `obj.field` read) on a local binding initialized from `new <Type>(...)` to the type's file, named `<Type>.<member>` using the canonical imported name. `<Type>` may be an imported name (direct or aliased `import { X as Y }` — the edge always carries canonical `X`) or a same-file class declaration. Resolved syntactically with no name resolution: factory-returned bindings (`openCanonIndex()`), namespace-member constructors (`new NS.Class()`), chained objects (`h.get().build()`), and reassigned bindings get no member-access edge.
+
 ### migrate
 CLI command that brings an existing canon up to the installed CLI by filling missing required scaffold from the target contract, then `upgrade-skills`. Not a schema-version rewriter; not `init`.
 
@@ -115,7 +118,7 @@ A same-file syntactic reference from a usage of a symbol to its declaration, res
 `.doc-canon/code-index-manifest.json`: deterministic, byte-identical code AST index manifest (`schema_version`, `corpus`, `grammar_versions`, `roots`, per-file `hash`/`language`/`symbols`); has no `index_id`/`built_at`, so identical input produces an identical artifact. `grammar_versions` divergence triggers a full rebuild.
 
 ### code-ast-index
-`.doc-canon/code-ast-index.json`: serialized symbols and syntactic references (anchors, import edges, in-scope bindings) for the discovered source roots, sharing its companion `code-index-manifest`. `import` edges resolve ESM `.js`/`.jsx`/`.mjs`/`.cjs` import specifiers to their TS/TSX sources and include call-site edges — identifier usages of imported names emit an `import`-kind edge to the definition file.
+`.doc-canon/code-ast-index.json`: serialized symbols and syntactic references (anchors, import edges, in-scope bindings) for the discovered source roots, sharing its companion `code-index-manifest`. `import` edges resolve ESM `.js`/`.jsx`/`.mjs`/`.cjs` import specifiers to their TS/TSX sources and include call-site edges — identifier usages of imported names emit an `import`-kind edge to the definition file. Member-access references extend this: a local binding initialized from `new <Type>(...)` emits `<Type>.<member>` edges for its `obj.method()`/`obj.field` usages (canonical name; aliased and same-file constructors included).
 
 ### code_index_stale
 A non-fatal freshness signal for the code AST index: one or more indexed source hashes differ from the live tree. Reported independently of the canon `index_stale`.
@@ -130,7 +133,7 @@ An agent-facing miss report when a code-index probe returns nothing or a thin se
 A bounded code retrieval result (CodePack) containing the query, mode (`symbols` or `refs`), freshness (`fresh`/`stale`), warnings, and symbol or syntactic-reference hits with short snippet windows from live files.
 
 ### Syntactic reference
-A reference edge already carried by the code AST index — same-file `anchor`, `import` edge, or in-scope `binding` — matched syntactically by `--refs` with no name resolution. `import` edges are cross-file: they resolve ESM `.js`/`.jsx`/`.mjs`/`.cjs` import specifiers to their TS/TSX sources and include call-site edges (identifier usages of imported names emit an `import`-kind edge to the definition file).
+A reference edge already carried by the code AST index — same-file `anchor`, `import` edge, or in-scope `binding` — matched syntactically by `--refs` with no name resolution. `import` edges are cross-file: they resolve ESM `.js`/`.jsx`/`.mjs`/`.cjs` import specifiers to their TS/TSX sources and include call-site edges (identifier usages of imported names emit an `import`-kind edge to the definition file) and member-access references — `obj.method()` / `obj.field` on `new Type()`-initialized bindings link to `<Type>.<member>` in the type's file (canonical name, aliases resolved).
 
 ## Naming conventions
 
