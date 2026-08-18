@@ -5,7 +5,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { syncCodeIndex } from "../src/code-index/sync.js";
-import { searchCodeIndex, CodeSearchError } from "../src/code-search/search.js";
+import { searchCodeIndex, CodeSearchError, type CodeRefHit } from "../src/code-search/search.js";
 
 function makeRepo(): string {
   const repo = fs.mkdtempSync(path.join(os.tmpdir(), "code-search-"));
@@ -192,6 +192,18 @@ describe("searchCodeIndex", () => {
     assert.deepEqual(lower.hits, []);
     const partial = searchCodeIndex(repo, "", { refs: "Reade" });
     assert.deepEqual(partial.hits, []);
+  });
+
+  it("refs mode matches constructor-backed member-access edges (Class.method)", () => {
+    const pack = searchCodeIndex(repo, "", { refs: "Reader.score" });
+    assert.equal(pack.mode, "refs");
+    const hit = pack.hits.find(
+      (h) => h.refKind === "import" && h.name === "Reader.score",
+    ) as CodeRefHit;
+    assert.ok(hit, "expected a Reader.score member-access hit");
+    assert.equal(hit.from, "src/main.ts");
+    assert.equal(hit.to, "src/reader.ts");
+    assert.equal(hit.line, 4);
   });
 
   it("refs mode returns a centered snippet window", async () => {
