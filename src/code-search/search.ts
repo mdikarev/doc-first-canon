@@ -2,6 +2,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import micromatch from "micromatch";
+import { findVcsRoot } from "../code-index/discovery.js";
 import { openCodeIndex } from "../code-index/reader.js";
 import { isFresh } from "../agnostic/freshness.js";
 import { centeredWindow, declarationWindow } from "./snippets.js";
@@ -50,9 +51,11 @@ export function searchCodeIndex(
     throw new CodeSearchError("empty_query", "query must be non-empty");
   }
 
+  let vcsRoot: string;
   let handle;
   try {
-    handle = openCodeIndex(root);
+    vcsRoot = findVcsRoot(root);
+    handle = openCodeIndex(vcsRoot);
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
     throw new CodeSearchError(
@@ -83,7 +86,7 @@ export function searchCodeIndex(
     const hits: CodeRefHit[] = [];
     let usedLines = 0;
     for (const ref of refs) {
-      const abs = path.join(root, ...ref.from.split("/"));
+      const abs = path.join(vcsRoot, ...ref.from.split("/"));
       let content: string;
       try {
         content = fs.readFileSync(abs, "utf8");
@@ -134,7 +137,7 @@ export function searchCodeIndex(
   const hits: CodeSearchHit[] = [];
   let usedLines = 0;
   for (const sym of symbols) {
-    const abs = path.join(root, ...sym.file.split("/"));
+    const abs = path.join(vcsRoot, ...sym.file.split("/"));
     let content: string;
     try {
       content = fs.readFileSync(abs, "utf8");

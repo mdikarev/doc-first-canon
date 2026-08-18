@@ -67,7 +67,7 @@ describe("searchCodeIndex", () => {
     assert.ok(hit.snippets.length >= 1);
   });
 
-  it("orders exact > prefix > substring, tie-break file then line", async () => {
+  it("orders exact > prefix > substring by match class", async () => {
     write(repo, "src/names.ts", "export function foo() {}\nexport function foobar() {}\nexport function xfoo() {}\n");
     await syncCodeIndex(repo);
     const pack = searchCodeIndex(repo, "foo");
@@ -75,6 +75,36 @@ describe("searchCodeIndex", () => {
       pack.hits.map((h) => h.name),
       ["foo", "foobar", "xfoo"],
     );
+  });
+
+  it("tie-breaks same match class by file", async () => {
+    write(repo, "src/a.ts", "export function sharedName() {}\n");
+    write(repo, "src/b.ts", "export function sharedName() {}\n");
+    await syncCodeIndex(repo);
+    const pack = searchCodeIndex(repo, "sharedName");
+    assert.deepEqual(
+      pack.hits.map((h) => `${h.file}:${h.line}:${h.name}`),
+      ["src/a.ts:1:sharedName", "src/b.ts:1:sharedName"],
+    );
+  });
+
+  it("tie-breaks same match class by line within one file", async () => {
+    write(repo, "src/tiebreak.ts", "export function fooBar() {}\nexport function fooBaz() {}\n");
+    await syncCodeIndex(repo);
+    const pack = searchCodeIndex(repo, "foob");
+    assert.deepEqual(
+      pack.hits.map((h) => `${h.file}:${h.line}:${h.name}`),
+      ["src/tiebreak.ts:1:fooBar", "src/tiebreak.ts:2:fooBaz"],
+    );
+  });
+
+  it("resolves the VCS root from a subdirectory root", async () => {
+    const pack = searchCodeIndex(path.join(repo, "src"), "Reader");
+    assert.equal(pack.freshness, "fresh");
+    const hit = pack.hits.find((h) => h.name === "Reader");
+    assert.ok(hit);
+    assert.equal(hit.file, "src/reader.ts");
+    assert.ok(hit.snippets.length >= 1);
   });
 
   it("filters by kind", () => {

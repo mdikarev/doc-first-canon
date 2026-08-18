@@ -74,11 +74,21 @@ describe("doc-canon code-index search cli", () => {
     assert.notEqual(r.status, 0);
   });
 
+  it("searches from a subdirectory root after building at repo root", () => {
+    assert.equal(run(["code-index", "build", "--root", repo]).status, 0);
+    const r = run(["code-index", "search", "Reader", "--root", path.join(repo, "src")]);
+    assert.equal(r.status, 0, r.stderr + r.stdout);
+    assert.match(r.stdout, /src\/reader\.ts\s+L1\s+class\s+Reader/);
+  });
+
   it("rejects invalid flag values", () => {
+    assert.equal(run(["code-index", "build", "--root", repo]).status, 0);
     for (const args of [
       ["--max-hits", "0"],
       ["--max-hits", "abc"],
+      ["--max-hits", "1.5"],
       ["--snippet-lines", "0"],
+      ["--snippet-lines", "2.5"],
       ["--kind", "bogus"],
     ]) {
       const r = run(["code-index", "search", "Reader", "--root", repo, ...args]);

@@ -77,12 +77,12 @@ export async function codeIndexSearch(
 
   const maxHits = Number(opts.maxHits ?? "10");
   const snippetLines = Number(opts.snippetLines ?? "4");
-  if (!Number.isFinite(maxHits) || maxHits < 1) {
-    console.error("error: --max-hits must be a positive number");
+  if (!Number.isInteger(maxHits) || maxHits < 1) {
+    console.error("error: --max-hits must be a positive integer");
     return 1;
   }
-  if (!Number.isFinite(snippetLines) || snippetLines < 1) {
-    console.error("error: --snippet-lines must be a positive number");
+  if (!Number.isInteger(snippetLines) || snippetLines < 1) {
+    console.error("error: --snippet-lines must be a positive integer");
     return 1;
   }
 
