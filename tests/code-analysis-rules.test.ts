@@ -1,3 +1,4 @@
+// tests/code-analysis-rules.test.ts
 import assert from "node:assert/strict";
 import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -21,7 +22,7 @@ describe("code analysis rules", () => {
     const rule = readEmbedded("rules", "doc-canon.mdc");
     assert.match(rule, /## Code analysis order/);
     assert.match(rule, /code-index search/);
-    assert.match(rule, /code_miss/);
+    assert.match(rule, /code_miss: <query> -> source:<path>/);
   });
 
   it("canon-bootstrap and canon-audit build indexes first and search-first", () => {
@@ -43,7 +44,7 @@ describe("code analysis rules", () => {
       const claude = readFileSync(join(root, "CLAUDE.md"), "utf8");
       assert.match(claude, /## Code analysis order/);
       assert.match(claude, /code-index search/);
-      assert.match(claude, /code_miss/);
+      assert.match(claude, /code_miss: <query> -> source:<path>/);
     } finally {
       rmSync(root, { recursive: true, force: true });
     }

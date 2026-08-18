@@ -99,7 +99,7 @@ coding agent starts code analysis
 ```markdown
 ## Code analysis order
 
-For code analysis in a covered language (TypeScript/JavaScript, Go, C#, Rust, Python), try `doc-canon code-index search <symbol> --root <repo>` before reading whole source files. Use the bounded snippet windows as the first probe. When the probe returns nothing or a thin set — or the code index is missing/stale (see CLI warnings) — read the source files as evidence and note the miss (`code_miss: <query> -> source:<path>`). Quality over thrift: never let a thin probe license under-reading. Languages outside the covered set go straight to source.
+For code analysis in a covered language (TypeScript/JavaScript, Go, C#, Rust, Python), try `doc-canon code-index search <symbol> --root <repo>` before reading whole source files. Use the bounded snippet windows as the first probe. When the probe returns nothing or a thin set — or the code index is missing (see CLI warnings) — read the source files as evidence and note the miss (`code_miss: <query> -> source:<path>`). A stale code index is served with a warning; keep using the pack and expand when thin. Quality over thrift: never let a thin probe license under-reading. Languages outside the covered set go straight to source.
 ```
 
 ## Data flow
