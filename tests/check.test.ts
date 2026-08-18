@@ -107,7 +107,13 @@ describe("checkCanon", () => {
       mkdirSync(dirname(reportPath), { recursive: true });
       writeFileSync(reportPath, "{ corrupt");
 
-      assert.equal(await checkCanon(root), 0);
+      const originalWarn = console.warn;
+      console.warn = () => {};
+      try {
+        assert.equal(await checkCanon(root), 0);
+      } finally {
+        console.warn = originalWarn;
+      }
       assert.deepEqual(readReport(root)?.findings, []);
     } finally {
       cleanup();
