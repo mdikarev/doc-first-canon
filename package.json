@@ -9,7 +9,8 @@
   },
   "exports": {
     "./index-reader": "./dist/index/reader.js",
-    "./search": "./dist/search/search.js"
+    "./search": "./dist/search/search.js",
+    "./code-index-reader": "./dist/code-index/reader.js"
   },
   "files": [
     "dist",
@@ -27,6 +28,7 @@
     "node": ">=20"
   },
   "dependencies": {
+    "@vscode/tree-sitter-wasm": "0.3.1",
     "commander": "^13.1.0",
     "micromatch": "^4.0.8",
     "yaml": "^2.7.0"
