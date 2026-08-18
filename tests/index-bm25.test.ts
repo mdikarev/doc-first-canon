@@ -96,4 +96,16 @@ describe("Bm25Index", () => {
     const again = Bm25Index.fromJSON(idx.toJSON());
     assert.equal(again.score("constructor")[0]?.path, "a.md");
   });
+
+  it("future_plans docs are downweighted under root-relative paths", () => {
+    const idx = Bm25Index.build(
+      [
+        { path: "docs/canon/future_plans/p1.md", text: "shared topic" },
+        { path: "docs/canon/living.md", text: "shared topic" },
+      ],
+      "id-live2",
+    );
+    const hits = idx.score("shared");
+    assert.equal(hits[0]?.path, "docs/canon/living.md");
+  });
 });

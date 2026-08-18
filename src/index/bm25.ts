@@ -109,7 +109,7 @@ export class Bm25Index {
         if (headingTerms.includes(term)) contribution *= HEADING_WEIGHT;
         score += contribution;
       }
-      if (path.startsWith("future_plans/")) score *= FUTURE_PLANS_WEIGHT;
+      if (path.split("/").includes("future_plans")) score *= FUTURE_PLANS_WEIGHT;
       if (score > 0) {
         results.push({ path, score });
       }
