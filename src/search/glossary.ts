@@ -79,10 +79,12 @@ export function expandGlossaryQuery(
   if (terms.length === 0) return query;
   const extra: string[] = [];
   for (const term of terms) {
+    const matches: GlossaryEntry[] = [];
     for (const entry of glossary.values()) {
-      if (entry.tokens.includes(term)) {
-        extra.push(...entry.tokens);
-      }
+      if (tokenize(entry.term).includes(term)) matches.push(entry);
+    }
+    if (matches.length === 1) {
+      extra.push(...matches[0].tokens);
     }
   }
   if (extra.length === 0) return query;

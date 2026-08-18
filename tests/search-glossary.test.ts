@@ -64,4 +64,24 @@ source of truth
   it("returns the query unchanged for a null glossary", () => {
     assert.equal(expandGlossaryQuery("sot", null), "sot");
   });
+
+  it("does not expand a term whose heading token is shared", () => {
+    const g = parseGlossary(`## Terms
+### index-manifest
+index manifest json
+### index_stale
+index stale warning
+`);
+    assert.equal(expandGlossaryQuery("index", g), "index");
+  });
+
+  it("expands via unique term headings, not body mentions", () => {
+    const g = parseGlossary(`## Terms
+### SoT
+source of truth
+### Pack
+A bounded result containing SoT.
+`);
+    assert.match(expandGlossaryQuery("sot", g), /source/);
+  });
 });
