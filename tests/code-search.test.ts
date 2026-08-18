@@ -401,3 +401,85 @@ describe("searchCodeIndex (csharp refs)", () => {
     assert.equal(pack.hits.filter((h) => h.refKind === "import" && h.name === "Reader.Score").length, 1);
   });
 });
+
+describe("searchCodeIndex (rust refs)", () => {
+  let repo: string;
+  beforeEach(async () => {
+    repo = makeRepo();
+    write(repo, "Cargo.toml", '[package]\nname = "app"\nversion = "0.1.0"\n');
+    write(
+      repo,
+      "src/main.rs",
+      `pub struct Reader {}
+
+impl Reader {
+    pub fn new() -> Reader {
+        Reader {}
+    }
+    pub fn score(&self) -> u32 {
+        1
+    }
+}
+
+fn main() {
+    let r = Reader::new();
+    r.score();
+}
+`,
+    );
+    await syncCodeIndex(repo);
+  });
+  afterEach(() => fs.rmSync(repo, { recursive: true, force: true }));
+
+  it("refs mode matches Rust associated-function-constructor member-access edges", () => {
+    const pack = searchCodeIndex(repo, "", { refs: "Reader.score" });
+    assert.equal(pack.mode, "refs");
+    const hit = pack.hits.find(
+      (h) => h.refKind === "import" && h.name === "Reader.score",
+    ) as CodeRefHit;
+    assert.ok(hit, "expected a Reader.score member-access hit");
+    assert.equal(hit.from, "src/main.rs");
+    assert.equal(hit.to, "src/main.rs");
+    assert.equal(hit.line, 14);
+  });
+
+  it("refs mode resolves Rust imported names across files via use edges", async () => {
+    write(
+      repo,
+      "src/common.rs",
+      `pub struct Reader {}
+
+impl Reader {
+    pub fn new() -> Reader {
+        Reader {}
+    }
+    pub fn score(&self) -> u32 {
+        1
+    }
+}
+`,
+    );
+    write(
+      repo,
+      "src/main.rs",
+      `mod common;
+
+use self::common::Reader;
+
+fn main() {
+    let r = Reader::new();
+    r.score();
+}
+`,
+    );
+    await syncCodeIndex(repo);
+    const pack = searchCodeIndex(repo, "", { refs: "Reader.score" });
+    const hit = pack.hits.find(
+      (h) => h.refKind === "import" && h.name === "Reader.score",
+    ) as CodeRefHit;
+    assert.ok(hit, "expected a Reader.score imported-name hit");
+    assert.equal(hit.from, "src/main.rs");
+    assert.equal(hit.to, "src/common.rs");
+    assert.equal(hit.line, 7);
+  });
+});

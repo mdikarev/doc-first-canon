@@ -127,3 +127,123 @@ fn main() {
     assert.ok(references.some((r) => r.kind === "binding" && r.name === "n"));
   });
 });
+
+describe("extractFile (rust) member-access references", () => {
+  const SAME_FILE = `pub struct Reader {}
+
+impl Reader {
+    pub fn new() -> Reader {
+        Reader {}
+    }
+    pub fn score(&self) -> u32 {
+        1
+    }
+}
+
+fn main() {
+    let r = Reader::new();
+    r.score();
+    let f = r.score;
+    let _ = f;
+}`;
+
+  it("emits same-file edges for let bindings initialized from Type::new()", async () => {
+    const { references } = await extractFile("src/main.rs", SAME_FILE, new Set());
+    const members = references
+      .filter((r) => r.kind === "import" && r.name.includes("."))
+      .sort((a, b) => a.line - b.line);
+    assert.deepEqual(
+      members.map((r) => ({ name: r.name, to: r.to })),
+      [
+        { name: "Reader.score", to: "src/main.rs" },
+        { name: "Reader.score", to: "src/main.rs" },
+      ],
+    );
+  });
+
+  it("emits same-file edges for Type::default() and const bindings", async () => {
+    const text = `pub struct Reader {}
+
+impl Reader {
+    pub fn new() -> Reader {
+        Reader {}
+    }
+}
+
+const LIMIT: Reader = Reader::default();
+
+fn main() {
+    let c = Reader::default();
+    LIMIT.score();
+    c.score();
+}`;
+    const { references } = await extractFile("src/main.rs", text, new Set());
+    const members = references.filter((r) => r.kind === "import" && r.name.includes("."));
+    assert.deepEqual(
+      members.map((r) => ({ name: r.name, to: r.to })),
+      [
+        { name: "Reader.score", to: "src/main.rs" },
+        { name: "Reader.score", to: "src/main.rs" },
+      ],
+    );
+  });
+
+  it("resolves imported names through the import edge map (self::)", async () => {
+    const text = `mod common;
+
+use self::common::Reader;
+
+fn main() {
+    let r = Reader::new();
+    r.score();
+}`;
+    const known = new Set(["src/main.rs", "src/common.rs"]);
+    const { references } = await extractFile("src/main.rs", text, known);
+    const members = references.filter((r) => r.kind === "import" && r.name.includes("."));
+    assert.deepEqual(
+      members.map((r) => ({ name: r.name, to: r.to })),
+      [{ name: "Reader.score", to: "src/common.rs" }],
+    );
+  });
+
+  it("emits no edge for non-new/default associated functions, generics, or external callees", async () => {
+    const text = `pub struct Reader {}
+
+impl Reader {
+    pub fn open() -> Reader {
+        Reader {}
+    }
+}
+
+fn main() {
+    let q = Reader::open();
+    q.score();
+    let t = std::vec::Vec::new();
+    t.push(1);
+    let w = 5;
+    w.checked_add(1);
+}`;
+    const { references } = await extractFile("src/main.rs", text, new Set());
+    const members = references.filter((r) => r.kind === "import" && r.name.includes("."));
+    assert.equal(members.length, 0);
+  });
+
+  it("emits no binding for tuple-pattern lets", async () => {
+    const text = `pub struct Reader {}
+
+impl Reader {
+    pub fn new() -> Reader {
+        Reader {}
+    }
+}
+
+fn main() {
+    let (a, b) = (Reader::new(), Reader::default());
+    a.score();
+    b.score();
+}`;
+    const { references } = await extractFile("src/main.rs", text, new Set());
+    const members = references.filter((r) => r.kind === "import" && r.name.includes("."));
+    assert.equal(members.length, 0);
+  });
+});

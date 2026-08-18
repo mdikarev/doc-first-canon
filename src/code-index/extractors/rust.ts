@@ -251,6 +251,95 @@ const REFERENCE_IDENTIFIERS = new Set([
   "field_identifier",
 ]);
 
+const CONSTRUCTOR_ASSOC_FNS = new Set(["new", "default"]);
+
+function constructorTypeName(value: Node | null): string | null {
+  if (!value || value.type !== "call_expression") return null;
+  const fn = value.childForFieldName("function");
+  if (!fn || fn.type !== "scoped_identifier") return null;
+  const path = fn.childForFieldName("path");
+  const name = fn.childForFieldName("name");
+  if (!path || path.type !== "identifier") return null;
+  if (!name || name.type !== "identifier" || !CONSTRUCTOR_ASSOC_FNS.has(name.text)) return null;
+  return path.text;
+}
+
+function collectConstructorBindings(root: Node): Map<string, string> {
+  const bindings = new Map<string, string>();
+  const visit = (node: Node): void => {
+    if (node.type === "let_declaration" || node.type === "const_item") {
+      const name =
+        node.type === "let_declaration"
+          ? node.childForFieldName("pattern")
+          : node.childForFieldName("name");
+      if (name?.type === "identifier") {
+        const typeName = constructorTypeName(node.childForFieldName("value"));
+        if (typeName) bindings.set(name.text, typeName);
+      }
+    }
+    for (const c of node.namedChildren) visit(c);
+  };
+  visit(root);
+  return bindings;
+}
+
+const MEMBER_ACCESS_KIND_NAMES = new Set(["struct", "trait", "enum", "type"]);
+
+function collectImportedNames(references: CodeReference[]): Map<string, string> {
+  const names = new Map<string, string>();
+  for (const r of references) {
+    if (r.kind === "import" && !names.has(r.name)) names.set(r.name, r.to);
+  }
+  return names;
+}
+
+function collectMemberAccessEdges(
+  root: Node,
+  ctx: WalkCtx,
+  bindings: Map<string, string>,
+  importedNames: Map<string, string>,
+): void {
+  const typeSymbolNames = new Set(
+    ctx.symbols
+      .filter((s) => MEMBER_ACCESS_KIND_NAMES.has(s.kind))
+      .map((s) => s.name),
+  );
+  const visit = (node: Node): void => {
+    if (node.type === "field_expression") {
+      const value = node.childForFieldName("value");
+      const field = node.childForFieldName("field");
+      if (value?.type === "identifier" && field?.type === "field_identifier") {
+        const typeName = bindings.get(value.text);
+        if (typeName !== undefined) {
+          const line = node.startPosition.row + 1;
+          if (typeSymbolNames.has(typeName)) {
+            ctx.references.push({
+              kind: "import",
+              from: ctx.file,
+              to: ctx.file,
+              name: `${typeName}.${field.text}`,
+              line,
+            });
+          } else {
+            const to = importedNames.get(typeName);
+            if (to !== undefined) {
+              ctx.references.push({
+                kind: "import",
+                from: ctx.file,
+                to,
+                name: `${typeName}.${field.text}`,
+                line,
+              });
+            }
+          }
+        }
+      }
+    }
+    for (const c of node.namedChildren) visit(c);
+  };
+  visit(root);
+}
+
 function collectAnchorAndBindingRefs(root: Node, ctx: WalkCtx): void {
   const symbolNames = new Set(ctx.symbols.map((s) => s.name));
   const bindingNames = collectBindingNames(root);
@@ -303,6 +392,9 @@ export async function extractFile(
     };
     collectUseEdges(tree.rootNode, ctxRefs);
     collectAnchorAndBindingRefs(tree.rootNode, ctxRefs);
+    const bindings = collectConstructorBindings(tree.rootNode);
+    const importedNames = collectImportedNames(ctxRefs.references);
+    collectMemberAccessEdges(tree.rootNode, ctxRefs, bindings, importedNames);
     ctxRefs.references.sort(
       (a, b) =>
         a.from.localeCompare(b.from) ||
