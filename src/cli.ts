@@ -144,4 +144,33 @@ codeIndex
     },
   );
 
+codeIndex
+  .command("search")
+  .description("Search the code AST index and emit a bounded code pack")
+  .argument("[query]", "symbol name query (omit with --refs)")
+  .option("--root <path>", "target repo root", ".")
+  .option("--json", "emit CodePack JSON on stdout")
+  .option("--max-hits <n>", "max hits", "10")
+  .option("--snippet-lines <n>", "lines per snippet window", "4")
+  .option("--kind <type>", "filter symbols by SymbolKind")
+  .option("--file <glob>", "filter by file glob (micromatch)")
+  .option("--refs <name>", "reference mode: syntactic references to name")
+  .action(
+    async (
+      query: string | undefined,
+      opts: {
+        root: string;
+        json?: boolean;
+        maxHits?: string;
+        snippetLines?: string;
+        kind?: string;
+        file?: string;
+        refs?: string;
+      },
+    ) => {
+      const { codeIndexSearch } = await import("./commands/code-index-search-cmd.js");
+      process.exitCode = await codeIndexSearch(opts.root, query, opts);
+    },
+  );
+
 await program.parseAsync();
