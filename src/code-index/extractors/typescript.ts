@@ -210,6 +210,21 @@ function collectImportEdges(root: Node, ctx: WalkCtx): void {
   visit(root);
 }
 
+const ESM_EXT_SOURCES: ReadonlyArray<[string, readonly string[]]> = [
+  [".js", [".ts", ".tsx"]],
+  [".jsx", [".tsx"]],
+  [".mjs", [".mts"]],
+  [".cjs", [".cts"]],
+];
+
+function pushEsmSubstitutions(base: string, out: string[]): void {
+  for (const [ext, replacements] of ESM_EXT_SOURCES) {
+    if (!base.endsWith(ext)) continue;
+    const stem = base.slice(0, -ext.length);
+    for (const repl of replacements) out.push(`${stem}${repl}`);
+  }
+}
+
 function resolveImportPath(
   fromFile: string,
   specifier: string,
@@ -217,11 +232,11 @@ function resolveImportPath(
 ): string | null {
   const dir = fromFile.includes("/") ? fromFile.slice(0, fromFile.lastIndexOf("/")) : "";
   const base = pathPosixJoin(dir, specifier);
-  const candidates = [
-    base,
-    ...VCS_INDEXABLE_EXTENSIONS.map((ext) => `${base}${ext}`),
-    ...VCS_INDEXABLE_EXTENSIONS.map((ext) => `${base}/index${ext}`),
-  ];
+  const candidates: string[] = [base];
+  for (const ext of VCS_INDEXABLE_EXTENSIONS) {
+    candidates.push(`${base}${ext}`, `${base}/index${ext}`);
+  }
+  pushEsmSubstitutions(base, candidates);
   for (const c of candidates) {
     if (knownFiles.has(c)) return c;
   }

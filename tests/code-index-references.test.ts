@@ -83,4 +83,34 @@ export class Reader {}`;
     );
     assert.equal(declNameRefs.length, 0);
   });
+
+  it("resolves ESM .js-extension specifiers to TS sources", async () => {
+    const text = `import { Reader } from "./reader.js";
+export function open(): Reader {
+  return new Reader();
+}`;
+    const known = new Set(["src/reader.ts", "src/open.ts"]);
+    const { references } = await extractFile("src/open.ts", text, known);
+    const atStatement = references.find((r) => r.kind === "import" && r.line === 1);
+    assert.deepEqual(atStatement, {
+      kind: "import",
+      from: "src/open.ts",
+      to: "src/reader.ts",
+      name: "Reader",
+      line: 1,
+    });
+  });
+
+  it("resolves index.js and .mjs/.cjs specifiers", async () => {
+    const text = `import { a } from "./dir/index.js";
+import { b } from "./util.mjs";
+import { c } from "./shim.cjs";`;
+    const known = new Set(["src/dir/index.ts", "src/util.mts", "src/shim.cts", "src/x.ts"]);
+    const { references } = await extractFile("src/x.ts", text, known);
+    const imports = references.filter((r) => r.kind === "import");
+    const byName = Object.fromEntries(imports.map((r) => [r.name, r]));
+    assert.equal(byName.a?.to, "src/dir/index.ts");
+    assert.equal(byName.b?.to, "src/util.mts");
+    assert.equal(byName.c?.to, "src/shim.cts");
+  });
 });
