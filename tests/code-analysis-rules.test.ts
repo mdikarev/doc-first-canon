@@ -23,4 +23,13 @@ describe("code analysis rules", () => {
     assert.match(rule, /code-index search/);
     assert.match(rule, /code_miss/);
   });
+
+  it("canon-bootstrap and canon-audit build indexes first and search-first", () => {
+    for (const skill of ["canon-bootstrap", "canon-audit"]) {
+      const s = readEmbedded("skills", skill, "SKILL.md");
+      assert.match(s, /doc-canon index/);
+      assert.match(s, /code-index build/);
+      assert.match(s, /code-index search|doc-canon search/);
+    }
+  });
 });
