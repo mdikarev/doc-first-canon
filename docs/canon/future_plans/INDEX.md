@@ -28,10 +28,14 @@ Design rationale: [`docs/superpowers/specs/2026-08-09-production-path-roadmap-de
 | 0b | BM25 index | absorbed | [p0b-bm25-index.md](p0b-bm25-index.md) |
 | 1 | Retrieval search & context pack | absorbed | [p1-retrieval-and-context-pack.md](p1-retrieval-and-context-pack.md) |
 | 2a | Code AST index construction | implementing | [p2a-code-ast-index.md](p2a-code-ast-index.md) |
+| 2a-go | Go code AST index slice | draft | [p2a-go-code-index.md](p2a-go-code-index.md) |
+| 2a-csharp | C# code AST index slice | draft | [p2a-csharp-code-index.md](p2a-csharp-code-index.md) |
+| 2a-rust | Rust code AST index slice | draft | [p2a-rust-code-index.md](p2a-rust-code-index.md) |
+| 2a-python | Python code AST index slice | draft | [p2a-python-code-index.md](p2a-python-code-index.md) |
 | 2b | Code search tools | draft | [p2b-code-search-tools.md](p2b-code-search-tools.md) |
 | 2c | Code analysis rules for agents & skills | draft | [p2c-code-analysis-rules.md](p2c-code-analysis-rules.md) |
 | 3 | Production hardening | absorbed | [p3-production-hardening.md](p3-production-hardening.md) |
 | 4 | BM25 scoring | draft | [p4-bm25-scoring.md](p4-bm25-scoring.md) |
 | 5 | Glossary-aware search | draft | [p5-glossary-aware-search.md](p5-glossary-aware-search.md) |
 
-P0, P0c, P0b, P1, and P3 are absorbed. P2 split into three sequential initiatives — P2a (code AST index construction), P2b (code search tools), P2c (code analysis rules); P2a is implementing, P2b/P2c remain draft; P4 (BM25 scoring) and P5 (glossary-aware search) remain draft. The P2 trio outranks P4/P5 in the table: it fills the previously referenced-but-unwritten AST-extractor slot and is the code-side analogue of the canon's retrieval discipline. The code AST index is a separate artifact from the canon BM25 index — `doc-canon index` indexes `docs/canon/**` documentation, not code. The language list is TypeScript/JavaScript, Go, C#, Rust, Python (five): slice 1 ships TypeScript/JavaScript end-to-end, Go/C#/Rust/Python follow as separate slices, and GDScript was dropped (out of scope).
+P0, P0c, P0b, P1, and P3 are absorbed. P2 split into three sequential initiatives — P2a (code AST index construction), P2b (code search tools), P2c (code analysis rules); P2a is implementing, P2b/P2c remain draft; P4 (BM25 scoring) and P5 (glossary-aware search) remain draft. The P2 trio outranks P4/P5 in the table: it fills the previously referenced-but-unwritten AST-extractor slot and is the code-side analogue of the canon's retrieval discipline. The code AST index is a separate artifact from the canon BM25 index — `doc-canon index` indexes `docs/canon/**` documentation, not code. The language list is TypeScript/JavaScript, Go, C#, Rust, Python (five): slice 1 ships TypeScript/JavaScript end-to-end, Go/C#/Rust/Python follow as separate slice initiatives (P2a-Go, P2a-C#, P2a-Rust, P2a-Python — draft), and GDScript was dropped (out of scope).
