@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.0
+
+- `code-index search --refs Class.method` member-access edges across all five languages: Go composite/pointer-literal constructors (`x := &T{}` / `x := T{}` / `var x = T{}`) with same-package cross-file resolution (`resolveGoSamePackageReferences`); C# `new Type(...)` with same-namespace cross-file resolution (`resolveCSharpNamespaceReferences`); Rust associated-function constructors (`Type::new()` / `Type::default()`) for same-file and `use`-imported names; Python bare-call constructors (`Type(...)`) for same-file classes and PascalCase imported names with `as`-alias canonicalization
+
 ## 0.2.0
 
 - Code AST index over discovered source roots: `code-index build` (tree-sitter WASM for TypeScript/JavaScript, Go, C#, Rust, Python; `--watch`/`--stop`) and `code-index search` (symbol mode with multi-token name/signature matching, `--kind`/`--file`/`--body`, and syntactic `--refs` mode incl. `Class.method` member-access edges for `new Type()`-initialized bindings)
