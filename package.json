@@ -10,7 +10,8 @@
   "exports": {
     "./index-reader": "./dist/index/reader.js",
     "./search": "./dist/search/search.js",
-    "./code-index-reader": "./dist/code-index/reader.js"
+    "./code-index-reader": "./dist/code-index/reader.js",
+    "./code-search": "./dist/code-search/search.js"
   },
   "files": [
     "dist",
