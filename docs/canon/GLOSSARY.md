@@ -85,7 +85,7 @@ A dependency-free light EN/RU suffix-strip applied to every token inside `tokeni
 A per-term score multiplier of 1.5 (`HEADING_WEIGHT`) applied when a term is in a doc's heading set — the tokens of markdown heading lines (`#`–`######`), stored as an optional `heading_terms` field in the BM25 state. Heading hits outrank body-only hits for equal otherwise.
 
 ### Liveness
-The search downweight of `docs/canon/future_plans/**`: paths starting `future_plans/` get their final score multiplied by 0.5 (`FUTURE_PLANS_WEIGHT`) so living canon (OVERVIEW/CLI/GLOSSARY/ARCHITECTURE) outranks directional plans for conceptual queries. Fixed constant; no `policies` knob.
+The search downweight of `docs/canon/future_plans/**`: any doc whose path contains a `future_plans` segment at any depth (canon-relative `future_plans/...` or root-relative `docs/canon/future_plans/...`) gets its final score multiplied by 0.5 (`FUTURE_PLANS_WEIGHT`) so living canon (OVERVIEW/CLI/GLOSSARY/ARCHITECTURE) outranks directional plans for conceptual queries. Fixed constant; no `policies` knob.
 
 ### Pack
 A bounded retrieval result containing the query, index identity and freshness, warnings, and ranked canon hits with scores and short snippet windows from live files.

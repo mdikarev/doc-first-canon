@@ -14,17 +14,15 @@ Never silently pick a side. Never edit application code from canon skills.
 
 ## Open
 
+## Resolved
+
 ### D-013: Liveness downweight never fires on the real corpus (`future_plans/**` not matched by path prefix)
-- **status:** open
+- **status:** resolved
 - **decision:** code_stale
 - **canon_paths:** `docs/canon/ARCHITECTURE.md`, `docs/canon/CLI.md`, `docs/canon/GLOSSARY.md`
 - **code_paths:** `src/index/bm25.ts`, `src/index/list.ts`, `src/index/sync.ts`, `tests/index-bm25.test.ts`
-- **evidence:** Canon and spec promise a 0.5× `FUTURE_PLANS_WEIGHT` for `future_plans/**` docs. The shipped `score()` in `src/index/bm25.ts` applies it only when `path.startsWith("future_plans/")`. But `listCanonMarkdown` (`src/index/list.ts`) returns root-relative paths (`docs/canon/future_plans/...`), which the manifest/index keys carry verbatim — so 0 of 36 indexed docs match the prefix and the downweight is never applied on the real corpus. The unit test (`tests/index-bm25.test.ts`) passes because it builds fixtures with corpus-relative paths (`future_plans/p1.md`, `living.md`). Verified on this worktree: `doc-canon search "how documentation indexing works"` still ranks `future_plans/p0-skill-context-efficiency.md` third (score 43.4) ahead of living `ARCHITECTURE.md` (37.5), so the spec problem #3 fix is not effective in production.
+- **evidence:** Canon and spec promise a 0.5× `FUTURE_PLANS_WEIGHT` for `future_plans/**` docs. The shipped `score()` in `src/index/bm25.ts` applied it only when `path.startsWith("future_plans/")`, but the manifest/index keys are root-relative (`docs/canon/future_plans/...`), so 0 of 36 indexed docs matched the prefix and the downweight never fired on the real corpus. Resolved by commit `e305262` as a bugfix: `score()` now matches a `future_plans` path segment at any depth (`path.split("/").includes("future_plans")`), and the existing liveness unit test now uses the root-relative path basis so it guards production behavior. The closing canon-audit (2026-08-18) confirmed the drift no longer reproduces: dogfood `doc-canon search "how documentation indexing works"` ranks living canon first (`GLOSSARY.md` 51.6, `SKILLS.md` 45.1, `ARCHITECTURE.md` 37.8) while `future_plans/p0-skill-context-efficiency.md` drops to rank 7 (score 21.9), and the full suite passes 323/323 — satisfying the apply-order rule that a `code_stale` entry stays Open until a later audit confirms; status moved to Resolved.
 - **finding_ids:** `F-014`
-- **coding_agent_prompt:** |
-  Study: `src/index/bm25.ts` (`score()`, the `FUTURE_PLANS_WEIGHT` branch), `src/index/list.ts` (path basis), `src/index/sync.ts` (build inputs), `tests/index-bm25.test.ts` (existing liveness test), and `.doc-canon/bm25-index.json` (real path keys). What diverges: the living canon (`ARCHITECTURE.md` Retrieval block, `GLOSSARY.md` Liveness term, `CLI.md` `search` notes) states `future_plans/**` final scores are multiplied by 0.5; the shipped code applies that multiplier only when the index path literally starts with `future_plans/`, which never matches the root-relative `docs/canon/future_plans/...` keys the index actually stores. Questions to clarify with the user: (1) should `Bm25Index` receive canon-relative paths (`future_plans/x.md`) or root-relative (`docs/canon/future_plans/x.md`)? (2) should the Pack's `path` field remain root-relative while scoring uses a canon-relative basis? Keep determinism and the Pack shape unchanged; make the existing liveness test use the real path basis so it guards production behavior.
-
-## Resolved
 
 ### D-012: ARCHITECTURE understates `.worktrees` default-ignore scope as code discovery only
 - **status:** resolved
