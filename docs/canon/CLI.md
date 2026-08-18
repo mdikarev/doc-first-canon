@@ -50,6 +50,30 @@ Artifacts: `.doc-canon/inventory.json`, `.doc-canon/report.json`, `.doc-canon/in
 
 `code-index search` fails with exit ≠0 for an empty query, an empty `--refs` name, a missing/corrupt code index (hint to run `doc-canon code-index build`), invalid flags, `--refs` combined with a positional query / `--kind` / `--file`, and `--body` combined with `--refs`. A stale code index is served with exit 0 and a `code_index_stale` warning (human mode on stderr; `--json` carries `warnings` + `freshness`). Zero hits exit 0. `code-index search` never auto-reindexes.
 
+## Usage guide: `code-index search`
+
+`code-index search` is the agent-facing probe for the code AST index. Two modes, chosen by flags:
+
+**Symbol mode** (positional `<query>`): finds declarations. Every query token is a case-insensitive substring of the symbol `name` or, falling back, the `signature`. Ordering: exact name > name prefix > name tokens > signature tokens, tie-break file then line. `--kind <type>` and `--file <glob>` narrow the scan; `--body` widens the snippet window from the declaration start to the symbol's `endLine` (symbol mode only; `--body` + `--refs` fails closed).
+
+```bash
+doc-canon code-index search "searchCanon"        # declaration of searchCanon (src/search/search.ts)
+doc-canon code-index search "search code index"  # multi-token: every token matches name/signature
+doc-canon code-index search "Reader" --kind class
+doc-canon code-index search "search" --file "src/**"
+doc-canon code-index search "searchCanon" --body
+```
+
+**Refs mode** (`--refs <name>`): finds usages. Exact, case-sensitive match over syntactic references — `anchor` (same-file usage), `import` (cross-file edges: import statements, call-site edges for identifier usages of imported names, and `Class.method` member-access edges for `new Type()`-initialized bindings, aliased or same-file, canonical name), and `binding` (in-scope locals).
+
+```bash
+doc-canon code-index search --refs "searchCanon"      # import statement + call sites across files
+doc-canon code-index search --refs "Reader.score"     # member-access edge: calls on new Reader() bindings
+doc-canon code-index search --refs "Store.save"       # aliased constructor (import { Store as ST }) resolves to canonical Store.save
+```
+
+Each hit carries a bounded snippet window from the live source file. A missing/corrupt index fails closed with a hint to run `doc-canon code-index build`; a stale index serves the pack with a `code_index_stale` warning; zero hits exit 0. `code-index search` never auto-reindexes — agents follow code-index-first, and on empty/thin packs read source as evidence and note `code_miss`.
+
 ## Dependencies
 
 - `commander` — CLI parsing

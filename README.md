@@ -154,6 +154,39 @@ doc-canon search "BM25" --max-hits 5 --snippet-lines 6
 doc-canon search "topic" --root /path/to/repo
 ```
 
+### code-index build
+
+Build or refresh the local AST index over the project's discovered source roots (writes `.doc-canon/code-index-manifest.json` and `.doc-canon/code-ast-index.json`). Covers TypeScript/JavaScript, Go, C#, Rust, and Python via pinned tree-sitter WASM grammars. One-shot exits non-zero if a watch process is already running. Same `--watch` / `--interval` / `--stop` discipline as `index`, with a separate watch pid.
+
+```bash
+doc-canon code-index build
+doc-canon code-index build --root /path/to/repo
+doc-canon code-index build --watch                 # poll and keep the index in sync (default 2000 ms)
+doc-canon code-index build --watch --interval 500  # custom poll interval (ms, min 200)
+doc-canon code-index build --stop                  # stop a running watch process
+```
+
+### code-index search
+
+Search the code AST index and print a bounded code pack (symbol or syntactic-reference hits with live-file snippets). Does not auto-reindex. Missing/corrupt index → exit ≠0 with a hint to run `doc-canon code-index build`. Stale index → exit 0 with a `code_index_stale` warning (stderr in human mode; `warnings` / `freshness` in `--json`).
+
+**Symbol mode** (positional query): every query token must be a case-insensitive substring of the symbol `name` (or, falling back, the `signature`). Ordering: exact name > name prefix > name tokens > signature tokens, tie-break file then line. Filters `--kind <type>` and `--file <glob>` narrow the scan; `--body` widens the snippet window to the symbol's `endLine` (symbol mode only).
+
+**Refs mode** (`--refs <name>`): exact, case-sensitive match over syntactic references — `anchor` (same-file usage), `import` (cross-file edges, incl. call-site edges and `Class.method` member-access edges for `new Type()`-initialized bindings), and `binding` (in-scope locals).
+
+```bash
+doc-canon code-index search "searchCanon"               # symbol mode: find the declaration
+doc-canon code-index search "search code index"          # multi-token: every token matches name/signature
+doc-canon code-index search --refs "searchCanon"         # refs mode: import + call-site edges
+doc-canon code-index search --refs "Reader.score"        # member-access edge (Class.method)
+doc-canon code-index search "Reader" --kind class        # filter by symbol kind
+doc-canon code-index search "search" --file "src/**"     # filter by file glob
+doc-canon code-index search "searchCanon" --body         # widen symbol-mode window to endLine
+doc-canon code-index search --refs "searchCanon" --json  # machine-readable pack
+doc-canon code-index search "Reader" --max-hits 5 --snippet-lines 6
+doc-canon code-index search "topic" --root /path/to/repo
+```
+
 ## Agent skills
 
 Managed skills (`canon-bootstrap`, `canon-write`, `canon-audit`, `canon-contract`, `canon-future-plan`) invoke `doc-canon` subprocesses. **`doc-canon` must be on PATH** (e.g. via `npm link`, global install, or CI `npm install -g .`).
@@ -353,6 +386,39 @@ doc-canon search "CLI commands"
 doc-canon search "working set" --json
 doc-canon search "BM25" --max-hits 5 --snippet-lines 6
 doc-canon search "topic" --root /path/to/repo
+```
+
+### code-index build
+
+Сборка или обновление локального AST-индекса по обнаруженным source-roots проекта (пишет `.doc-canon/code-index-manifest.json` и `.doc-canon/code-ast-index.json`). Покрывает TypeScript/JavaScript, Go, C#, Rust и Python через закреплённые tree-sitter WASM-грамматики. One-shot завершается с ненулевым кодом, если уже запущен watch. Та же дисциплина `--watch` / `--interval` / `--stop`, что и у `index`, но с отдельным watch-pid.
+
+```bash
+doc-canon code-index build
+doc-canon code-index build --root /path/to/repo
+doc-canon code-index build --watch                 # опрос и поддержание индекса (по умолчанию 2000 мс)
+doc-canon code-index build --watch --interval 500  # свой интервал опроса (мс, мин. 200)
+doc-canon code-index build --stop                  # остановить запущенный watch
+```
+
+### code-index search
+
+Поиск по кодовому AST-индексу и печать ограниченного code pack (хиты по символам или синтаксическим ссылкам со сниппетами из живых файлов). Не делает auto-reindex. Нет/битый индекс → exit ≠0 с подсказкой `doc-canon code-index build`. Устаревший индекс → exit 0 с предупреждением `code_index_stale` (stderr в human-режиме; `warnings` / `freshness` при `--json`).
+
+**Symbol-режим** (позиционный запрос): каждый токен запроса должен быть case-insensitive подстрокой имени символа `name` (или, как запасной вариант, `signature`). Ранжирование: точное имя > префикс имени > токены в имени > токены в сигнатуре, tie-break по файлу, затем строке. Фильтры `--kind <type>` и `--file <glob>` сужают сканирование; `--body` расширяет сниппет-окно до `endLine` символа (только symbol-режим).
+
+**Refs-режим** (`--refs <name>`): точное, case-sensitive совпадение по синтаксическим ссылкам — `anchor` (использование в том же файле), `import` (межфайловые эджи, включая call-site эджи и member-access эджи `Class.method` для привязок из `new Type()`), и `binding` (локальные переменные в области видимости).
+
+```bash
+doc-canon code-index search "searchCanon"               # symbol-режим: найти объявление
+doc-canon code-index search "search code index"          # мультитокенный: каждый токен матчится в name/signature
+doc-canon code-index search --refs "searchCanon"         # refs-режим: import + call-site эджи
+doc-canon code-index search --refs "Reader.score"        # member-access эдж (Class.method)
+doc-canon code-index search "Reader" --kind class        # фильтр по виду символа
+doc-canon code-index search "search" --file "src/**"     # фильтр по glob файла
+doc-canon code-index search "searchCanon" --body         # расширить окно symbol-режима до endLine
+doc-canon code-index search --refs "searchCanon" --json  # машиночитаемый pack
+doc-canon code-index search "Reader" --max-hits 5 --snippet-lines 6
+doc-canon code-index search "topic" --root /path/to/repo
 ```
 
 ## Agent skills
