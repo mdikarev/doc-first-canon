@@ -19,7 +19,7 @@ import {
   extractFile as extractPyFile,
   grammarForFile as pyGrammarForFile,
 } from "./python.js";
-import type { CodeReference, CodeSymbol } from "../types.js";
+import type { CodeReference, CodeSymbol, ExtractResult } from "../types.js";
 
 export function grammarForFile(rel: string): string {
   if (rel.endsWith(".go")) return goGrammarForFile(rel);
@@ -33,7 +33,7 @@ export async function extractFile(
   rel: string,
   text: string,
   knownFiles: Set<string>,
-): Promise<{ symbols: CodeSymbol[]; references: CodeReference[] }> {
+): Promise<ExtractResult> {
   if (rel.endsWith(".go")) return extractGoFile(rel, text, knownFiles);
   if (rel.endsWith(".cs")) return extractCsFile(rel, text, knownFiles);
   if (rel.endsWith(".rs")) return extractRsFile(rel, text, knownFiles);

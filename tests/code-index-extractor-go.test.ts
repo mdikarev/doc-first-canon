@@ -73,9 +73,9 @@ func main() {
 }`;
     const { references } = await extractFile("main.go", text, new Set(["reader.go"]));
     const imports = references.filter((r) => r.kind === "import");
-    assert.equal(imports.length, 1);
-    assert.equal(imports[0].to, "reader.go");
-    assert.equal(imports[0].name, "reader");
+    assert.equal(imports.length, 2);
+    assert.ok(imports.some((r) => r.to === "reader.go" && r.name === "reader"));
+    assert.ok(imports.some((r) => r.to === "reader.go" && r.name === "Handle.Score"));
     assert.ok(references.some((r) => r.kind === "binding" && r.name === "h"));
   });
 
@@ -87,5 +87,103 @@ import "fmt"
 func main() { fmt.Println("hi") }`;
     const { references } = await extractFile("main.go", text, new Set(["fmt"]));
     assert.equal(references.filter((r) => r.kind === "import").length, 0);
+  });
+});
+
+describe("extractFile (go) member-access references", () => {
+  it("emits same-file edges for := &T{}, := T{}, and var x = T{} bindings", async () => {
+    const text = `package main
+
+type Handle struct {
+	Field int
+}
+
+func main() {
+	x := &Handle{}
+	y := Handle{}
+	var v = Handle{}
+	x.Score("q")
+	_ = y
+	_ = v
+	_ = x
+}`;
+    const { references } = await extractFile("main.go", text, new Set());
+    const members = references
+      .filter((r) => r.kind === "import" && r.name.includes("."))
+      .sort((a, b) => a.name.localeCompare(b.name));
+    assert.deepEqual(
+      members.map((r) => ({ name: r.name, to: r.to })),
+      [{ name: "Handle.Score", to: "main.go" }],
+    );
+  });
+
+  it("emits property-read edges for struct fields", async () => {
+    const text = `package main
+
+type Handle struct {
+	Field int
+}
+
+func main() {
+	x := &Handle{}
+	_ = x.Field
+}`;
+    const { references } = await extractFile("main.go", text, new Set());
+    const members = references.filter((r) => r.kind === "import" && r.name.includes("."));
+    assert.deepEqual(
+      members.map((r) => ({ name: r.name, to: r.to })),
+      [{ name: "Handle.Field", to: "main.go" }],
+    );
+  });
+
+  it("resolves qualified imported types through the import edge map", async () => {
+    const text = `package main
+
+import "./reader"
+
+func main() {
+	h := &reader.Handle{}
+	h.Score("q")
+}`;
+    const known = new Set(["main.go", "reader.go"]);
+    const { references } = await extractFile("main.go", text, known);
+    const members = references.filter((r) => r.kind === "import" && r.name.includes("."));
+    assert.deepEqual(
+      members.map((r) => ({ name: r.name, to: r.to })),
+      [{ name: "Handle.Score", to: "reader.go" }],
+    );
+  });
+
+  it("emits no edge for factory calls, slice/map literals, or uninitialized var", async () => {
+    const text = `package main
+
+func NewT() *Handle { return nil }
+
+func main() {
+	x := NewT()
+	y := []Handle{}
+	z := map[string]Handle{}
+	var w Handle
+	x.Score("q")
+	_ = y
+	_ = z
+	_ = w
+}`;
+    const { references } = await extractFile("main.go", text, new Set());
+    const members = references.filter((r) => r.kind === "import" && r.name.includes("."));
+    assert.equal(members.length, 0);
+  });
+
+  it("surfaces same-package candidates in unresolvedMembers", async () => {
+    const text = `package main
+
+func main() {
+	x := &Handle{}
+	x.Score("q")
+}`;
+    const { unresolvedMembers } = await extractFile("main.go", text, new Set());
+    assert.deepEqual(unresolvedMembers, [
+      { file: "main.go", typeName: "Handle", memberName: "Score", line: 5 },
+    ]);
   });
 });

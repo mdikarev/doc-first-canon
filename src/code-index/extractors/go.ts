@@ -1,6 +1,6 @@
 // src/code-index/extractors/go.ts
 import { createParser, loadGrammar, type Node } from "../parser.js";
-import type { CodeReference, CodeSymbol, SymbolKind } from "../types.js";
+import type { CodeReference, CodeSymbol, ExtractResult, SymbolKind, UnresolvedMember } from "../types.js";
 
 export function grammarForFile(rel: string): "go" {
   return "go";
@@ -273,6 +273,138 @@ function collectBindingNames(root: Node): Set<string> {
   return names;
 }
 
+type CompositeBinding = { typeName: string; packageName: string | null };
+
+function compositeLiteralIn(expr: Node): Node | null {
+  const inner = expr.type === "expression_list" ? expr.namedChildren[0] : expr;
+  if (!inner) return null;
+  if (inner.type === "composite_literal") return inner;
+  if (inner.type === "unary_expression") {
+    return inner.namedChildren.find((c) => c.type === "composite_literal") ?? null;
+  }
+  return null;
+}
+
+function literalTypeName(lit: Node): CompositeBinding | null {
+  const typeNode = lit.childForFieldName("type");
+  if (!typeNode) return null;
+  if (typeNode.type === "type_identifier") {
+    return { typeName: typeNode.text, packageName: null };
+  }
+  if (typeNode.type === "qualified_type") {
+    const pkg = typeNode.namedChildren.find((c) => c.type === "package_identifier");
+    const type = typeNode.namedChildren.find((c) => c.type === "type_identifier");
+    if (pkg && type) return { typeName: type.text, packageName: pkg.text };
+  }
+  return null;
+}
+
+function collectCompositeLiteralBindings(root: Node): Map<string, CompositeBinding> {
+  const bindings = new Map<string, CompositeBinding>();
+  const visit = (node: Node): void => {
+    if (node.type === "short_var_declaration") {
+      const left = node.childForFieldName("left");
+      const right = node.childForFieldName("right");
+      const name = left?.namedChildren.find((c) => c.type === "identifier");
+      if (name && right) {
+        const lit = compositeLiteralIn(right);
+        const type = lit ? literalTypeName(lit) : null;
+        if (name.text && type) bindings.set(name.text, type);
+      }
+    } else if (node.type === "var_spec") {
+      const name = node.childForFieldName("name");
+      const value = node.childForFieldName("value");
+      if (name && value) {
+        const lit = compositeLiteralIn(value);
+        const type = lit ? literalTypeName(lit) : null;
+        if (name.text && type) bindings.set(name.text, type);
+      }
+    }
+    for (const c of node.namedChildren) visit(c);
+  };
+  visit(root);
+  return bindings;
+}
+
+function collectImportedPackages(root: Node, ctx: WalkCtx): Map<string, string> {
+  const imported = new Map<string, string>();
+  const visit = (node: Node): void => {
+    if (node.type === "import_declaration") {
+      for (const spec of node.namedChildren) {
+        if (spec.type !== "import_spec") continue;
+        const pathNode = spec.childForFieldName("path");
+        if (!pathNode) continue;
+        const source = pathNode.text.replace(/^`|^"|"$|`$/g, "");
+        if (source.startsWith("./") || source.startsWith("../")) {
+          const alias = spec.childForFieldName("name")?.text;
+          const name = alias ?? source.slice(source.lastIndexOf("/") + 1);
+          const resolved = resolveImportPath(ctx.file, source, ctx.knownFiles);
+          if (resolved) imported.set(name, resolved);
+        }
+      }
+    }
+    for (const c of node.namedChildren) visit(c);
+  };
+  visit(root);
+  return imported;
+}
+
+function collectMemberAccessEdges(
+  root: Node,
+  ctx: WalkCtx,
+  bindings: Map<string, CompositeBinding>,
+  importedPackages: Map<string, string>,
+  unresolved: UnresolvedMember[],
+): void {
+  const typeSymbolNames = new Set(
+    ctx.symbols
+      .filter((s) => s.kind === "struct" || s.kind === "interface" || s.kind === "type")
+      .map((s) => s.name),
+  );
+  const visit = (node: Node): void => {
+    if (node.type === "selector_expression") {
+      const object = node.namedChildren.find((c) => c.type === "identifier");
+      const field = node.childForFieldName("field");
+      if (object && field?.type === "field_identifier") {
+        const binding = bindings.get(object.text);
+        if (binding) {
+          const line = node.startPosition.row + 1;
+          const member = field.text;
+          if (binding.packageName !== null) {
+            const to = importedPackages.get(binding.packageName);
+            if (to !== undefined) {
+              ctx.references.push({
+                kind: "import",
+                from: ctx.file,
+                to,
+                name: `${binding.typeName}.${member}`,
+                line,
+              });
+            }
+          } else if (typeSymbolNames.has(binding.typeName)) {
+            ctx.references.push({
+              kind: "import",
+              from: ctx.file,
+              to: ctx.file,
+              name: `${binding.typeName}.${member}`,
+              line,
+            });
+          } else {
+            unresolved.push({
+              file: ctx.file,
+              typeName: binding.typeName,
+              memberName: member,
+              line,
+            });
+          }
+        }
+      }
+    }
+    for (const c of node.namedChildren) visit(c);
+  };
+  visit(root);
+}
+
 function collectAnchorAndBindingRefs(root: Node, ctx: WalkCtx): void {
   const symbolNames = new Set(ctx.symbols.map((s) => s.name));
   const bindingNames = collectBindingNames(root);
@@ -298,7 +430,7 @@ export async function extractFile(
   rel: string,
   text: string,
   knownFiles: Set<string>,
-): Promise<{ symbols: CodeSymbol[]; references: CodeReference[] }> {
+): Promise<ExtractResult> {
   const language = await loadGrammar("go");
   const parser = createParser(language);
   const tree = parser.parse(text);
@@ -324,6 +456,10 @@ export async function extractFile(
     };
     collectImportEdges(tree.rootNode, ctxRefs);
     collectAnchorAndBindingRefs(tree.rootNode, ctxRefs);
+    const bindings = collectCompositeLiteralBindings(tree.rootNode);
+    const importedPackages = collectImportedPackages(tree.rootNode, ctxRefs);
+    const unresolvedMembers: UnresolvedMember[] = [];
+    collectMemberAccessEdges(tree.rootNode, ctxRefs, bindings, importedPackages, unresolvedMembers);
     ctxRefs.references.sort(
       (a, b) =>
         a.from.localeCompare(b.from) ||
@@ -332,7 +468,7 @@ export async function extractFile(
         a.kind.localeCompare(b.kind) ||
         a.to.localeCompare(b.to),
     );
-    return { symbols: ctx.symbols, references: ctxRefs.references };
+    return { symbols: ctx.symbols, references: ctxRefs.references, unresolvedMembers };
   } finally {
     tree.delete();
   }

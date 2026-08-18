@@ -31,6 +31,19 @@ export type CodeReference = {
   line: number;
 };
 
+export type UnresolvedMember = {
+  file: string;
+  typeName: string;
+  memberName: string;
+  line: number;
+};
+
+export type ExtractResult = {
+  symbols: CodeSymbol[];
+  references: CodeReference[];
+  unresolvedMembers?: UnresolvedMember[];
+};
+
 export type CodeIndexFileMeta = {
   hash: string;
   language: string;
