@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.5.0
+
+- **feat:** `search` / `code-index search` self-heal a stale index at the CLI layer when no watch owns it (rebuild then serve; `auto_reindexed` warning); missing index stays fail-closed
+- **feat:** every successful CLI search appends one line to `.doc-canon/probe-log.jsonl` (trimmed to 1000)
+- **feat:** new `doc-canon discipline` command — probe-currency report (`--json`), exit ≠0 on un-probed state; `check` merges `kind: "discipline"` findings
+- **feat:** mandatory search-first gate in managed overlays (pointer rule, `AGENTS.md`, `CLAUDE.md`, canon skills); machine-parseable `code_miss` / new `doc_miss`; `skills_stamp` 0.14.0
+
 ## 0.4.0
 
 - `code-index search --refs Class.method` C# imported-type member-access edges: `using`-imported / `using`-alias (canonical name) / namespace-qualified `new Ns.Type()` / explicit-typed target-typed `new()` bindings resolved through a deterministic syntactic project model (`resolveCSharpNamespaceReferences` own-first/using-union)

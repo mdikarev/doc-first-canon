@@ -100,6 +100,16 @@ doc-canon report
 doc-canon report --root /path/to/repo
 ```
 
+### discipline
+
+Report probe discipline: reads `.doc-canon/probe-log.jsonl` (last doc/code probe age, probe count) plus the index manifests (files changed since each probe). Exits ≠0 when an index exists and relevant files changed after the last probe of that kind (un-probed state). Missing index or never-probed fresh clone → not-applicable, exit 0.
+
+```bash
+doc-canon discipline
+doc-canon discipline --root /path/to/repo
+doc-canon discipline --json
+```
+
 ### upgrade-skills
 
 Refresh managed skills, Cursor rule, `AGENTS.md`, and `CLAUDE.md` overlays without touching canon content. Also migrates existing repos onto the required `future_plans/INDEX.md` skeleton when missing.
@@ -145,7 +155,7 @@ doc-canon index --stop                  # stop a running --watch process
 
 ### search
 
-Search the existing BM25 index and print a bounded context pack (ranked paths, scores, live-file snippets). Does not auto-reindex. Missing/corrupt index → exit ≠0 with a hint to run `doc-canon index`. Stale index → exit 0 with an `index_stale` warning (stderr in human mode; Pack `warnings` / `freshness` with `--json`).
+Search the existing BM25 index and print a bounded context pack (ranked paths, scores, live-file snippets). A stale index is self-healed at the CLI layer when no watch owns it (rebuild then serve, `auto_reindexed` warning); with a live watch, stale is served with exit 0 and an `index_stale` warning. Missing/corrupt index → exit ≠0 with a hint to run `doc-canon index`. Every successful search appends a line to `.doc-canon/probe-log.jsonl`.
 
 ```bash
 doc-canon search "CLI commands"
@@ -168,7 +178,7 @@ doc-canon code-index build --stop                  # stop a running watch proces
 
 ### code-index search
 
-Search the code AST index and print a bounded code pack (symbol or syntactic-reference hits with live-file snippets). Does not auto-reindex. Missing/corrupt index → exit ≠0 with a hint to run `doc-canon code-index build`. Stale index → exit 0 with a `code_index_stale` warning (stderr in human mode; `warnings` / `freshness` in `--json`).
+Search the code AST index and print a bounded code pack (symbol or syntactic-reference hits with live-file snippets). A stale index is self-healed at the CLI layer when no watch owns it (rebuild then serve, `auto_reindexed` warning); with a live watch, stale is served with exit 0 and a `code_index_stale` warning. Missing/corrupt index → exit ≠0 with a hint to run `doc-canon code-index build`. Every successful search appends a line to `.doc-canon/probe-log.jsonl`.
 
 **Symbol mode** (positional query): every query token must be a case-insensitive substring of the symbol `name` (or, falling back, the `signature`). Ordering: exact name > name prefix > name tokens > signature tokens, tie-break file then line. Filters `--kind <type>` and `--file <glob>` narrow the scan; `--body` widens the snippet window to the symbol's `endLine` (symbol mode only).
 
@@ -334,6 +344,16 @@ doc-canon report
 doc-canon report --root /path/to/repo
 ```
 
+### discipline
+
+Отчёт о дисциплине поиска (probe discipline): читает `.doc-canon/probe-log.jsonl` (возраст последнего doc/code probe, число probe) плюс манифесты индексов (файлы, изменённые после каждого probe). Завершается с кодом ≠0, когда индекс существует и релевантные файлы изменились после последнего probe этого вида (un-probed состояние). Нет индекса или свежий клон без probe → not-applicable, exit 0.
+
+```bash
+doc-canon discipline
+doc-canon discipline --root /path/to/repo
+doc-canon discipline --json
+```
+
 ### upgrade-skills
 
 Обновление управляемых skills, Cursor rule, `AGENTS.md` и `CLAUDE.md` без изменения содержимого канона. Также мигрирует существующие репозитории на обязательный каркас `future_plans/INDEX.md`, если его ещё нет.
@@ -379,7 +399,7 @@ doc-canon index --stop                  # остановить запущенн�
 
 ### search
 
-Поиск по существующему BM25-индексу и печать ограниченного context pack (ранжированные пути, scores, сниппеты из живых файлов). Не делает auto-reindex. Нет/битый индекс → exit ≠0 с подсказкой `doc-canon index`. Устаревший индекс → exit 0 с сигналом `index_stale` (stderr в human-режиме; Pack `warnings` / `freshness` при `--json`).
+Поиск по существующему BM25-индексу и печать ограниченного context pack (ранжированные пути, scores, сниппеты из живых файлов). Устаревший индекс самовосстанавливается на уровне CLI, когда его не держит watch (пересборка и выдача с предупреждением `auto_reindexed`); при живом watch устаревший индекс отдаётся с exit 0 и предупреждением `index_stale`. Нет/битый индекс → exit ≠0 с подсказкой `doc-canon index`. Каждый успешный поиск дописывает строку в `.doc-canon/probe-log.jsonl`.
 
 ```bash
 doc-canon search "CLI commands"
@@ -402,7 +422,7 @@ doc-canon code-index build --stop                  # остановить зап
 
 ### code-index search
 
-Поиск по кодовому AST-индексу и печать ограниченного code pack (хиты по символам или синтаксическим ссылкам со сниппетами из живых файлов). Не делает auto-reindex. Нет/битый индекс → exit ≠0 с подсказкой `doc-canon code-index build`. Устаревший индекс → exit 0 с предупреждением `code_index_stale` (stderr в human-режиме; `warnings` / `freshness` при `--json`).
+Поиск по кодовому AST-индексу и печать ограниченного code pack (хиты по символам или синтаксическим ссылкам со сниппетами из живых файлов). Устаревший индекс самовосстанавливается на уровне CLI, когда его не держит watch (пересборка и выдача с предупреждением `auto_reindexed`); при живом watch устаревший индекс отдаётся с exit 0 и предупреждением `code_index_stale`. Нет/битый индекс → exit ≠0 с подсказкой `doc-canon code-index build`. Каждый успешный поиск дописывает строку в `.doc-canon/probe-log.jsonl`.
 
 **Symbol-режим** (позиционный запрос): каждый токен запроса должен быть case-insensitive подстрокой имени символа `name` (или, как запасной вариант, `signature`). Ранжирование: точное имя > префикс имени > токены в имени > токены в сигнатуре, tie-break по файлу, затем строке. Фильтры `--kind <type>` и `--file <glob>` сужают сканирование; `--body` расширяет сниппет-окно до `endLine` символа (только symbol-режим).
 
