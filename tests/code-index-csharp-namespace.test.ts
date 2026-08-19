@@ -94,3 +94,94 @@ describe("resolveCSharpNamespaceReferences", () => {
     assert.deepEqual(resolveCSharpNamespaceReferences(unresolved, symbols), []);
   });
 });
+
+describe("resolveCSharpNamespaceReferences (imported types)", () => {
+  it("resolves using-imported types via the namespaces search-set", () => {
+    const symbols = [
+      moduleSym("src/App/Program.cs", "App"),
+      moduleSym("src/App/Models/Widget.cs", "App.Models"),
+      typeSym("src/App/Models/Widget.cs", "Widget", "App.Models"),
+    ];
+    const unresolved = [
+      { file: "src/App/Program.cs", typeName: "Widget", memberName: "Score", line: 9, namespaces: ["App", "App.Models"] },
+    ];
+    assert.deepEqual(resolveCSharpNamespaceReferences(unresolved, symbols), [
+      { kind: "import", from: "src/App/Program.cs", to: "src/App/Models/Widget.cs", name: "Widget.Score", line: 9 },
+    ]);
+  });
+
+  it("resolves namespace-qualified types against a single qualified namespace", () => {
+    const symbols = [
+      moduleSym("src/App/Program.cs", "App"),
+      moduleSym("src/App/Models/Widget.cs", "App.Models"),
+      typeSym("src/App/Models/Widget.cs", "Widget", "App.Models"),
+    ];
+    const unresolved = [
+      { file: "src/App/Program.cs", typeName: "Widget", memberName: "Score", line: 9, namespaces: ["App.Models"] },
+    ];
+    assert.deepEqual(resolveCSharpNamespaceReferences(unresolved, symbols), [
+      { kind: "import", from: "src/App/Program.cs", to: "src/App/Models/Widget.cs", name: "Widget.Score", line: 9 },
+    ]);
+  });
+
+  it("does not prefer own-namespace candidates outside the qualified search-set", () => {
+    const symbols = [
+      moduleSym("src/App/Models/Program.cs", "App.Models"),
+      moduleSym("src/App/Models/Widget.cs", "App.Models"),
+      moduleSym("src/App/Other/Widget.cs", "App.Other"),
+      typeSym("src/App/Models/Widget.cs", "Widget", "App.Models"),
+      typeSym("src/App/Other/Widget.cs", "Widget", "App.Other"),
+    ];
+    const unresolved = [
+      { file: "src/App/Models/Program.cs", typeName: "Widget", memberName: "Score", line: 9, namespaces: ["App.Other"] },
+    ];
+    assert.deepEqual(resolveCSharpNamespaceReferences(unresolved, symbols), [
+      { kind: "import", from: "src/App/Models/Program.cs", to: "src/App/Other/Widget.cs", name: "Widget.Score", line: 9 },
+    ]);
+  });
+
+  it("prefers the own-namespace candidate when it is unique in the search-set", () => {
+    const symbols = [
+      moduleSym("src/App/Program.cs", "App"),
+      moduleSym("src/App/Widget.cs", "App"),
+      moduleSym("src/App/Models/Widget.cs", "App.Models"),
+      typeSym("src/App/Widget.cs", "Widget", "App"),
+      typeSym("src/App/Models/Widget.cs", "Widget", "App.Models"),
+    ];
+    const unresolved = [
+      { file: "src/App/Program.cs", typeName: "Widget", memberName: "Score", line: 9, namespaces: ["App", "App.Models"] },
+    ];
+    assert.deepEqual(resolveCSharpNamespaceReferences(unresolved, symbols), [
+      { kind: "import", from: "src/App/Program.cs", to: "src/App/Widget.cs", name: "Widget.Score", line: 9 },
+    ]);
+  });
+
+  it("resolves nested namespaces via all module symbols of a file", () => {
+    const symbols = [
+      moduleSym("src/App/Program.cs", "App"),
+      moduleSym("src/App/Inner/Widget.cs", "App"),
+      moduleSym("src/App/Inner/Widget.cs", "App.Inner"),
+      typeSym("src/App/Inner/Widget.cs", "Widget", "App.Inner"),
+    ];
+    const unresolved = [
+      { file: "src/App/Program.cs", typeName: "Widget", memberName: "Score", line: 9, namespaces: ["App", "App.Inner"] },
+    ];
+    assert.deepEqual(resolveCSharpNamespaceReferences(unresolved, symbols), [
+      { kind: "import", from: "src/App/Program.cs", to: "src/App/Inner/Widget.cs", name: "Widget.Score", line: 9 },
+    ]);
+  });
+
+  it("drops when the full search-set has multiple distinct candidate files", () => {
+    const symbols = [
+      moduleSym("src/App/Program.cs", "App"),
+      moduleSym("src/App/A/Widget.cs", "App.A"),
+      moduleSym("src/App/B/Widget.cs", "App.B"),
+      typeSym("src/App/A/Widget.cs", "Widget", "App.A"),
+      typeSym("src/App/B/Widget.cs", "Widget", "App.B"),
+    ];
+    const unresolved = [
+      { file: "src/App/Program.cs", typeName: "Widget", memberName: "Score", line: 9, namespaces: ["App", "App.A", "App.B"] },
+    ];
+    assert.deepEqual(resolveCSharpNamespaceReferences(unresolved, symbols), []);
+  });
+});
