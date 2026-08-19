@@ -1,6 +1,6 @@
 # P6a-CSharp-2 — C# code-refs member-access imported-type resolution
 
-- **Status:** implementing
+- **Status:** absorbed
 - **Focus:** Second C# iteration of P6: imported-type resolution for member-access edges beyond the same-namespace pass — `using`-directive and `using`-alias imports, namespace-qualified constructors (`new NS.Type()`), and target-typed `new()`, cross-namespace types — unblocks `--refs Type.method` across C# namespaces via a deterministic syntactic project model (file↔namespace from `module` symbols + per-file `using` names), no `.csproj`/`.sln` parsing.
 - **Depends on:** P6 (TS/JS v1, absorbed), P2a-CSharp (C# extractor, absorbed), and P6a-CSharp (same-file + same-namespace slice, absorbed)
 - **Unblocks:** `--refs Type.method` for C# types imported via `using` / namespace-qualified construction
@@ -26,18 +26,12 @@ P6a-CSharp shipped the cheap syntactic tier for C#: `var x = new Type();` + `x.m
 - `.csproj`/`.sln` compile-item parsing — namespace identity comes from each file's own `namespace` declarations
 - `using static` (imports members, not types) and `global using` (project-wide) — skipped by per-file syntactic resolution
 - Call graphs; cross-symbol dataflow
-- Other languages (Rust/Python P6a slices are separate drafts)
 - Changes to refs-mode query semantics or the CLI surface; the canon BM25 index
 
 ## Absorbs into
 
-`ARCHITECTURE.md` (code AST index — C# imported-type resolution / syntactic project model), `CLI.md` (`code-index search --refs Class.method` — C# imported types), `GLOSSARY.md` (`Member-access reference` term — C# imported-type pattern), `CODE_INDEX.md` (C# per-language row + cross-file resolution passes + open questions), extractor tests.
+Merged: `ARCHITECTURE.md` (code AST index — C# imported-type resolution / syntactic project model), `CLI.md` (`code-index search --refs Class.method` — C# imported types), `GLOSSARY.md` (`Member-access reference` term — C# imported-type pattern), `CODE_INDEX.md` (C# per-language row + cross-file resolution passes + open questions), extractor tests.
 
 ## Open questions
 
-*Resolved by the design spec Decisions* (syntactic project model; explicit-type-only target-typed `new()`; `using static`/`global using` excluded; canonical edge names; own-first priority; nested namespaces via all-module-symbols index).
-
-- ~~Minimum viable project model~~ — *Resolved:* a deterministic syntactic project model (file↔namespace from collected `module` symbols + per-file `using` names); no `.csproj`/`.sln` parse.
-- ~~Whether target-typed `new()` is ever resolvable without type inference~~ — *Resolved:* only with an explicit non-`var` type anchor (`Widget w = new();`); `var w = new();` stays unresolved.
-- ~~`using`-alias and namespace-qualified name resolution rules~~ — *Resolved:* edge name is the canonical last segment (`Widget.Score`, `Reader.Get`); `--refs R.Score` (alias form) does not match; own-first then using-union, exactly one distinct candidate file → edge.
-- ~~Exact tree-sitter-csharp node shapes for `using_alias`, qualified `type` nodes, and target-typed `new()`~~ — *Resolved:* locked in extractor tests during implementation (`collectUsingDirectives`, extended `collectConstructorBindings`, `collectMemberAccessEdges` in `csharp.ts`).
+*Resolved by the design spec Decisions and the slice implementation* (deterministic syntactic project model — file↔namespace from collected `module` symbols + per-file `using` names, no `.csproj`/`.sln` parse; target-typed `new()` only with an explicit non-`var` type anchor (`Widget w = new();`), `var w = new();` stays unresolved; `using static`/`global using` excluded; edge names canonical (`Widget.Score`, `Reader.Get`) — `--refs R.Score` (alias form) does not match; own-first then using-union priority, exactly one distinct candidate file → edge; nested namespaces via the all-module-symbols index; exact tree-sitter-csharp node shapes locked in extractor tests — `collectUsingDirectives`, extended `collectConstructorBindings`, `collectMemberAccessEdges` in `csharp.ts`).

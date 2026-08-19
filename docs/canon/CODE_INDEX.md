@@ -52,7 +52,7 @@ Member-access edges that cannot be resolved to a same-file type surface as `Unre
 
 ## Open questions
 
-- C# imported-type resolution (`using`, `using`-alias, namespace-qualified `new NS.Type()`, target-typed `new()`, cross-namespace types) — *resolved by the P6a-CSharp-2 design*: a deterministic syntactic project model (file↔namespace from `module` symbols + per-file `using` names) with own-first/using-union resolution; initiative status `implementing`.
+- C# imported-type resolution (`using`, `using`-alias, namespace-qualified `new NS.Type()`, target-typed `new()`, cross-namespace types) — *resolved by the P6a-CSharp-2 design*: a deterministic syntactic project model (file↔namespace from `module` symbols + per-file `using` names) with own-first/using-union resolution; initiative status `absorbed`.
 
 ## Related canon
 
