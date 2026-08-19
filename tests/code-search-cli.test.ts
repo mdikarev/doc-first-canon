@@ -5,6 +5,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { codeIndexWatchPidPath } from "../src/code-index/paths.js";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const bin = path.join(repoRoot, "bin", "doc-canon.js");
@@ -63,6 +64,8 @@ describe("doc-canon code-index search cli", () => {
 
   it("warns on stderr when stale in human mode", () => {
     assert.equal(run(["code-index", "build", "--root", repo]).status, 0);
+    // A live watch keeps stale warn + serve (exit 0); without it the index self-heals.
+    fs.writeFileSync(codeIndexWatchPidPath(repo), String(process.pid));
     fs.writeFileSync(path.join(repo, "src/reader.ts"), "export class Reader { changed() {} }\n");
     const r = run(["code-index", "search", "Reader", "--root", repo]);
     assert.equal(r.status, 0, r.stderr + r.stdout);
