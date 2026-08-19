@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.0
+
+- `code-index search --refs Class.method` C# imported-type member-access edges: `using`-imported / `using`-alias (canonical name) / namespace-qualified `new Ns.Type()` / explicit-typed target-typed `new()` bindings resolved through a deterministic syntactic project model (`resolveCSharpNamespaceReferences` own-first/using-union)
+- Documentation coverage checklist in managed skills (`canon-write`, `canon-bootstrap`): authored canon sections cover Public interfaces, Workflows, Usage examples, Operational runbooks, Failure modes, and Success criteria (or explicitly exclude a category in Scope); `SKILLS_STAMP` 0.13.0
+- Exhaustive CLI command flags table in canon: a flag not listed in `CLI.md` does not exist; unknown options fail closed with `error: unknown option '<flag>'` (exit ≠0)
+
 ## 0.3.0
 
 - `code-index search --refs Class.method` member-access edges across all five languages: Go composite/pointer-literal constructors (`x := &T{}` / `x := T{}` / `var x = T{}`) with same-package cross-file resolution (`resolveGoSamePackageReferences`); C# `new Type(...)` with same-namespace cross-file resolution (`resolveCSharpNamespaceReferences`); Rust associated-function constructors (`Type::new()` / `Type::default()`) for same-file and `use`-imported names; Python bare-call constructors (`Type(...)`) for same-file classes and PascalCase imported names with `as`-alias canonicalization
