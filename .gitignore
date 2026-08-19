@@ -5,3 +5,4 @@ dist/
 .doc-canon/
 *.log
 .DS_Store
+.dsh/
