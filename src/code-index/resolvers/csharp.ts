@@ -31,7 +31,7 @@ export function resolveCSharpNamespaceReferences(
   const out: CodeReference[] = [];
   for (const u of unresolved) {
     const own = nsByFile.get(u.file) ?? [];
-    const target = u.namespaces ?? own;
+    const target = u.namespaces?.length ? u.namespaces : own;
     const pick = (nss: string[]): CodeSymbol | null => {
       const distinct: CodeSymbol[] = [];
       const seen = new Set<string>();

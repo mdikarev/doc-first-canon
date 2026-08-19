@@ -184,4 +184,18 @@ describe("resolveCSharpNamespaceReferences (imported types)", () => {
     ];
     assert.deepEqual(resolveCSharpNamespaceReferences(unresolved, symbols), []);
   });
+
+  it("falls back to own namespace for an empty namespaces array", () => {
+    const symbols = [
+      moduleSym("src/App/Program.cs", "App"),
+      moduleSym("src/App/Widget.cs", "App"),
+      typeSym("src/App/Widget.cs", "Widget", "App"),
+    ];
+    const unresolved = [
+      { file: "src/App/Program.cs", typeName: "Widget", memberName: "Score", line: 9, namespaces: [] },
+    ];
+    assert.deepEqual(resolveCSharpNamespaceReferences(unresolved, symbols), [
+      { kind: "import", from: "src/App/Program.cs", to: "src/App/Widget.cs", name: "Widget.Score", line: 9 },
+    ]);
+  });
 });
