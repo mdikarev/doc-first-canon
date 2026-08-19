@@ -6,6 +6,9 @@ import {
   type CodeRefHit,
   type CodeSearchHit,
 } from "../code-search/search.js";
+import { findVcsRoot } from "../code-index/discovery.js";
+import { refreshStaleIndex } from "./auto-reindex.js";
+import { appendProbe } from "../probe-log.js";
 import type { SymbolKind } from "../code-index/types.js";
 
 const SYMBOL_KINDS: readonly SymbolKind[] = [
@@ -92,33 +95,55 @@ export async function codeIndexSearch(
   }
 
   try {
-    const pack = searchCodeIndex(root, query ?? "", {
-      maxHits,
-      snippetLines,
-      refs: opts.refs,
-      kind: opts.kind as SymbolKind | undefined,
-      file: opts.file,
-      body: opts.body,
+    const runSearch = () =>
+      searchCodeIndex(root, query ?? "", {
+        maxHits,
+        snippetLines,
+        refs: opts.refs,
+        kind: opts.kind as SymbolKind | undefined,
+        file: opts.file,
+        body: opts.body,
+      });
+    let served = runSearch();
+    const vcsRoot = findVcsRoot(root);
+    const reindexed = await refreshStaleIndex(vcsRoot, "code", served.freshness);
+    if (reindexed) {
+      served = runSearch();
+      if (!served.warnings.includes("auto_reindexed")) {
+        served.warnings = [...served.warnings, "auto_reindexed"];
+      }
+    }
+    appendProbe(root, {
+      ts: new Date().toISOString(),
+      kind: "code",
+      query: (opts.refs ?? query ?? "").trim(),
+      mode: opts.refs !== undefined ? "refs" : "symbols",
+      hits: served.hits.length,
+      freshness: served.freshness,
+      reindexed,
     });
 
     if (opts.json) {
-      console.log(JSON.stringify(pack));
+      console.log(JSON.stringify(served));
       return 0;
     }
 
-    if (pack.freshness === "stale") {
+    if (reindexed) {
+      console.error("warning: auto_reindexed (stale code index rebuilt before serving)");
+    }
+    if (served.freshness === "stale") {
       console.error("warning: code_index_stale (run doc-canon code-index build to refresh)");
     }
-    if (pack.hits.length === 0) {
+    if (served.hits.length === 0) {
       console.log("no hits");
       return 0;
     }
-    if (pack.mode === "refs") {
-      for (const hit of pack.hits as CodeRefHit[]) {
+    if (served.mode === "refs") {
+      for (const hit of served.hits as CodeRefHit[]) {
         printHitLines(`${hit.file}  L${hit.line}  ${hit.refKind}  ${hit.name}  → ${hit.to}`, hit.snippets);
       }
     } else {
-      for (const hit of pack.hits as CodeSearchHit[]) {
+      for (const hit of served.hits as CodeSearchHit[]) {
         printHitLines(`${hit.file}  L${hit.line}  ${hit.kind}  ${hit.name}`, hit.snippets);
       }
     }
