@@ -99,11 +99,20 @@ A bounded retrieval result containing the query, index identity and freshness, w
 ### searchCanon / search
 `searchCanon` is the public `doc-canon/search` API that ranks canon documents from the local BM25 index and builds a Pack from live-file snippets. `doc-canon search` is its thin human/JSON CLI wrapper.
 
+### Probe log
+`.doc-canon/probe-log.jsonl`: an append-only record of successful CLI searches (`doc-canon search` / `code-index search`), one JSON line per call — timestamp, kind (`doc` / `code`), query, mode (code only: `symbols` / `refs`), hit count, freshness, and whether the command auto-reindexed. The observability basis for the strict search-first gate: `doc-canon discipline` and `check` read it (trimmed to the last 1000 lines) to report probe currency.
+
+### Discipline finding
+A `kind: "discipline"` finding in `.doc-canon/report.json` (merged via the CLI finding merge) summarizing probe currency: age of the last doc/code probe and how many docs or source files changed after it. Informational in `check`; the `doc-canon discipline` command turns the same state into an exit-gate (exit ≠0 on un-probed state).
+
+### doc_miss
+The documentation-side miss note, mirror of `code_miss`: `doc_miss: <query> -> docs:<path>`, required when a deep read of `docs/canon/**` happens outside a search pack (index unavailable or thin result).
+
 ### Glossary expansion
 Search-time query expansion from `GLOSSARY.md`: a query term triggers expansion only when it equals a **heading token** (a token of a term's canonical `###` heading) that is unique across all term headings; it then adds that entry's full token set (canonical term tokens + synonym tokens) to the query term set before scoring — additive (OR), never dropping original terms. Ambiguous/common tokens (appearing in more than one term heading, or only in definition bodies) get no expansion — plain stemming + BM25 handles them. The glossary is read live at search time via the contract's glossary role (no manifest snapshot); a missing or unparsable glossary fails open to plain search.
 
 ### index_stale
-A non-fatal search warning that one or more indexed document hashes differ from the live canon corpus. Search serves the Pack with exit 0, surfaces the warning, and does not auto-reindex.
+A non-fatal freshness signal that one or more indexed document hashes differ from the live canon corpus. `doc-canon search` self-heals at the CLI layer when no watch owns the index: it rebuilds, re-runs, and serves a fresh Pack with an `auto_reindexed` warning; with a live watch the stale Pack is served with the `index_stale` warning. A missing index fails closed.
 
 ### Source root
 A discovered or configured directory holding the project's source code to be indexed by `code-index build`; found via explicit config, manifest detection (`package.json` for TypeScript/JavaScript, `go.mod` for Go, `*.csproj`/`*.sln` for C#, `Cargo.toml` for Rust, `pyproject.toml`/`setup.py`/`setup.cfg` for Python — the five shipped languages), or extension-based fallback under the VCS root.
@@ -124,13 +133,13 @@ A same-file syntactic reference from a usage of a symbol to its declaration, res
 `.doc-canon/code-ast-index.json`: serialized symbols and syntactic references (anchors, import edges, in-scope bindings) for the discovered source roots, sharing its companion `code-index-manifest`. `import` edges resolve ESM `.js`/`.jsx`/`.mjs`/`.cjs` import specifiers to their TS/TSX sources and include call-site edges — identifier usages of imported names emit an `import`-kind edge to the definition file. Member-access references extend this: a local binding initialized from `new <Type>(...)` emits `<Type>.<member>` edges for its `obj.method()`/`obj.field` usages (canonical name; aliased and same-file constructors included). Per-language import conventions and member-access/resolution scope differ by language (Go composite/pointer literals with a same-package pass, C# `object_creation_expression` with an imported-type/namespace pass over the syntactic project model, Rust associated-function constructors and Python bare-call constructors resolved through the import edge map with no cross-file pass) — see [CODE_INDEX.md](CODE_INDEX.md).
 
 ### code_index_stale
-A non-fatal freshness signal for the code AST index: one or more indexed source hashes differ from the live tree. Reported independently of the canon `index_stale`.
+A non-fatal freshness signal for the code AST index: one or more indexed source hashes differ from the live tree. `code-index search` self-heals at the CLI layer when no watch owns the index (rebuild then serve, `auto_reindexed` warning); with a live watch the stale pack is served with `code_index_stale`. Reported independently of the canon `index_stale`.
 
 ### code_index_missing
 A fail-closed code-index state: no code AST index artifact exists, so code-side retrieval cannot proceed; a hint to run `doc-canon code-index build` is surfaced.
 
 ### code_miss
-An agent-facing miss report when a code-index probe returns nothing or a thin set: the agent reads source as evidence and notes `code_miss: <query> -> source:<path>`, mirroring the canon's visible Expand gate. Code-index-first analysis applies to the five covered languages (TypeScript/JavaScript, Go, C#, Rust, Python); uncovered languages go straight to source.
+A machine-parseable miss report (strict format `code_miss: <query> -> source:<path>`) required when a whole-file source read happens outside a search pack — the probe returned nothing or a thin set, or the index is unavailable. The agent reads source as evidence and notes the miss, mirroring the canon's visible Expand gate. Code-index-first analysis is mandatory for the five covered languages (TypeScript/JavaScript, Go, C#, Rust, Python); uncovered languages go straight to source without a probe.
 
 ### Code pack
 A bounded code retrieval result (CodePack) containing the query, mode (`symbols` or `refs`), freshness (`fresh`/`stale`), warnings, and symbol or syntactic-reference hits with short snippet windows from live files.
