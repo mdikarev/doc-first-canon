@@ -44,6 +44,23 @@ MVP package `doc-canon@0.2.0` (Node ≥20, ESM). Entry: `bin/doc-canon.js` → c
 | `code-index build` | Discover source roots (config > manifests > extension scan), extract symbols/references via tree-sitter WASM into the shared normalized model, and write a deterministic `.doc-canon/code-index-manifest.json` + `.doc-canon/code-ast-index.json`; `--watch` polls (default 2000 ms, `--interval <ms>`, min 200) and keeps artifacts in sync; `--stop` stops a running watch via its pid file; `--root`. Separate artifact from `index` (docs, not code); freshness reported independently |
 | `code-index search <query>` | Search the code AST index and print a bounded code pack; symbol mode matches tokenized (every query token is a case-insensitive substring of `name` or, falling back, `signature`; ordering exact > prefix > name-tokens > signature-tokens, tie-break file then line) with `--kind <type>` / `--file <glob>`; `--body` widens symbol-mode snippet windows from the declaration start to the symbol's `endLine` (symbol mode only; `--body` + `--refs` fails closed); `--refs <name>` for syntactic references (anchor/import/binding, incl. `Class.method` member-access edges for `new Type()`-initialized bindings (TS/JS and C#), Go composite/pointer-literal bindings, Rust associated-function-constructor bindings, and Python bare-call constructor bindings — same-file, qualified-import, same-package, C# same-namespace/`using`-imported/`using`-alias (canonical name)/namespace-qualified/explicit-typed target-typed `new()`, imported-name (Rust), and imported-name (Python)); `--json`; `--max-hits <N>` (default 10); `--snippet-lines <N>` (default 4); `--root <path>` |
 
+### Command flags (exhaustive)
+
+A flag not listed here does not exist: any other option fails closed with `error: unknown option '<flag>'` (exit ≠0). Defaults shown where set.
+
+| Command | Flags |
+| --- | --- |
+| `init` | `--root <path>` (default `.`), `--force-skills`, `--yes` |
+| `upgrade-skills` | `--root <path>` (default `.`) |
+| `migrate` | `--root <path>` (default `.`) |
+| `validate` | `--root <path>` (default `.`) |
+| `check` | `--root <path>` (default `.`) |
+| `report` | `--root <path>` (default `.`); always prints JSON on stdout — **no** `--json` |
+| `index` | `--root <path>` (default `.`), `--watch`, `--stop`, `--interval <ms>` |
+| `search <query>` | `--root <path>` (default `.`), `--json`, `--max-hits <n>` (default `10`), `--snippet-lines <n>` (default `4`) |
+| `code-index build` | `--root <path>` (default `.`), `--watch`, `--stop`, `--interval <ms>` |
+| `code-index search [query]` | `--root <path>` (default `.`), `--json`, `--max-hits <n>` (default `10`), `--snippet-lines <n>` (default `4`), `--kind <type>`, `--file <glob>`, `--refs <name>`, `--body` |
+
 Artifacts: `.doc-canon/inventory.json`, `.doc-canon/report.json`, `.doc-canon/index-manifest.json`, `.doc-canon/bm25-index.json`, `.doc-canon/code-index-manifest.json`, `.doc-canon/code-ast-index.json` (may be gitignored in target repos).
 
 `search` fails with exit ≠0 for an empty or whitespace-only query and for a missing or corrupt index; index failures include a hint to run `doc-canon index`. A stale index is served with exit 0 and an `index_stale` signal: human mode prints a warning on stderr; `--json` includes `warnings` (and `freshness`) in the Pack on stdout with no stderr warning. Zero hits also exit 0. `search` never auto-reindexes. Ranking internally applies stemming, heading weights, the `future_plans/**` downweight, and glossary expansion (fail-open when `GLOSSARY.md` is absent) — no flags or output-shape changes.
@@ -90,6 +107,7 @@ Each hit carries a bounded snippet window from the live source file. A missing/c
 - Never edits `DISCREPANCIES.md` or other canon content during `check` / `report`
 - Report merge must not wipe skill-owned findings
 - `doc-canon` must be on PATH for skills that spawn it
+- The Command flags table is the exhaustive CLI surface: a flag not listed in canon does not exist; unknown options fail closed with `error: unknown option '<flag>'` (exit ≠0). When a flag is added or removed in code, this table and the command's row must be updated in the same change
 
 ## Open questions
 
