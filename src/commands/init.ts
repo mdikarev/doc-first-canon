@@ -4,11 +4,14 @@ import { parseContractMarkdown } from "../contract/parse.js";
 import { canonDir, embeddedRoot, resolveRoot } from "../paths.js";
 import { copyManagedAssets } from "../scaffold/copy-managed.js";
 import { defaultContractMarkdown } from "../scaffold/default-contract.js";
+import { resolveInitHarnesses } from "../scaffold/harnesses.js";
 import { validateCanon } from "./validate.js";
 
 export interface InitOptions {
   forceSkills?: boolean;
   yes?: boolean;
+  /** Comma-separated harness list (cursor,claude,dsh); undefined = prompt or default. */
+  harnesses?: string;
 }
 
 function scaffoldCanon(root: string): void {
@@ -69,7 +72,11 @@ export async function initCanon(
 
   if (!canonExists) scaffoldCanon(resolvedRoot);
   else console.log("Canon already exists; preserving canon document content.");
-  if (!canonExists || opts.forceSkills) copyManagedAssets(resolvedRoot);
+  const shouldCopyAssets = !canonExists || opts.forceSkills;
+  if (shouldCopyAssets) {
+    const harnesses = await resolveInitHarnesses(opts);
+    copyManagedAssets(resolvedRoot, harnesses);
+  }
   ensureGitignore(resolvedRoot);
 
   return validateCanon(resolvedRoot);

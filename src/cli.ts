@@ -13,25 +13,36 @@ program
   .description("Scaffold canon + managed agent assets")
   .option("--root <path>", "target repo root", ".")
   .option("--force-skills", "refresh managed agent assets on re-init")
+  .option("--harnesses <cursor,claude,dsh>", "agent harnesses to install (comma-separated)")
   .option("--yes", "accept non-interactive defaults")
   .action(
     async (opts: {
       root: string;
       forceSkills?: boolean;
       yes?: boolean;
+      harnesses?: string;
     }) => {
-      const { initCanon } = await import("./commands/init.js");
-      process.exitCode = await initCanon(opts.root, opts);
+      try {
+        const { initCanon } = await import("./commands/init.js");
+        process.exitCode = await initCanon(opts.root, opts);
+      } catch (error) {
+        console.error(
+          `error: ${error instanceof Error ? error.message : String(error)}`,
+        );
+        process.exitCode = 1;
+      }
     },
   );
 program
   .command("upgrade-skills")
   .description("Refresh managed skills/rules/AGENTS block")
   .option("--root <path>", "target repo root", ".")
-  .action(async (opts: { root: string }) => {
+  .option("--harnesses <cursor,claude,dsh>", "agent harnesses to refresh (comma-separated)")
+  .option("--yes", "accept non-interactive defaults")
+  .action(async (opts: { root: string; yes?: boolean; harnesses?: string }) => {
     try {
       const { upgradeSkills } = await import("./commands/upgrade-skills.js");
-      process.exitCode = await upgradeSkills(opts.root);
+      process.exitCode = await upgradeSkills(opts.root, opts);
     } catch (error) {
       console.error(
         `error: ${error instanceof Error ? error.message : String(error)}`,
@@ -45,10 +56,12 @@ program
     "Bring an existing canon up to this CLI (required gaps, then upgrade-skills)",
   )
   .option("--root <path>", "target repo root", ".")
-  .action(async (opts: { root: string }) => {
+  .option("--harnesses <cursor,claude,dsh>", "agent harnesses to install (comma-separated)")
+  .option("--yes", "accept non-interactive defaults")
+  .action(async (opts: { root: string; yes?: boolean; harnesses?: string }) => {
     try {
       const { migrateCanon } = await import("./commands/migrate.js");
-      process.exitCode = await migrateCanon(opts.root);
+      process.exitCode = await migrateCanon(opts.root, opts);
     } catch (error) {
       console.error(
         `error: ${error instanceof Error ? error.message : String(error)}`,

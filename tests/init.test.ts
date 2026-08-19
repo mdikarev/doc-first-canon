@@ -54,16 +54,13 @@ it("initializes a valid canon and managed assets in an empty repository", async 
       );
     }
     for (const skill of SKILLS) {
-      assert.equal(
-        existsSync(join(root, ".cursor", "skills", skill, "SKILL.md")),
-        true,
-        skill,
-      );
-      assert.equal(
-        existsSync(join(root, ".claude", "skills", skill, "SKILL.md")),
-        true,
-        `claude ${skill}`,
-      );
+      for (const skillRoot of [".cursor", ".claude", ".dsh"] as const) {
+        assert.equal(
+          existsSync(join(root, skillRoot, "skills", skill, "SKILL.md")),
+          true,
+          `${skillRoot} ${skill}`,
+        );
+      }
     }
 
     assert.equal(existsSync(join(root, ".cursor", "rules", "doc-canon.mdc")), true);
@@ -89,6 +86,29 @@ it("initializes a valid canon and managed assets in an empty repository", async 
       readFileSync(join(root, "docs", "canon", "INDEX.md"), "utf8"),
       /future_plans\/INDEX\.md/,
     );
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+it("installs only the harnesses passed via options.harnesses", async () => {
+  const root = mkdtempSync(join(tmpdir(), "doc-canon-init-harnesses-"));
+  try {
+    assert.equal(await initCanon(root, { yes: true, harnesses: "dsh" }), 0);
+
+    for (const skill of SKILLS) {
+      assert.equal(
+        existsSync(join(root, ".dsh", "skills", skill, "SKILL.md")),
+        true,
+        skill,
+      );
+    }
+    assert.equal(existsSync(join(root, ".cursor", "skills")), false);
+    assert.equal(existsSync(join(root, ".claude", "skills")), false);
+    assert.equal(existsSync(join(root, ".cursor", "rules")), false);
+    // Cross-harness always-on blocks are still upserted.
+    assert.match(readFileSync(join(root, "AGENTS.md"), "utf8"), /<!-- doc-canon:start -->/);
+    assert.match(readFileSync(join(root, "CLAUDE.md"), "utf8"), /<!-- doc-canon:start -->/);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }

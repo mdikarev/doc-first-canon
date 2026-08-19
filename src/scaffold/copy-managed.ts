@@ -1,6 +1,11 @@
 import fs from "node:fs";
 import path from "node:path";
 import { embeddedRoot } from "../paths.js";
+import {
+  HARNESS_SKILL_ROOTS,
+  HARNESSES,
+  type Harness,
+} from "./harnesses.js";
 
 const START_MARKER = "<!-- doc-canon:start -->";
 const END_MARKER = "<!-- doc-canon:end -->";
@@ -92,7 +97,16 @@ export function upsertClaudeBlock(root: string): void {
   upsertMarkedBlock(root, "CLAUDE.md", managedBlock);
 }
 
-export function copyManagedAssets(root: string): void {
+/**
+ * Copy the managed agent assets into the repo for the selected harnesses
+ * (default: all). The AGENTS.md / CLAUDE.md blocks are always upserted — they
+ * are the cross-harness always-on guidance (Cursor, Claude Code, and DSH all
+ * load them); the Cursor pointer rule is written only when cursor is selected.
+ */
+export function copyManagedAssets(
+  root: string,
+  harnesses: readonly Harness[] = HARNESSES,
+): void {
   for (const name of ["AGENTS.md", "CLAUDE.md"] as const) {
     const filePath = path.join(root, name);
     if (fs.existsSync(filePath)) {
@@ -101,15 +115,21 @@ export function copyManagedAssets(root: string): void {
   }
 
   const skillsSource = path.join(embeddedRoot(), "skills");
-  copyDirectoryFiles(skillsSource, path.join(root, ".cursor", "skills"));
-  copyDirectoryFiles(skillsSource, path.join(root, ".claude", "skills"));
+  for (const harness of harnesses) {
+    copyDirectoryFiles(
+      skillsSource,
+      path.join(root, HARNESS_SKILL_ROOTS[harness]),
+    );
+  }
 
-  const rulesRoot = path.join(root, ".cursor", "rules");
-  fs.mkdirSync(rulesRoot, { recursive: true });
-  fs.copyFileSync(
-    path.join(embeddedRoot(), "rules", "doc-canon.mdc"),
-    path.join(rulesRoot, "doc-canon.mdc"),
-  );
+  if (harnesses.includes("cursor")) {
+    const rulesRoot = path.join(root, ".cursor", "rules");
+    fs.mkdirSync(rulesRoot, { recursive: true });
+    fs.copyFileSync(
+      path.join(embeddedRoot(), "rules", "doc-canon.mdc"),
+      path.join(rulesRoot, "doc-canon.mdc"),
+    );
+  }
 
   upsertAgentsBlock(root);
   upsertClaudeBlock(root);

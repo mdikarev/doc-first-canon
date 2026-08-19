@@ -64,13 +64,15 @@ All commands accept `--root <path>` (default: current directory) to target a rep
 
 ### init
 
-Scaffold `docs/canon/`, mandatory templates, default contract, and managed Cursor + Claude overlays (`.cursor/skills`, `.claude/skills`, `.cursor/rules/doc-canon.mdc`, short `AGENTS.md` block, full-body `CLAUDE.md`).
+Scaffold `docs/canon/`, mandatory templates, default contract, and managed harness overlays — Cursor, Claude Code, and DSH (`.cursor/skills`, `.claude/skills`, `.dsh/skills`, `.cursor/rules/doc-canon.mdc`, short `AGENTS.md` block, full-body `CLAUDE.md`). On a TTY `init` asks which harnesses to install (checkbox, all checked by default); `--harnesses cursor,claude,dsh` picks an exact set; `--yes` / non-TTY installs all three.
 
 ```bash
 doc-canon init
 doc-canon init --root /path/to/repo
-doc-canon init --force-skills   # refresh managed assets on re-init
-doc-canon init --yes             # non-interactive defaults
+doc-canon init --force-skills        # refresh managed assets on re-init
+doc-canon init --yes                  # install all harnesses, ask nothing
+doc-canon init --harnesses dsh        # install only the DSH skill tree
+doc-canon init --harnesses cursor,dsh # comma-separated selection
 ```
 
 ### validate
@@ -112,21 +114,23 @@ doc-canon discipline --json
 
 ### upgrade-skills
 
-Refresh managed skills, Cursor rule, `AGENTS.md`, and `CLAUDE.md` overlays without touching canon content. Also migrates existing repos onto the required `future_plans/INDEX.md` skeleton when missing.
+Refresh managed skills, Cursor rule, `AGENTS.md`, and `CLAUDE.md` overlays without touching canon content. Refreshes the skill trees of the harnesses already present in the repo (`.cursor/skills`, `.claude/skills`, `.dsh/skills`); on a TTY it additionally offers the missing harnesses. `--harnesses cursor,claude,dsh` overrides the detected set; `--yes` / non-TTY never prompts. Also migrates existing repos onto the required `future_plans/INDEX.md` skeleton when missing.
 
 ```bash
 doc-canon upgrade-skills
 doc-canon upgrade-skills --root /path/to/repo
+doc-canon upgrade-skills --harnesses dsh
 ```
 
 ### migrate
 
-Bring an **existing** canon up to this CLI: create missing required files/templates listed in **that repo’s** `CANON_CONTRACT.md`, add missing INDEX Sections rows, then run `upgrade-skills`. Does not rewrite section prose and does not add default sections the contract omitted. Empty repos should use `init`, not `migrate`.
+Bring an **existing** canon up to this CLI: create missing required files/templates listed in **that repo’s** `CANON_CONTRACT.md`, add missing INDEX Sections rows, then run `upgrade-skills`. Does not rewrite section prose and does not add default sections the contract omitted. Empty repos should use `init`, not `migrate`. Harness handling follows `upgrade-skills` (refresh present harnesses, offer missing ones on a TTY, `--harnesses` to override).
 
 ```bash
 # global install (doc-canon on PATH):
 doc-canon migrate
 doc-canon migrate --root /path/to/repo
+doc-canon migrate --harnesses cursor,claude
 
 # one-shot npx (no global install):
 npx doc-canon migrate --root .
@@ -201,7 +205,7 @@ doc-canon code-index search "topic" --root /path/to/repo
 
 Managed skills (`canon-bootstrap`, `canon-write`, `canon-audit`, `canon-contract`, `canon-future-plan`) invoke `doc-canon` subprocesses. **`doc-canon` must be on PATH** (e.g. via `npm link`, global install, or CI `npm install -g .`).
 
-`init` / `upgrade-skills` install identical skill trees under `.cursor/skills/` and `.claude/skills/`. Cursor always-on guidance is `.cursor/rules/doc-canon.mdc` plus the short `AGENTS.md` block; Claude Code uses full pointer-rule body in `CLAUDE.md` and does **not** load `.cursor/rules/`.
+`init` / `upgrade-skills` install identical skill trees under the selected harnesses' skill roots — `.cursor/skills/`, `.claude/skills/`, and `.dsh/skills/` (DSH — the DeepSeek Harness — discovers skills under `.dsh/skills/`). Cursor always-on guidance is `.cursor/rules/doc-canon.mdc` plus the short `AGENTS.md` block; Claude Code uses full pointer-rule body in `CLAUDE.md` and does **not** load `.cursor/rules/`; DSH loads the same always-on guidance from both `AGENTS.md` and `CLAUDE.md` and needs no dedicated rule file. Selection: interactive checkbox on a TTY, `--harnesses cursor,claude,dsh`, or installed-harness detection on `upgrade-skills` / `migrate`.
 
 ## Adopter CI
 
@@ -308,13 +312,15 @@ npm link   # опционально: добавить doc-canon в PATH для �
 
 ### init
 
-Создаёт каркас `docs/canon/`, обязательные шаблоны, контракт по умолчанию и управляемые оверлеи Cursor + Claude (`.cursor/skills`, `.claude/skills`, `.cursor/rules/doc-canon.mdc`, короткий блок `AGENTS.md`, полный body в `CLAUDE.md`).
+Создаёт каркас `docs/canon/`, обязательные шаблоны, контракт по умолчанию и управляемые оверлеи для харнессов — Cursor, Claude Code и DSH (`.cursor/skills`, `.claude/skills`, `.dsh/skills`, `.cursor/rules/doc-canon.mdc`, короткий блок `AGENTS.md`, полный body в `CLAUDE.md`). На TTY `init` спрашивает, какие харнессы установить (чекбокс, все отмечены по умолчанию); `--harnesses cursor,claude,dsh` задаёт точный набор; `--yes` / не-TTY ставит все три.
 
 ```bash
 doc-canon init
 doc-canon init --root /path/to/repo
-doc-canon init --force-skills   # обновить управляемые ассеты при повторном init
-doc-canon init --yes             # неинтерактивные значения по умолчанию
+doc-canon init --force-skills        # обновить управляемые ассеты при повторном init
+doc-canon init --yes                  # установить все харнессы, без вопросов
+doc-canon init --harnesses dsh        # установить только дерево скиллов DSH
+doc-canon init --harnesses cursor,dsh # выбор через запятую
 ```
 
 ### validate
@@ -356,21 +362,23 @@ doc-canon discipline --json
 
 ### upgrade-skills
 
-Обновление управляемых skills, Cursor rule, `AGENTS.md` и `CLAUDE.md` без изменения содержимого канона. Также мигрирует существующие репозитории на обязательный каркас `future_plans/INDEX.md`, если его ещё нет.
+Обновление управляемых skills, Cursor rule, `AGENTS.md` и `CLAUDE.md` без изменения содержимого канона. Обновляет деревья скиллов тех харнессов, которые уже есть в репозитории (`.cursor/skills`, `.claude/skills`, `.dsh/skills`); на TTY дополнительно предлагает отсутствующие. `--harnesses cursor,claude,dsh` перекрывает обнаруженный набор; `--yes` / не-TTY никогда не спрашивает. Также мигрирует существующие репозитории на обязательный каркас `future_plans/INDEX.md`, если его ещё нет.
 
 ```bash
 doc-canon upgrade-skills
 doc-canon upgrade-skills --root /path/to/repo
+doc-canon upgrade-skills --harnesses dsh
 ```
 
 ### migrate
 
-Подтянуть **существующий** канон до этого CLI: создать отсутствующие обязательные файлы/шаблоны, перечисленные в `CANON_CONTRACT.md` **целевого** репозитория, добавить отсутствующие строки Sections в INDEX, затем выполнить `upgrade-skills`. Не переписывает прозу секций и не добавляет секции по умолчанию, которых нет в контракте. Пустые репозитории должны использовать `init`, а не `migrate`.
+Подтянуть **существующий** канон до этого CLI: создать отсутствующие обязательные файлы/шаблоны, перечисленные в `CANON_CONTRACT.md` **целевого** репозитория, добавить отсутствующие строки Sections в INDEX, затем выполнить `upgrade-skills`. Не переписывает прозу секций и не добавляет секции по умолчанию, которых нет в контракте. Пустые репозитории должны использовать `init`, а не `migrate`. Харнессы обрабатываются как в `upgrade-skills` (обновить присутствующие, предложить отсутствующие на TTY, `--harnesses` для переопределения).
 
 ```bash
 # глобальная установка (doc-canon в PATH):
 doc-canon migrate
 doc-canon migrate --root /path/to/repo
+doc-canon migrate --harnesses cursor,claude
 
 # one-shot npx (без глобальной установки):
 npx doc-canon migrate --root .
@@ -445,7 +453,7 @@ doc-canon code-index search "topic" --root /path/to/repo
 
 Управляемые skills (`canon-bootstrap`, `canon-write`, `canon-audit`, `canon-contract`, `canon-future-plan`) вызывают subprocess `doc-canon`. **`doc-canon` должен быть в PATH** (например, через `npm link`, глобальную установку или `npm install -g .` в CI).
 
-`init` / `upgrade-skills` ставят одинаковые деревья skills в `.cursor/skills/` и `.claude/skills/`. Always-on для Cursor — `.cursor/rules/doc-canon.mdc` и короткий блок `AGENTS.md`; Claude Code читает полный body pointer-rule из `CLAUDE.md` и **не** загружает `.cursor/rules/`.
+`init` / `upgrade-skills` ставят одинаковые деревья skills в корни скиллов выбранных харнессов — `.cursor/skills/`, `.claude/skills/` и `.dsh/skills/` (DSH — DeepSeek Harness — находит скиллы в `.dsh/skills/`). Always-on для Cursor — `.cursor/rules/doc-canon.mdc` и короткий блок `AGENTS.md`; Claude Code читает полный body pointer-rule из `CLAUDE.md` и **не** загружает `.cursor/rules/`; DSH читает тот же always-on гайденс из `AGENTS.md` и `CLAUDE.md` — отдельный rule-файл ему не нужен. Выбор: интерактивный чекбокс на TTY, `--harnesses cursor,claude,dsh` или обнаружение установленных харнессов в `upgrade-skills` / `migrate`.
 
 ## CI для adopter-репозитория
 

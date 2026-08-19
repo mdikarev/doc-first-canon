@@ -65,10 +65,13 @@ it("restores missing required files then upgrade-skills, and is content-idempote
     assert.equal(await migrateCanon(root), 0);
     assert.equal(existsSync(overview), true);
     assert.equal(readFileSync(architecture, "utf8"), planted);
-    assert.equal(
-      existsSync(join(root, ".cursor", "skills", "canon-write", "SKILL.md")),
-      true,
-    );
+    for (const skillRoot of [".cursor", ".claude", ".dsh"] as const) {
+      assert.equal(
+        existsSync(join(root, skillRoot, "skills", "canon-write", "SKILL.md")),
+        true,
+        skillRoot,
+      );
+    }
 
     const snapshot = {
       overview: readFileSync(overview, "utf8"),

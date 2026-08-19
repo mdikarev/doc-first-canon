@@ -6,20 +6,20 @@ Own the deterministic core of `doc-canon`: scaffold, structural validation, inve
 
 ## Scope
 
-**Covers:** commands `init`, `validate`, `check`, `report`, `upgrade-skills`, `migrate`, `index`, `search`, `discipline`, `code-index`; contract parse/schema; heading and INDEX agreement checks; ignore-aware inventory; CLI finding merge; embedding default templates/skills/rules into target repos; required-gap ensure on existing canons (`migrate`); build/update a local BM25 index over `docs/canon/**/*.md` (`index`), including poll-based `--watch` (default 2000 ms, `--interval`) and `--stop`, writing `.doc-canon/index-manifest.json` + `.doc-canon/bm25-index.json`; one-shot `index` exits ≠0 if a watch process is running; search that index and return a bounded context pack, self-healing a stale index at the CLI layer (rebuild then serve) and recording every successful search in `.doc-canon/probe-log.jsonl`; report probe discipline via `discipline`; build/update a deterministic AST index over the project's discovered source roots (`code-index build`), writing `.doc-canon/code-index-manifest.json` + `.doc-canon/code-ast-index.json`, with the same poll `--watch`/`--stop` discipline and a separate watch pid; search that code index (`code-index search`) and return a bounded code pack with the same self-healing and probe logging.
+**Covers:** commands `init`, `validate`, `check`, `report`, `upgrade-skills`, `migrate`, `index`, `search`, `discipline`, `code-index`; contract parse/schema; heading and INDEX agreement checks; ignore-aware inventory; CLI finding merge; embedding default templates/skills/rules into target repos (harness-selected: Cursor / Claude Code / DSH); required-gap ensure on existing canons (`migrate`); build/update a local BM25 index over `docs/canon/**/*.md` (`index`), including poll-based `--watch` (default 2000 ms, `--interval`) and `--stop`, writing `.doc-canon/index-manifest.json` + `.doc-canon/bm25-index.json`; one-shot `index` exits ≠0 if a watch process is running; search that index and return a bounded context pack, self-healing a stale index at the CLI layer (rebuild then serve) and recording every successful search in `.doc-canon/probe-log.jsonl`; report probe discipline via `discipline`; build/update a deterministic AST index over the project's discovered source roots (`code-index build`), writing `.doc-canon/code-index-manifest.json` + `.doc-canon/code-ast-index.json`, with the same poll `--watch`/`--stop` discipline and a separate watch pid; search that code index (`code-index search`) and return a bounded code pack with the same self-healing and probe logging.
 
 **Excludes:** interview, semantic audit judgements, discrepancy dialogue, and any application-code edits (those belong to skills or coding agents).
 
 ## Current state
 
-MVP package `doc-canon@0.2.0` (Node ≥20, ESM). Entry: `bin/doc-canon.js` → compiled `dist/`. Commands: `init`, `validate`, `check`, `report`, `upgrade-skills`, `migrate`, `index`, `search`, `discipline`, plus the `code-index` subcommands `build` (tree-sitter WASM extraction over discovered source roots) and `search` (search over that code AST index). All commands accept `--root <path>` (default: cwd).
+Package `doc-canon@0.6.0` (Node ≥20, ESM). Entry: `bin/doc-canon.js` → compiled `dist/`. Commands: `init`, `validate`, `check`, `report`, `upgrade-skills`, `migrate`, `index`, `search`, `discipline`, plus the `code-index` subcommands `build` (tree-sitter WASM extraction over discovered source roots) and `search` (search over that code AST index). All commands accept `--root <path>` (default: cwd).
 
 ## Responsibilities
 
-- Materialize default canon + managed Cursor and Claude Code overlays on `init`, including a required `future_plans/INDEX.md` and its templates: identical skill trees under `.cursor/skills/` and `.claude/skills/`, Cursor pointer rule (`.cursor/rules/doc-canon.mdc`), short managed block in `AGENTS.md`, and full pointer-rule body (YAML frontmatter stripped) in `CLAUDE.md`
+- Materialize default canon + managed harness overlays on `init`, including a required `future_plans/INDEX.md` and its templates: identical skill trees under the selected harnesses' skill roots (`.cursor/skills/`, `.claude/skills/`, `.dsh/skills/`), Cursor pointer rule (`.cursor/rules/doc-canon.mdc`), short managed block in `AGENTS.md`, and full pointer-rule body (YAML frontmatter stripped) in `CLAUDE.md`; the `AGENTS.md`/`CLAUDE.md` blocks are always upserted (all three harnesses load them); DSH needs no dedicated rule file
 - Fail closed on invalid contract YAML, incompatible `schema_version`, missing required files/headings, INDEX≠contract, too-old `skills_stamp`
 - Refresh inventory and `source: cli` findings on `check` while preserving `source: skill`
-- Refresh managed skills/rules/`AGENTS.md`/`CLAUDE.md` overlays on `upgrade-skills` without wiping canon document content
+- Refresh managed skills/rules/`AGENTS.md`/`CLAUDE.md` overlays on `upgrade-skills` without wiping canon document content; refresh the skill trees of the harnesses present in the repo (`.cursor/skills/`, `.claude/skills/`, `.dsh/skills/` presence detection), unless `--harnesses` overrides the set
 - On `upgrade-skills`, idempotently migrate existing repos onto the `future_plans/INDEX.md` skeleton (contract section + templates entries, INDEX table row, index file) without overwriting existing initiative prose or templates, and bump `skills_stamp`
 - On existing canon, `init` preserves canon prose; skills refresh only with `--force-skills` / upgrade path
 - Validate `future_plans/*.md` (except `INDEX.md`) via an INDEX-driven zone instead of per-file contract rows: exempt from the orphan check; each file must have a `future_plans/INDEX.md` Initiatives row; each must carry required `FUTURE_PLAN` headings
@@ -33,13 +33,13 @@ MVP package `doc-canon@0.2.0` (Node ≥20, ESM). Entry: `bin/doc-canon.js` → c
 
 | Command | Behavior |
 | --- | --- |
-| `init` | Scaffold `docs/canon/`, templates, default contract (including required `future_plans/INDEX.md`), dual skill trees (`.cursor` + `.claude`), Cursor pointer rule, short `AGENTS.md` block, full-body `CLAUDE.md`; `--yes`, `--force-skills`, `--root` |
+| `init` | Scaffold `docs/canon/`, templates, default contract (including required `future_plans/INDEX.md`), skill trees for the selected harnesses (`.cursor` / `.claude` / `.dsh`), Cursor pointer rule, short `AGENTS.md` block, full-body `CLAUDE.md`; interactive TTY checkbox prompt (all three checked by default), `--yes` (all three, ask nothing), `--harnesses <cursor,claude,dsh>`, `--force-skills`, `--root` |
 | `validate` | Schema + structure; exit ≠0 on errors; need not write report; does not require presence of IDE overlay paths on disk (stamp-only for managed-asset currency) |
 | `check` | validate + inventory + merge CLI findings into `.doc-canon/report.json` |
 | `report` | Print last report.json to stdout (read-only) |
 | `discipline` | Read `.doc-canon/probe-log.jsonl` (last doc/code probe age, probe count) plus the index manifests (files changed since each probe) and print a probe-discipline report: human table on stdout, `--json` for machine use; exit ≠0 when an index exists and relevant files changed after the last probe of that kind (un-probed state), or when an index exists but is unreadable (corrupt — report says `corrupt index (unreadable)`); missing index or never-probed fresh clone → not-applicable, exit 0; `--root` |
-| `upgrade-skills` | Refresh Cursor + Claude managed overlays from installed package; idempotently ensure `future_plans/INDEX.md` skeleton on pre-existing canons; bump `skills_stamp` |
-| `migrate` | Require existing canon + parseable `CANON_CONTRACT.md` (else fail closed; that path is `init`); reject `schema_version` other than `1` before writes (no YAML rewrite); create missing **required** section files and listed templates from the **target contract** (never overwrite; never inject default-kit sections); add missing INDEX Sections rows for contract sections; then run `upgrade-skills`. Flags: `--root` only. |
+| `upgrade-skills` | Refresh managed overlays for the harnesses present in the repo (or `--harnesses`); interactive TTY prompt offers missing harnesses; idempotently ensure `future_plans/INDEX.md` skeleton on pre-existing canons; bump `skills_stamp`; `--yes`/non-TTY skip prompts |
+| `migrate` | Require existing canon + parseable `CANON_CONTRACT.md` (else fail closed; that path is `init`); reject `schema_version` other than `1` before writes (no YAML rewrite); create missing **required** section files and listed templates from the **target contract** (never overwrite; never inject default-kit sections); add missing INDEX Sections rows for contract sections; then run `upgrade-skills`. Flags: `--root`, `--harnesses <cursor,claude,dsh>`, `--yes`. |
 | `index` | Build/update a local BM25 index for `docs/canon/**/*.md`; one-shot exits ≠0 if a watch is running; `--watch` polls (default 2000 ms, `--interval <ms>`, min 200) and keeps artifacts in sync; `--stop` stops a running watch via its pid file; `--root` |
 | `search <query>` | Search the existing index and print a ranked context pack; ranking applies light EN/RU stemming (inside the tokenizer), a 1.5× heading-token weight, a 0.5× `future_plans/**` downweight, and glossary-aware query expansion from a live glossary read (all internal — no surface change); human output on stdout; `--json`; `--max-hits <N>` (default 10); `--snippet-lines <N>` (default 4); `--root <path>` |
 | `code-index build` | Discover source roots (config > manifests > extension scan), extract symbols/references via tree-sitter WASM into the shared normalized model, and write a deterministic `.doc-canon/code-index-manifest.json` + `.doc-canon/code-ast-index.json`; `--watch` polls (default 2000 ms, `--interval <ms>`, min 200) and keeps artifacts in sync; `--stop` stops a running watch via its pid file; `--root`. Separate artifact from `index` (docs, not code); freshness reported independently |
@@ -51,9 +51,9 @@ A flag not listed here does not exist: any other option fails closed with `error
 
 | Command | Flags |
 | --- | --- |
-| `init` | `--root <path>` (default `.`), `--force-skills`, `--yes` |
-| `upgrade-skills` | `--root <path>` (default `.`) |
-| `migrate` | `--root <path>` (default `.`) |
+| `init` | `--root <path>` (default `.`), `--force-skills`, `--harnesses <cursor,claude,dsh>`, `--yes` |
+| `upgrade-skills` | `--root <path>` (default `.`), `--harnesses <cursor,claude,dsh>`, `--yes` |
+| `migrate` | `--root <path>` (default `.`), `--harnesses <cursor,claude,dsh>`, `--yes` |
 | `validate` | `--root <path>` (default `.`) |
 | `check` | `--root <path>` (default `.`) |
 | `report` | `--root <path>` (default `.`); always prints JSON on stdout — **no** `--json` |
@@ -62,6 +62,21 @@ A flag not listed here does not exist: any other option fails closed with `error
 | `search <query>` | `--root <path>` (default `.`), `--json`, `--max-hits <n>` (default `10`), `--snippet-lines <n>` (default `4`) |
 | `code-index build` | `--root <path>` (default `.`), `--watch`, `--stop`, `--interval <ms>` |
 | `code-index search [query]` | `--root <path>` (default `.`), `--json`, `--max-hits <n>` (default `10`), `--snippet-lines <n>` (default `4`), `--kind <type>`, `--file <glob>`, `--refs <name>`, `--body` |
+
+### Managed harnesses
+
+| Harness | Skill tree | Always-on guidance |
+| --- | --- | --- |
+| `cursor` | `.cursor/skills/` | `.cursor/rules/doc-canon.mdc` + short `AGENTS.md` block |
+| `claude` | `.claude/skills/` | full pointer-rule body in `CLAUDE.md` (does not load `.cursor/rules`) |
+| `dsh` | `.dsh/skills/` (discovered by the DeepSeek Harness) | `AGENTS.md` + `CLAUDE.md` blocks (no dedicated rule file) |
+
+Selection rules:
+
+- `init` prompts interactively when stdin is a TTY (checkbox, all three checked by default); `--yes` or non-TTY installs all three; `--harnesses cursor,claude,dsh` installs exactly the listed harnesses; an unknown harness name fails closed with exit ≠0 (see `--help` for the accepted list).
+- `upgrade-skills` / `migrate` detect installed harnesses by skill-root presence (`.cursor/skills/`, `.claude/skills/`, `.dsh/skills/`) and refresh them without prompting; missing harnesses are offered in a TTY checkbox prompt and skipped when non-TTY or `--yes`; `--harnesses` overrides detection entirely (installs exactly the listed set, adding any missing roots).
+- `AGENTS.md` / `CLAUDE.md` blocks are always upserted regardless of selection — they are the cross-harness always-on guidance (Cursor, Claude Code, and DSH all load them).
+- `--yes` on `init` / `upgrade-skills` / `migrate` means "accept defaults, ask nothing".
 
 Artifacts: `.doc-canon/inventory.json`, `.doc-canon/report.json`, `.doc-canon/index-manifest.json`, `.doc-canon/bm25-index.json`, `.doc-canon/code-index-manifest.json`, `.doc-canon/code-ast-index.json`, `.doc-canon/probe-log.jsonl` (may be gitignored in target repos).
 
@@ -113,7 +128,7 @@ Each hit carries a bounded snippet window from the live source file. A missing/c
 
 ## Open questions
 
-- None for MVP freeze; Claude Code marketplace / plugin packaging remains out of scope (dual-write overlay is in scope).
+- None for MVP freeze; Claude Code marketplace / plugin packaging remains out of scope (repo-local managed harness overlays are in scope).
 
 ## Related canon
 

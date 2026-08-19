@@ -63,6 +63,13 @@ it("refreshes managed assets and stamp without replacing canon prose", async () 
       "canon-write",
       "SKILL.md",
     );
+    const dshSkillPath = join(
+      root,
+      ".dsh",
+      "skills",
+      "canon-write",
+      "SKILL.md",
+    );
     const rulePath = join(root, ".cursor", "rules", "doc-canon.mdc");
     const agentsPath = join(root, "AGENTS.md");
     const customOverview = `${readFileSync(overviewPath, "utf8")}\nUser prose.\n`;
@@ -75,6 +82,7 @@ it("refreshes managed assets and stamp without replacing canon prose", async () 
     writeFileSync(overviewPath, customOverview);
     writeFileSync(contractPath, staleContract);
     writeFileSync(skillPath, "stale skill\n");
+    writeFileSync(dshSkillPath, "stale dsh skill\n");
     writeFileSync(rulePath, "stale rule\n");
     writeFileSync(
       agentsPath,
@@ -93,6 +101,13 @@ it("refreshes managed assets and stamp without replacing canon prose", async () 
     );
     assert.equal(
       readFileSync(skillPath, "utf8"),
+      readFileSync(
+        join(embeddedRoot(), "skills", "canon-write", "SKILL.md"),
+        "utf8",
+      ),
+    );
+    assert.equal(
+      readFileSync(dshSkillPath, "utf8"),
       readFileSync(
         join(embeddedRoot(), "skills", "canon-write", "SKILL.md"),
         "utf8",
@@ -126,13 +141,38 @@ it("refreshes managed assets and stamp without replacing canon prose", async () 
   }
 });
 
-it("restores Claude overlay on upgrade for Cursor-only trees", async () => {
+it("does not reinstall a deleted harness tree without opt-in", async () => {
   const root = mkdtempSync(join(tmpdir(), "doc-canon-upgrade-claude-"));
   try {
     assert.equal(await initCanon(root, { yes: true }), 0);
     rmSync(join(root, ".claude"), { recursive: true, force: true });
-    rmSync(join(root, "CLAUDE.md"), { force: true });
     assert.equal(await upgradeSkills(root), 0);
+    assert.equal(existsSync(join(root, ".claude")), false);
+    // The always-on blocks are still upserted regardless of harness selection.
+    assert.match(
+      readFileSync(join(root, "CLAUDE.md"), "utf8"),
+      /# doc-canon context rule/,
+    );
+    // The still-present harnesses keep their refreshed trees.
+    assert.equal(
+      existsSync(join(root, ".cursor", "skills", "canon-write", "SKILL.md")),
+      true,
+    );
+    assert.equal(
+      existsSync(join(root, ".dsh", "skills", "canon-write", "SKILL.md")),
+      true,
+    );
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+it("reinstalls a deleted harness tree when explicitly selected", async () => {
+  const root = mkdtempSync(join(tmpdir(), "doc-canon-upgrade-claude-optin-"));
+  try {
+    assert.equal(await initCanon(root, { yes: true }), 0);
+    rmSync(join(root, ".claude"), { recursive: true, force: true });
+    assert.equal(await upgradeSkills(root, { harnesses: "claude" }), 0);
     assert.equal(
       existsSync(join(root, ".claude", "skills", "canon-write", "SKILL.md")),
       true,
@@ -141,6 +181,36 @@ it("restores Claude overlay on upgrade for Cursor-only trees", async () => {
       readFileSync(join(root, "CLAUDE.md"), "utf8"),
       /# doc-canon context rule/,
     );
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+it("refreshes only the harnesses passed via --harnesses", async () => {
+  const root = mkdtempSync(join(tmpdir(), "doc-canon-upgrade-dsh-only-"));
+  try {
+    assert.equal(await initCanon(root, { yes: true }), 0);
+    const cursorSkill = join(
+      root,
+      ".cursor",
+      "skills",
+      "canon-write",
+      "SKILL.md",
+    );
+    writeFileSync(cursorSkill, "stale cursor skill\n");
+    assert.equal(await upgradeSkills(root, { harnesses: "dsh" }), 0);
+    // dsh refreshed, cursor untouched (not selected), claude untouched.
+    assert.equal(
+      readFileSync(
+        join(root, ".dsh", "skills", "canon-write", "SKILL.md"),
+        "utf8",
+      ),
+      readFileSync(
+        join(embeddedRoot(), "skills", "canon-write", "SKILL.md"),
+        "utf8",
+      ),
+    );
+    assert.equal(readFileSync(cursorSkill, "utf8"), "stale cursor skill\n");
   } finally {
     rmSync(root, { recursive: true, force: true });
   }

@@ -7,8 +7,15 @@ import {
   assertManagedMarkersWellFormed,
   copyManagedAssets,
 } from "../scaffold/copy-managed.js";
+import { resolveUpgradeHarnesses } from "../scaffold/harnesses.js";
 import { SKILLS_STAMP } from "../version.js";
 import { validateCanon } from "./validate.js";
+
+export interface UpgradeSkillsOptions {
+  yes?: boolean;
+  /** Comma-separated harness list (cursor,claude,dsh); undefined = detect + prompt. */
+  harnesses?: string;
+}
 
 function upgradedContractMarkdown(root: string): string {
   const file = contractPath(root);
@@ -40,10 +47,14 @@ function assertUpgradePreconditions(root: string): string {
   return updatedContract;
 }
 
-export async function upgradeSkills(root: string): Promise<number> {
+export async function upgradeSkills(
+  root: string,
+  opts: UpgradeSkillsOptions = {},
+): Promise<number> {
   const resolvedRoot = resolveRoot(process.cwd(), root);
   const updatedContract = assertUpgradePreconditions(resolvedRoot);
-  copyManagedAssets(resolvedRoot);
+  const harnesses = await resolveUpgradeHarnesses(resolvedRoot, opts);
+  copyManagedAssets(resolvedRoot, harnesses);
   const { contractMarkdown } = ensureFuturePlansSkeleton(
     resolvedRoot,
     updatedContract,

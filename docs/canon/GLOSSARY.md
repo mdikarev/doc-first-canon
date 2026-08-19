@@ -40,7 +40,10 @@ User decision that application code is wrong; skill writes an Open coding task a
 Non-empty bootstrap: inventory and legacy docs are import sources; agreed facts are written into canon templates; after validate, only `docs/canon/` is SoT.
 
 ### Managed assets
-Skills (identical trees under `.cursor/skills/` and `.claude/skills/`), Cursor pointer rule (`.cursor/rules/doc-canon.mdc`), short `AGENTS.md` managed block, and full pointer-rule body in `CLAUDE.md` (YAML frontmatter stripped), copied/refreshed by `init` / `upgrade-skills` from the installed CLI package.
+Skills (identical trees under `.cursor/skills/`, `.claude/skills/`, and `.dsh/skills/`, written to the selected harnesses), Cursor pointer rule (`.cursor/rules/doc-canon.mdc`), short `AGENTS.md` managed block, and full pointer-rule body in `CLAUDE.md` (YAML frontmatter stripped), copied/refreshed by `init` / `upgrade-skills` from the installed CLI package.
+
+### Harness
+A coding-agent host that consumes doc-canon's managed assets: Cursor (`.cursor/skills/` + `.cursor/rules/doc-canon.mdc` + short `AGENTS.md` block), Claude Code (`.claude/skills/` + full pointer-rule body in `CLAUDE.md`), and DSH — the DeepSeek Harness (`.dsh/skills/` + the same `AGENTS.md`/`CLAUDE.md` blocks; no dedicated rule file). `init` / `upgrade-skills` / `migrate` select which harnesses get skill trees — interactively, via `--harnesses`, or by installed-harness detection.
 
 ### Working set
 The small list of canon/artifact paths an agent intends to use for the current task. Discover via `doc-canon search` first (pack paths and snippet stubs); fall back to INDEX (and CLI inventory/report when needed) when search fails closed. Build the set before deep-reading file bodies.

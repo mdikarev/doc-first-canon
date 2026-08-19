@@ -4,9 +4,15 @@ import { extractYamlBlock, parseContractMarkdown } from "../contract/parse.js";
 import { contractPath, resolveRoot } from "../paths.js";
 import { ensureRequiredGaps } from "../scaffold/ensure-required-gaps.js";
 import { DEFAULT_SCHEMA_VERSION, PACKAGE_VERSION } from "../version.js";
-import { upgradeSkills } from "./upgrade-skills.js";
+import {
+  upgradeSkills,
+  type UpgradeSkillsOptions,
+} from "./upgrade-skills.js";
 
-export async function migrateCanon(root: string): Promise<number> {
+export async function migrateCanon(
+  root: string,
+  opts: UpgradeSkillsOptions = {},
+): Promise<number> {
   const resolvedRoot = resolveRoot(process.cwd(), root);
   const file = contractPath(resolvedRoot);
   if (!fs.existsSync(file)) {
@@ -25,5 +31,5 @@ export async function migrateCanon(root: string): Promise<number> {
   }
   const contract = parseContractMarkdown(markdown);
   ensureRequiredGaps(resolvedRoot, contract);
-  return upgradeSkills(resolvedRoot);
+  return upgradeSkills(resolvedRoot, opts);
 }
