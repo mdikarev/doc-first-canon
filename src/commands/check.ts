@@ -91,12 +91,23 @@ export async function checkCanon(root: string): Promise<number> {
   const discipline = computeDisciplineState(resolvedRoot);
   const disciplineFindings: Finding[] = [];
   const pushDiscipline = (label: "doc" | "code", s: KindState): void => {
+    if (s.corrupt) {
+      disciplineFindings.push({
+        id: stableFindingId("discipline", [label], `${label} index is corrupt (unreadable)`),
+        kind: "discipline",
+        paths: [],
+        summary: `${label} index is corrupt (unreadable)`,
+        status: "open",
+        source: "cli",
+      });
+      return;
+    }
     if (!s.indexExists || (s.changed.length === 0 && !s.unprobed)) return;
     disciplineFindings.push({
       id: stableFindingId("discipline", [label], `${label} index un-probed`),
       kind: "discipline",
       paths: s.changed,
-      summary: `${label} index exists but ${s.changed.length} file(s) changed since the last probe (un-probed: ${s.unprobed})`,
+      summary: `${label} index exists but ${s.changed.length} file(s) differ from the index manifest (un-probed: ${s.unprobed})`,
       status: "open",
       source: "cli",
     });

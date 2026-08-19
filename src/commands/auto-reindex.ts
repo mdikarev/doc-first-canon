@@ -20,9 +20,19 @@ export async function refreshStaleIndex(
   if (freshness !== "stale") return false;
   if (watchOwnsIndex(root, kind)) return false;
   if (kind === "doc") {
-    await syncCanonIndex(root);
+    try {
+      await syncCanonIndex(root);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`${message}; run doc-canon index manually`);
+    }
   } else {
-    await syncCodeIndex(root);
+    try {
+      await syncCodeIndex(root);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`${message}; run doc-canon code-index build manually`);
+    }
   }
   return true;
 }

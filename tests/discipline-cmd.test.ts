@@ -46,6 +46,22 @@ describe("doc-canon discipline", () => {
     assert.equal(status, 1);
   });
 
+  it("exits 1 when a canon doc is deleted after the index (un-probed via deletion)", () => {
+    assert.equal(spawnSync("node", [bin, "index", "--root", root], { encoding: "utf8" }).status, 0);
+    fs.rmSync(path.join(root, "docs", "canon", "a.md"));
+    const { status, stdout } = run(root, []);
+    assert.equal(status, 1);
+    assert.match(stdout, /un-probed/);
+  });
+
+  it("exits 1 and reports corrupt when the doc index manifest is unreadable", () => {
+    assert.equal(spawnSync("node", [bin, "index", "--root", root], { encoding: "utf8" }).status, 0);
+    fs.writeFileSync(path.join(root, ".doc-canon", "index-manifest.json"), "garbage");
+    const { status, stdout } = run(root, []);
+    assert.equal(status, 1);
+    assert.match(stdout, /corrupt/);
+  });
+
   it("exits 0 when a probe is newer than the change", () => {
     assert.equal(spawnSync("node", [bin, "index", "--root", root], { encoding: "utf8" }).status, 0);
     const doc = path.join(root, "docs", "canon", "a.md");
@@ -72,7 +88,9 @@ describe("doc-canon discipline", () => {
     assert.equal(typeof parsed.doc.index_exists, "boolean");
     assert.equal(typeof parsed.doc.changed, "number");
     assert.equal(typeof parsed.doc.unprobed, "boolean");
+    assert.equal(typeof parsed.doc.corrupt, "boolean");
     assert.equal(typeof parsed.code.index_exists, "boolean");
+    assert.equal(typeof parsed.code.corrupt, "boolean");
   });
 });
 
@@ -92,5 +110,13 @@ describe("doc-canon discipline (code kind)", () => {
     fs.writeFileSync(path.join(root, "src", "a.ts"), "export class Alpha { field = 1; }\nexport class Beta { field = 2; }\n");
     const { status } = run(root, []);
     assert.equal(status, 1);
+  });
+
+  it("exits 1 and reports corrupt when the code index pair is unreadable", () => {
+    assert.equal(spawnSync("node", [bin, "code-index", "build", "--root", root], { encoding: "utf8" }).status, 0);
+    fs.writeFileSync(path.join(root, ".doc-canon", "code-ast-index.json"), "garbage");
+    const { status, stdout } = run(root, []);
+    assert.equal(status, 1);
+    assert.match(stdout, /corrupt/);
   });
 });

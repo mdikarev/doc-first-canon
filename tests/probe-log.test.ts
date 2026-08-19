@@ -67,4 +67,27 @@ describe("probe log", () => {
     appendProbe(root, { ts: "2026-08-19T00:00:00.000Z", kind: "doc", query: "x", hits: 0, freshness: "fresh", reindexed: false });
     assert.ok(fs.existsSync(probeLogPath(root)));
   });
+
+  it("skips parseable-but-malformed lines (shape guard)", () => {
+    appendProbe(root, {
+      ts: "2026-08-19T00:00:00.000Z",
+      kind: "doc",
+      query: "x",
+      hits: 1,
+      freshness: "fresh",
+      reindexed: false,
+    });
+    fs.appendFileSync(probeLogPath(root), "{}\nnot-json\n", "utf8");
+    appendProbe(root, {
+      ts: "2026-08-19T00:00:02.000Z",
+      kind: "doc",
+      query: "y",
+      hits: 0,
+      freshness: "fresh",
+      reindexed: false,
+    });
+    const entries = readProbeLog(root);
+    assert.equal(entries.length, 2);
+    assert.deepEqual(entries.map((e) => e.query), ["x", "y"]);
+  });
 });

@@ -33,4 +33,24 @@ describe("check discipline findings", () => {
       rmSync(root, { recursive: true, force: true });
     }
   });
+
+  it("emits a corrupt discipline finding when the doc index manifest is unreadable", async () => {
+    const root = mkdtempSync(join(tmpdir(), "discipline-corrupt-"));
+    try {
+      cpSync(happyCanon, root, { recursive: true });
+      await syncCanonIndex(root);
+      writeFileSync(join(root, ".doc-canon", "index-manifest.json"), "garbage");
+
+      const exit = await checkCanon(root);
+      assert.equal(exit, 0, "discipline findings must not change the check exit code");
+
+      const report = readReport(root);
+      assert.ok(report !== null);
+      const discipline = report.findings.filter((f) => f.kind === "discipline");
+      assert.ok(discipline.length >= 1, `expected a corrupt discipline finding, got ${JSON.stringify(report.findings)}`);
+      assert.match(discipline[0]!.summary, /corrupt/i);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
 });

@@ -31,6 +31,17 @@ export function appendProbe(root: string, entry: ProbeEntry): void {
   }
 }
 
+function isProbeEntry(value: unknown): value is ProbeEntry {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) return false;
+  const v = value as Record<string, unknown>;
+  return (
+    typeof v.ts === "string" &&
+    (v.kind === "doc" || v.kind === "code") &&
+    typeof v.query === "string" &&
+    typeof v.hits === "number"
+  );
+}
+
 export function readProbeLog(root: string): ProbeEntry[] {
   let lines: string[];
   try {
@@ -50,7 +61,9 @@ export function readProbeLog(root: string): ProbeEntry[] {
   const entries: ProbeEntry[] = [];
   for (const line of kept) {
     try {
-      entries.push(JSON.parse(line) as ProbeEntry);
+      const parsed: unknown = JSON.parse(line);
+      // Shape guard: skip parseable-but-malformed lines (e.g. {}), not just bad JSON.
+      if (isProbeEntry(parsed)) entries.push(parsed);
     } catch {
       // Skip corrupt lines.
     }

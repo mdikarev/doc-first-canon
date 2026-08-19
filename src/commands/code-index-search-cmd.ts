@@ -105,6 +105,8 @@ export async function codeIndexSearch(
         body: opts.body,
       });
     let served = runSearch();
+    // searchCodeIndex resolves the VCS root internally (public API is frozen by design);
+    // the second resolution here is required for the refresh target.
     const vcsRoot = findVcsRoot(root);
     const reindexed = await refreshStaleIndex(vcsRoot, "code", served.freshness);
     if (reindexed) {

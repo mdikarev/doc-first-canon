@@ -6,6 +6,7 @@ import {
 } from "../discipline/state.js";
 
 function describeKind(label: string, s: KindState): string {
+  if (s.corrupt) return `${label}: corrupt index (unreadable)`;
   if (!s.indexExists) return `${label}: no index (not-applicable)`;
   const probe =
     s.lastProbe === null
@@ -35,12 +36,14 @@ export async function disciplineReport(
             changed: state.doc.changed.length,
             last_probe: state.doc.lastProbe?.ts ?? null,
             unprobed: state.doc.unprobed,
+            corrupt: state.doc.corrupt,
           },
           code: {
             index_exists: state.code.indexExists,
             changed: state.code.changed.length,
             last_probe: state.code.lastProbe?.ts ?? null,
             unprobed: state.code.unprobed,
+            corrupt: state.code.corrupt,
           },
         },
         null,
@@ -51,5 +54,7 @@ export async function disciplineReport(
     console.log(describeKind("doc", state.doc));
     console.log(describeKind("code", state.code));
   }
-  return state.doc.unprobed || state.code.unprobed ? 1 : 0;
+  return state.doc.unprobed || state.code.unprobed || state.doc.corrupt || state.code.corrupt
+    ? 1
+    : 0;
 }
