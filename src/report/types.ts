@@ -1,4 +1,4 @@
-export type FindingKind = "structure" | "consistency" | "drift" | "conflict";
+export type FindingKind = "structure" | "consistency" | "drift" | "conflict" | "discipline";
 export type FindingStatus = "open" | "stale";
 export type FindingSource = "cli" | "skill";
 

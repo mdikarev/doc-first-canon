@@ -11,6 +11,7 @@ import {
 import { readReport, writeReport } from "../report/io.js";
 import { mergeCliFindings } from "../report/merge.js";
 import type { Finding } from "../report/types.js";
+import { computeDisciplineState, type KindState } from "../discipline/state.js";
 import { extractMarkdownHeadings } from "../validate/headings.js";
 import {
   validateCanon,
@@ -87,6 +88,22 @@ export async function checkCanon(root: string): Promise<number> {
     return finding;
   });
 
-  writeReport(resolvedRoot, mergeCliFindings(existing, cliFindings));
+  const discipline = computeDisciplineState(resolvedRoot);
+  const disciplineFindings: Finding[] = [];
+  const pushDiscipline = (label: "doc" | "code", s: KindState): void => {
+    if (!s.indexExists || (s.changed.length === 0 && !s.unprobed)) return;
+    disciplineFindings.push({
+      id: stableFindingId("discipline", [label], `${label} index un-probed`),
+      kind: "discipline",
+      paths: s.changed,
+      summary: `${label} index exists but ${s.changed.length} file(s) changed since the last probe (un-probed: ${s.unprobed})`,
+      status: "open",
+      source: "cli",
+    });
+  };
+  pushDiscipline("doc", discipline.doc);
+  pushDiscipline("code", discipline.code);
+
+  writeReport(resolvedRoot, mergeCliFindings(existing, [...cliFindings, ...disciplineFindings]));
   return validation.ok ? 0 : 1;
 }
