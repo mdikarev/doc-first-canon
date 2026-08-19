@@ -15,6 +15,9 @@ Source of truth. For design/development context after successful bootstrap valid
 ### Contract
 `CANON_CONTRACT.md`: human sections plus exactly one fenced YAML machine block that defines sections, templates, and policies for this repository only.
 
+### Documentation coverage checklist
+The required content categories that canon sections must cover when authored or revised — Public interfaces, Workflows / key flows, Usage examples, Operational runbooks, Failure modes / error handling, and Success criteria — or explicitly exclude in Scope with a reason. Applied as an authorship discipline in the managed skills (`canon-write`, `canon-bootstrap`); not validator-enforced structure. See [SKILLS.md](SKILLS.md).
+
 ### Template
 A registered markdown shape under `docs/canon/templates/` that required headings must satisfy. Extra headings are allowed.
 

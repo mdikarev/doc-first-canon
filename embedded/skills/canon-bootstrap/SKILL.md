@@ -12,6 +12,17 @@ description: Bootstrap or import a repository's documentation canon.
 - Always run `doc-canon validate` before claiming success on canon edits.
 - If `doc-canon` is missing on PATH, stop and give an install hint: `npm install -g doc-canon` or use a local npx invocation. Do not continue without validation.
 
+## Documentation coverage checklist
+
+When filling canon sections (mandatory or agreed extras), cover each required content category below, or explicitly exclude it in that section's Scope with a reason. This is an authorship discipline, not validator-enforced structure; keep the registered template's required headings and add coverage as the section's key details / responsibilities / flows call for.
+
+- **Public interfaces** — public inputs, outputs, and contracts; observable signals (exit codes ≠0, warnings, `--json` shape)
+- **Workflows / key flows** — order of steps for each main operation
+- **Usage examples** — working command examples with flags and expected results
+- **Operational runbooks** — startup, configuration, upgrade, rollback, recovery
+- **Failure modes / error handling** — what can break, how failure is signaled, how to recover
+- **Success criteria** — observable signs that the system works as documented
+
 ## Workflow
 
 1. If the canon scaffold is missing, call `doc-canon init`.

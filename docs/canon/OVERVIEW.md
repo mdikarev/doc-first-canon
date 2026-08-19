@@ -22,6 +22,7 @@ Ad-hoc agent docs drift from code, contradict each other, and diverge in shape w
 - Per-repo canon tree, templates, and `CANON_CONTRACT.md`
 - `future_plans/INDEX.md`: required, scaffolded canon subtree for directional post-MVP initiatives (not behavioral SoT, not a task tracker); `upgrade-skills` migrates existing repos onto it
 - Managed skills (`canon-bootstrap`, `canon-write`, `canon-audit`, `canon-contract`, `canon-future-plan`) dual-written to `.cursor/skills/` and `.claude/skills/`; Cursor pointer rule; short `AGENTS.md` managed block; full pointer-rule body in `CLAUDE.md`
+- Documentation coverage checklist in the managed skills: authored canon sections cover Public interfaces, Workflows, Usage examples, Operational runbooks, Failure modes, and Success criteria (or explicitly exclude a category in Scope) — see [SKILLS.md](SKILLS.md)
 - Language-agnostic inventory and machine-readable reports under `.doc-canon/`
 - Local BM25 index over `docs/canon/**/*.md` via `doc-canon index` (manifest + bm25 artifacts under `.doc-canon/`; optional poll `--watch`)
 - Deterministic AST index over discovered source roots via `doc-canon code-index build` (separate `.doc-canon/code-index-manifest.json` + `.doc-canon/code-ast-index.json`; optional poll `--watch`) — the code-side probe, distinct from the canon documentation index
@@ -42,6 +43,7 @@ Ad-hoc agent docs drift from code, contradict each other, and diverge in shape w
 
 - After bootstrap, a repo has a valid canon, local contract, installed skills, and pointer guidance to `docs/canon/`
 - Different LLMs keep the same required document shapes via in-repo templates
+- Authored canon sections follow the documentation coverage checklist, so agent-facing docs include interfaces, workflows, examples, runbooks, failure modes, and success criteria
 - `validate` / `check` fail closed on structural breakage; semantic conflicts stay open until the user decides
 - Skills invoke `doc-canon` on PATH and never edit application code
 - An adopter can install from npm (`npx` / global) and bring an existing canon current with `migrate`

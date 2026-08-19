@@ -48,6 +48,17 @@ The existing docs↔code “which side is stale?” question uses this same opti
 
 Clarify does **not** replace the contract workflow: for a new kind or structural change, stop and invoke `canon-contract` after intent is clear.
 
+## Documentation coverage checklist
+
+Canon sections are living behavioral SoT. When authoring or refactoring a section, cover each required content category below, or explicitly exclude it in that section's Scope with a reason. This is an authorship discipline, not validator-enforced structure; keep the registered template's required headings and add coverage as the section's key details / responsibilities / flows call for.
+
+- **Public interfaces** — public inputs, outputs, and contracts; observable signals (exit codes ≠0, warnings, `--json` shape)
+- **Workflows / key flows** — order of steps for each main operation
+- **Usage examples** — working command examples with flags and expected results
+- **Operational runbooks** — startup, configuration, upgrade, rollback, recovery
+- **Failure modes / error handling** — what can break, how failure is signaled, how to recover
+- **Success criteria** — observable signs that the system works as documented
+
 ## Workflow
 
 1. Run **Scout → Expand before deep reads** (show working set + verdict). Prefer expand over loading the whole canon when affected sections are unclear.

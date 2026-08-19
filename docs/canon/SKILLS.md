@@ -23,7 +23,7 @@ Coding agents follow feature-change order for new or changed behavior and public
 | Skill | Responsibility |
 | --- | --- |
 | `canon-bootstrap` | First run; empty interview or non-empty extract-then-freeze; fill mandatory (+ agreed) sections including required `future_plans/INDEX.md`; validate |
-| `canon-write` | Author/refactor canon prose; run before feature code for behavior/public-contract changes and for everyday sync of affected sections; Scout → Expand (show working set + verdict) before deep reads; after Expand, clarify when invent-risk remains (one question at a time, A/B/C options, recommended answer, max 3) or skip when the request is already unambiguous; inventory/`check` only when syncing vs code/tree; after successful substantive writes to `docs/canon/**`, run one-shot `doc-canon index`; **narrowed for `future_plans/**`:** on any create / refine / status-change request for that folder, stop and hand off to `canon-future-plan` — `canon-write` keeps only living-SoT absorb (merge shipped outcomes into root sections), then hands the `absorbed` status / INDEX update back to `canon-future-plan` |
+| `canon-write` | Author/refactor canon prose; run before feature code for behavior/public-contract changes and for everyday sync of affected sections; Scout → Expand (show working set + verdict) before deep reads; after Expand, clarify when invent-risk remains (one question at a time, A/B/C options, recommended answer, max 3) or skip when the request is already unambiguous; apply the documentation coverage checklist to authored sections (cover each category or explicitly exclude it in Scope); inventory/`check` only when syncing vs code/tree; after successful substantive writes to `docs/canon/**`, run one-shot `doc-canon index`; **narrowed for `future_plans/**`:** on any create / refine / status-change request for that folder, stop and hand off to `canon-future-plan` — `canon-write` keeps only living-SoT absorb (merge shipped outcomes into root sections), then hands the `absorbed` status / INDEX update back to `canon-future-plan` |
 | `canon-future-plan` | Create/refine directional initiatives under `future_plans/` from `FUTURE_PLAN`; own status transitions and `pN` / `pN`+letter numbering; keep `future_plans/INDEX.md` (table row, status, short ordering note) in sync in the same pass; refuse checklists, sprint plans, and coding-agent prompts in initiative bodies; same Scout → Expand → clarify-if-invent-risk protocol as `canon-write`; run `doc-canon validate` before claiming success |
 | `canon-audit` | Semantic audit vs inventory; Scout → Expand with visible working set + verdict before deep evidence reads (`validate` then `check` as Scout inputs); keep LLM context on open findings only (`stale_skipped: N`); before merge, discover prior `source: skill` findings via full `doc-canon report` and mark unreproduced ones stale by normalized `(kind, paths)`; resolve dialogue; discrepancy lifecycle |
 | `canon-contract` | Propose contract/template diffs; write only after explicit user confirmation; validate |
@@ -43,6 +43,19 @@ After any successful substantive write to `docs/canon/**`, the responsible manag
 
 `canon-bootstrap` may legitimately use a wide inventory/import pass—do not force an artificially tiny working set. `canon-contract` work is naturally narrow (contract + templates + INDEX); full phased skill text for those two can wait until write/audit patterns stabilize.
 
+## Documentation coverage checklist
+
+Canon sections are living behavioral SoT: each section, when authored or revised, must cover the required content categories below, or explicitly exclude a category in its Scope with a reason. This is an authorship discipline in the managed skills (`canon-write`, `canon-bootstrap`) — not validator-enforced structure. The checklist is not a template; sections keep the registered template's required headings and add the coverage as their key details / responsibilities / flows call for.
+
+| Category | Lives where | What a good section documents |
+| --- | --- | --- |
+| Public interfaces | `Interfaces` / `Interfaces` table in MODULE, SECTION, ENTITY | Public inputs, outputs, and contracts; observable signals (exit codes ≠0, warnings, `--json` shape) |
+| Workflows / key flows | `Key flows` in ARCHITECTURE; `Workflows` elsewhere | Order of steps for each main operation; what triggers and consumes it |
+| Usage examples | `Usage guide` / `Usage examples` sub-sections | Working command examples with flags and expected results (see `CLI.md` `code-index search`) |
+| Operational runbooks | `Runbooks` / `Operational` sub-sections | Startup, configuration, upgrade, rollback, recovery; what to do when things fail |
+| Failure modes / error handling | `Error handling` / `Failure modes` | What can break, how failure is signaled, and how to recover |
+| Success criteria | `Success signals` in OVERVIEW | Observable signs that the system works as documented |
+
 ## Interfaces
 
 - **Inputs:** user intent, inventory/report, existing canon and templates, legacy docs as import sources during bootstrap only
@@ -60,6 +73,7 @@ After any successful substantive write to `docs/canon/**`, the responsible manag
 - Never patch application code; `code_stale` → Open coding task only
 - Never bypass contract for new section kinds
 - `future_plans/**` holds directional initiatives only; never convert it into a task tracker, checklist, or coding-agent prompt list — execution work belongs in `DISCREPANCIES.md` / project task tools
+- Authored canon sections cover the documentation coverage checklist categories (Public interfaces, Workflows, Usage examples, Operational runbooks, Failure modes, Success criteria) or explicitly exclude a category in Scope with a reason
 - Always `doc-canon validate` before claiming success on canon edits
 - `canon-write` must not invent material facts for substantial edits: clarify (MCQ + recommendation) or skip only when the request already resolves ambiguity
 - `check` does not close discrepancies; only audit applies the lifecycle when appropriate
