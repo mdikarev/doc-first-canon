@@ -23,6 +23,8 @@ Never silently pick a side. Never edit application code from canon skills.
 - **code_paths:** `src/code-index/extractors/csharp.ts`, `src/code-index/resolvers/csharp.ts`
 - **evidence:** `GLOSSARY.md` `code-ast-index` still described "C# `object_creation_expression` with a same-namespace pass" and "Rust/Python relative-import edges only and no member-access in v1", contradicting the shipped C# imported-type pass (`collectUsingDirectives`, `bindingForTypeNode`, `collectConstructorBindings`, `collectMemberAccessEdges` in `src/code-index/extractors/csharp.ts`; `resolveCSharpNamespaceReferences` own-first/using-union in `src/code-index/resolvers/csharp.ts`), the absorbed Rust/Python slices, and sibling canon (GLOSSARY `Member-access reference`, `ARCHITECTURE.md`, `CODE_INDEX.md` per-language row). Also swept `CODE_INDEX.md` Open questions still marking the P6a-CSharp-2 initiative status `implementing`. Task log pre-authorized the docs_stale fix: rewrote the parenthetical to state C# imported-type/namespace pass over the syntactic project model and Rust/Python import-edge-map resolution with no cross-file pass; updated the initiative status to `absorbed`; `doc-canon validate` succeeded in the same session.
 - **finding_ids:** `F-015`
+
+### D-013: Liveness downweight never fires on the real corpus (`future_plans/**` not matched by path prefix)
 - **status:** resolved
 - **decision:** code_stale
 - **canon_paths:** `docs/canon/ARCHITECTURE.md`, `docs/canon/CLI.md`, `docs/canon/GLOSSARY.md`
