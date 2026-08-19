@@ -120,6 +120,15 @@ program
       process.exitCode = await searchCanonCli(opts.root, query, opts);
     },
   );
+program
+  .command("discipline")
+  .description("Report probe discipline; exit ≠0 when the index is un-probed")
+  .option("--root <path>", "target repo root", ".")
+  .option("--json", "emit JSON on stdout")
+  .action(async (opts: { root: string; json?: boolean }) => {
+    const { disciplineReport } = await import("./commands/discipline.js");
+    process.exitCode = await disciplineReport(opts.root, opts);
+  });
 
 const codeIndex = program
   .command("code-index")
