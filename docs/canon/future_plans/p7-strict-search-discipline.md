@@ -1,6 +1,6 @@
 # P7 — Strict search discipline
 
-- **Status:** implementing
+- **Status:** absorbed
 - **Design:** [`docs/superpowers/specs/2026-08-19-p7-strict-search-discipline-design.md`](../../superpowers/specs/2026-08-19-p7-strict-search-discipline-design.md) — SoT for the enforcement mechanics: CLI-layer auto-reindex, probe log + `discipline` gate, and the mandatory search-first gate with machine-parseable miss notes
 - **Focus:** Make the search-first reading rule structurally enforced rather than guidance-only — self-healing freshness, observable probes, and a hard skill gate.
 - **Depends on:** P0b (BM25 index), P1 (search + pack), P2a/P2b (code AST index + code search), P2c (code-index-first rules)
@@ -32,6 +32,6 @@ The index and search tools only pay for themselves if agents actually use them �
 
 ## Open questions
 
-- Probe-log trim bound (default 1000 lines) and which command owns trimming (default: `discipline` trims, idempotent)
-- Symmetric doc/code exit-gate in `discipline` (default: symmetric)
-- Whether adopter CI examples include `doc-canon discipline` (default: optional gate, not part of the recommended `validate` CI block)
+- Probe-log trim bound (default 1000 lines) and which command owns trimming (default: `discipline` trims, idempotent) — resolved in design
+- Symmetric doc/code exit-gate in `discipline` (default: symmetric) — resolved in design
+- Whether adopter CI examples include `doc-canon discipline` (default: optional gate, not part of the recommended `validate` CI block) — resolved in design
