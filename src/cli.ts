@@ -122,7 +122,7 @@ program
   );
 program
   .command("discipline")
-  .description("Report probe discipline; exit ≠0 when the index is un-probed")
+  .description("Report probe discipline; exit ≠0 when the index is un-probed or corrupt")
   .option("--root <path>", "target repo root", ".")
   .option("--json", "emit JSON on stdout")
   .action(async (opts: { root: string; json?: boolean }) => {

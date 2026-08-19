@@ -104,20 +104,27 @@ export function computeCodeState(root: string): KindState {
     // Manifest exists but the index pair is unreadable → corrupt.
     return corrupt();
   }
-  const live = handle.liveHashes();
-  const manifestFiles = handle.manifest.files;
-  const changed = [
-    ...Object.keys(manifestFiles).filter((rel) => manifestFiles[rel]!.hash !== live[rel]),
-    ...Object.keys(live).filter((rel) => manifestFiles[rel] === undefined),
-  ];
-  const lastProbe = lastProbeByKind(root, "code");
-  return {
-    indexExists: true,
-    changed,
-    lastProbe,
-    unprobed: changedAfterProbe(changed, vcsRoot, lastProbe),
-    corrupt: false,
-  };
+  try {
+    const live = handle.liveHashes();
+    const manifestFiles = handle.manifest.files;
+    const changed = [
+      ...Object.keys(manifestFiles).filter((rel) => manifestFiles[rel]!.hash !== live[rel]),
+      ...Object.keys(live).filter((rel) => manifestFiles[rel] === undefined),
+    ];
+    const lastProbe = lastProbeByKind(root, "code");
+    return {
+      indexExists: true,
+      changed,
+      lastProbe,
+      unprobed: changedAfterProbe(changed, vcsRoot, lastProbe),
+      corrupt: false,
+    };
+  } catch {
+    // Fail-soft toward the gate: a live-hash error (unreadable code-index.json
+    // config, missing source root, unreadable file) means the index cannot be
+    // verified — report corrupt instead of crashing discipline/check.
+    return corrupt();
+  }
 }
 
 export function computeDisciplineState(root: string): DisciplineState {

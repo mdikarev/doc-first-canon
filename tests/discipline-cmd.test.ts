@@ -119,4 +119,14 @@ describe("doc-canon discipline (code kind)", () => {
     assert.equal(status, 1);
     assert.match(stdout, /corrupt/);
   });
+
+  it("reports corrupt (not crash) when the code config is unreadable", () => {
+    assert.equal(spawnSync("node", [bin, "code-index", "build", "--root", root], { encoding: "utf8" }).status, 0);
+    fs.writeFileSync(path.join(root, ".doc-canon", "code-index.json"), "{invalid json");
+    const res = spawnSync("node", [bin, "discipline", "--root", root, "--json"], { encoding: "utf8" });
+    assert.equal(res.status, 1);
+    assert.doesNotMatch(res.stderr, /UnhandledPromiseRejection/);
+    const parsed = JSON.parse(res.stdout);
+    assert.equal(parsed.code.corrupt, true);
+  });
 });
