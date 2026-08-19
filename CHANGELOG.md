@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.6.0
+
+- **feat:** DSH (DeepSeek Harness) is a first-class managed harness: `init` / `upgrade-skills` / `migrate` write identical skill trees to `.dsh/skills/` alongside `.cursor/skills/` and `.claude/skills/`; DSH loads the always-on `AGENTS.md` / `CLAUDE.md` guidance and needs no dedicated rule file
+- **feat:** harness selection — `init` prompts on a TTY (checkbox, all checked by default); `--harnesses cursor,claude,dsh` picks an exact set on `init` / `upgrade-skills` / `migrate`; `--yes` / non-TTY install all harnesses on `init` and, on `upgrade-skills` / `migrate`, refresh only the harnesses already present in the repo (missing ones are offered on a TTY); unknown harness names fail closed with exit ≠0
+
 ## 0.5.0
 
 - **feat:** `search` / `code-index search` self-heal a stale index at the CLI layer when no watch owns it (rebuild then serve; `auto_reindexed` warning); missing index stays fail-closed
