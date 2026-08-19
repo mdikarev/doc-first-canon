@@ -36,6 +36,7 @@ export type UnresolvedMember = {
   typeName: string;
   memberName: string;
   line: number;
+  namespaces?: string[];
 };
 
 export type ExtractResult = {

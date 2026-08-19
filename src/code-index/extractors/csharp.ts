@@ -187,16 +187,85 @@ function collectBindingNames(root: Node): Set<string> {
   return names;
 }
 
-function collectConstructorBindings(root: Node): Map<string, string> {
-  const bindings = new Map<string, string>();
+type ConstructorBinding = { typeName: string; namespaces: string[] };
+
+type UsingContext = { usings: string[]; aliases: Record<string, string> };
+
+function splitQualifiedName(text: string): { typeName: string; namespace: string | null } {
+  const lastDot = text.lastIndexOf(".");
+  if (lastDot === -1) return { typeName: text, namespace: null };
+  return { typeName: text.slice(lastDot + 1), namespace: text.slice(0, lastDot) };
+}
+
+function collectUsingDirectives(root: Node): UsingContext {
+  const usings: string[] = [];
+  const aliases: Record<string, string> = {};
+  const visit = (node: Node): void => {
+    if (node.type === "using_directive") {
+      const isStatic = node.children.some((c) => c.type === "static");
+      const isGlobal = node.children.some((c) => c.type === "global");
+      if (isStatic || isGlobal) {
+        for (const c of node.namedChildren) visit(c);
+        return;
+      }
+      const named = node.namedChildren;
+      const first = named[0];
+      const last = named[named.length - 1];
+      if (first?.type === "identifier" && last?.type === "qualified_name") {
+        aliases[first.text] = last.text;
+      } else if (first?.type === "qualified_name") {
+        usings.push(first.text);
+      }
+    }
+    for (const c of node.namedChildren) visit(c);
+  };
+  visit(root);
+  return { usings, aliases };
+}
+
+function bindingForTypeNode(
+  type: Node,
+  ownNamespaces: string[],
+  using: UsingContext,
+): ConstructorBinding | null {
+  if (type.type === "identifier") {
+    const alias = using.aliases[type.text];
+    if (alias !== undefined) {
+      const { typeName, namespace } = splitQualifiedName(alias);
+      return typeName ? { typeName, namespaces: namespace ? [namespace] : [] } : null;
+    }
+    return { typeName: type.text, namespaces: [...ownNamespaces, ...using.usings] };
+  }
+  if (type.type === "qualified_name") {
+    const { typeName, namespace } = splitQualifiedName(type.text);
+    return typeName ? { typeName, namespaces: namespace ? [namespace] : [] } : null;
+  }
+  return null;
+}
+
+function collectConstructorBindings(
+  root: Node,
+  ownNamespaces: string[],
+  using: UsingContext,
+): Map<string, ConstructorBinding> {
+  const bindings = new Map<string, ConstructorBinding>();
   const visit = (node: Node): void => {
     if (node.type === "variable_declarator") {
       const name = node.childForFieldName("name");
       const ctor = node.namedChildren.find((c) => c.type === "object_creation_expression");
+      let binding: ConstructorBinding | null = null;
       if (name && ctor) {
         const type = ctor.childForFieldName("type");
-        if (type?.type === "identifier") bindings.set(name.text, type.text);
+        if (type) binding = bindingForTypeNode(type, ownNamespaces, using);
+      } else if (name) {
+        const implicit = node.namedChildren.find((c) => c.type === "implicit_object_creation_expression");
+        if (implicit) {
+          const decl = node.parent;
+          const declType = decl?.type === "variable_declaration" ? decl.childForFieldName("type") : null;
+          if (declType) binding = bindingForTypeNode(declType, ownNamespaces, using);
+        }
       }
+      if (name && binding) bindings.set(name.text, binding);
     }
     for (const c of node.namedChildren) visit(c);
   };
@@ -213,7 +282,7 @@ const MEMBER_ACCESS_KIND_NAMES = new Set([
 function collectMemberAccessEdges(
   root: Node,
   ctx: WalkCtx,
-  constructorBindings: Map<string, string>,
+  constructorBindings: Map<string, ConstructorBinding>,
   unresolved: UnresolvedMember[],
 ): void {
   const typeSymbolNames = new Set(
@@ -227,23 +296,24 @@ function collectMemberAccessEdges(
       const member = node.childForFieldName("name");
       if (object?.type === "identifier" && member?.type === "identifier") {
         const binding = object.text;
-        const typeName = constructorBindings.get(binding);
-        if (typeName !== undefined) {
+        const entry = constructorBindings.get(binding);
+        if (entry !== undefined) {
           const line = node.startPosition.row + 1;
-          if (typeSymbolNames.has(typeName)) {
+          if (typeSymbolNames.has(entry.typeName)) {
             ctx.references.push({
               kind: "import",
               from: ctx.file,
               to: ctx.file,
-              name: `${typeName}.${member.text}`,
+              name: `${entry.typeName}.${member.text}`,
               line,
             });
           } else {
             unresolved.push({
               file: ctx.file,
-              typeName,
+              typeName: entry.typeName,
               memberName: member.text,
               line,
+              namespaces: entry.namespaces,
             });
           }
         }
@@ -303,7 +373,9 @@ export async function extractFile(
       declarationPositions: collectDeclarationPositions(tree.rootNode, rel),
     };
     collectAnchorAndBindingRefs(tree.rootNode, ctxRefs);
-    const constructorBindings = collectConstructorBindings(tree.rootNode);
+    const using = collectUsingDirectives(tree.rootNode);
+    const ownNamespaces = ctx.symbols.filter((s) => s.kind === "module").map((s) => s.name);
+    const constructorBindings = collectConstructorBindings(tree.rootNode, ownNamespaces, using);
     const unresolvedMembers: UnresolvedMember[] = [];
     collectMemberAccessEdges(tree.rootNode, ctxRefs, constructorBindings, unresolvedMembers);
     ctxRefs.references.sort(

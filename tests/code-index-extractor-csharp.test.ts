@@ -262,3 +262,111 @@ namespace App
     assert.ok(symbols.some((s) => s.name === "App" && s.kind === "class"));
   });
 });
+
+describe("extractFile (csharp) imported-type member-access", () => {
+  it("surfaces using-imported candidates with own+using namespaces", async () => {
+    const text = `using App.Models;
+
+namespace App
+{
+    public class Program
+    {
+        static void Main()
+        {
+            var w = new Widget();
+            w.Score = 5;
+        }
+    }
+}
+`;
+    const { unresolvedMembers } = await extractFile("src/App/Program.cs", text, new Set());
+    assert.deepEqual(unresolvedMembers, [
+      { file: "src/App/Program.cs", typeName: "Widget", memberName: "Score", line: 10, namespaces: ["App", "App.Models"] },
+    ]);
+  });
+
+  it("surfaces namespace-qualified candidates with a single qualified namespace", async () => {
+    const text = `namespace App
+{
+    public class Program
+    {
+        static void Main()
+        {
+            var q = new App.Models.Widget();
+            q.Score = 5;
+        }
+    }
+}
+`;
+    const { unresolvedMembers } = await extractFile("src/App/Program.cs", text, new Set());
+    assert.deepEqual(unresolvedMembers, [
+      { file: "src/App/Program.cs", typeName: "Widget", memberName: "Score", line: 8, namespaces: ["App.Models"] },
+    ]);
+  });
+
+  it("resolves using-alias constructors to canonical type + namespace", async () => {
+    const text = `using R = App.Reader;
+
+namespace App
+{
+    public class Program
+    {
+        static void Main()
+        {
+            R r = new R();
+            r.Get("q");
+        }
+    }
+}
+`;
+    const { unresolvedMembers } = await extractFile("src/App/Program.cs", text, new Set());
+    assert.deepEqual(unresolvedMembers, [
+      { file: "src/App/Program.cs", typeName: "Reader", memberName: "Get", line: 10, namespaces: ["App"] },
+    ]);
+  });
+
+  it("emits target-typed new() entries only for explicit-typed declarations", async () => {
+    const text = `using App.Models;
+
+namespace App
+{
+    public class Program
+    {
+        static void Main()
+        {
+            Widget w = new();
+            w.Score = 5;
+            var v = new();
+            v.Score = 1;
+        }
+    }
+}
+`;
+    const { unresolvedMembers } = await extractFile("src/App/Program.cs", text, new Set());
+    assert.deepEqual(unresolvedMembers, [
+      { file: "src/App/Program.cs", typeName: "Widget", memberName: "Score", line: 10, namespaces: ["App", "App.Models"] },
+    ]);
+  });
+
+  it("ignores using static and global using when computing namespaces", async () => {
+    const text = `using static System.Math;
+global using System.Linq;
+
+namespace App
+{
+    public class Program
+    {
+        static void Main()
+        {
+            var w = new Widget();
+            w.Score = 5;
+        }
+    }
+}
+`;
+    const { unresolvedMembers } = await extractFile("src/App/Program.cs", text, new Set());
+    assert.deepEqual(unresolvedMembers, [
+      { file: "src/App/Program.cs", typeName: "Widget", memberName: "Score", line: 11, namespaces: ["App"] },
+    ]);
+  });
+});
