@@ -103,7 +103,7 @@ A bounded retrieval result containing the query, index identity and freshness, w
 `.doc-canon/probe-log.jsonl`: an append-only record of successful CLI searches (`doc-canon search` / `code-index search`), one JSON line per call — timestamp, kind (`doc` / `code`), query, mode (code only: `symbols` / `refs`), hit count, freshness, and whether the command auto-reindexed. The observability basis for the strict search-first gate: `doc-canon discipline` and `check` read it (trimmed to the last 1000 lines) to report probe currency.
 
 ### Discipline finding
-A `kind: "discipline"` finding in `.doc-canon/report.json` (merged via the CLI finding merge) summarizing probe currency: age of the last doc/code probe and how many docs or source files changed after it. Informational in `check`; the `doc-canon discipline` command turns the same state into an exit-gate (exit ≠0 on un-probed state).
+A `kind: "discipline"` finding in `.doc-canon/report.json` (merged via the CLI finding merge) summarizing probe currency: age of the last doc/code probe and how many docs or source files changed after it. Informational in `check`; the `doc-canon discipline` command turns the same state into an exit-gate (exit ≠0 on un-probed state, or when an index exists but is unreadable — a corrupt index is reported, not masked as not-applicable).
 
 ### doc_miss
 The documentation-side miss note, mirror of `code_miss`: `doc_miss: <query> -> docs:<path>`, required when a deep read of `docs/canon/**` happens outside a search pack (index unavailable or thin result).

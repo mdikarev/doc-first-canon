@@ -16,6 +16,13 @@ Never silently pick a side. Never edit application code from canon skills.
 
 ## Resolved
 
+### D-015: Canon under-documented the corrupt-index exit-gate in `discipline`
+- **status:** resolved
+- **decision:** docs_stale
+- **canon_paths:** `docs/canon/CLI.md`, `docs/canon/GLOSSARY.md`
+- **code_paths:** `src/discipline/state.ts`, `src/commands/discipline.ts`
+- **evidence:** The `discipline` command exits ≠0 not only on an un-probed index but also when an index exists but is unreadable — `corrupt: true` in `src/discipline/state.ts` (manifest present but unparseable, or `openCodeIndex`/`liveHashes` failures), reported as `corrupt index (unreadable)` in `src/commands/discipline.ts` and surfaced as a per-kind `corrupt` key in `--json`. This corrupt gate was prescribed by the P7 final review (the spec's error table left corrupt unspecified; the ruling was "report + exit ≠0"), but the living canon written before that refinement documented only the un-probed exit: `CLI.md` `discipline` row said "exit ≠0 … (un-probed state)" and `GLOSSARY.md` `Discipline finding` said "exit ≠0 on un-probed state". Fixed both passages to state the corrupt exit-gate and that a corrupt index is reported, not masked as not-applicable; `doc-canon validate` succeeded in the same session. The closing P7 canon-audit (2026-08-19) confirmed the drift no longer reproduces.
+
 ### D-014: GLOSSARY code-ast-index lagged C# imported-type and Rust/Python member-access slices
 - **status:** resolved
 - **decision:** docs_stale
