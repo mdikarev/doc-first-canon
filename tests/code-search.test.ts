@@ -552,3 +552,160 @@ def run():
     assert.equal(hit.line, 8);
   });
 });
+
+describe("searchCodeIndex (csharp refs imported types)", () => {
+  let repo: string;
+  beforeEach(async () => {
+    repo = makeRepo();
+    write(repo, "src/App/App.csproj", "<Project Sdk=\"Microsoft.NET.Sdk\" />");
+    write(
+      repo,
+      "src/App/Models/Widget.cs",
+      `namespace App.Models
+{
+    public class Widget
+    {
+        public int Score { get; set; }
+    }
+}
+`,
+    );
+    write(
+      repo,
+      "src/App/Program.cs",
+      `using App.Models;
+
+namespace App
+{
+    public class Program
+    {
+        static void Main()
+        {
+            var w = new Widget();
+            var n = w.Score;
+        }
+    }
+}
+`,
+    );
+    await syncCodeIndex(repo);
+  });
+  afterEach(() => fs.rmSync(repo, { recursive: true, force: true }));
+
+  it("refs mode resolves using-imported types across namespaces", () => {
+    const pack = searchCodeIndex(repo, "", { refs: "Widget.Score" });
+    const hit = pack.hits.find(
+      (h) => h.refKind === "import" && h.name === "Widget.Score",
+    ) as CodeRefHit;
+    assert.ok(hit, "expected a Widget.Score using-imported hit");
+    assert.equal(hit.from, "src/App/Program.cs");
+    assert.equal(hit.to, "src/App/Models/Widget.cs");
+    assert.equal(hit.line, 10);
+  });
+
+  it("refs mode resolves namespace-qualified constructors", async () => {
+    write(
+      repo,
+      "src/App/Program.cs",
+      `namespace App
+{
+    public class Program
+    {
+        static void Main()
+        {
+            var w = new App.Models.Widget();
+            var n = w.Score;
+        }
+    }
+}
+`,
+    );
+    await syncCodeIndex(repo);
+    const pack = searchCodeIndex(repo, "", { refs: "Widget.Score" });
+    const hit = pack.hits.find(
+      (h) => h.refKind === "import" && h.name === "Widget.Score",
+    ) as CodeRefHit;
+    assert.ok(hit, "expected a Widget.Score qualified hit");
+    assert.equal(hit.from, "src/App/Program.cs");
+    assert.equal(hit.to, "src/App/Models/Widget.cs");
+    assert.equal(hit.line, 8);
+  });
+
+  it("refs mode resolves using-alias constructors to the canonical name", async () => {
+    write(
+      repo,
+      "src/App/Program.cs",
+      `using W = App.Models.Widget;
+
+namespace App
+{
+    public class Program
+    {
+        static void Main()
+        {
+            var w = new W();
+            var n = w.Score;
+        }
+    }
+}
+`,
+    );
+    await syncCodeIndex(repo);
+    const pack = searchCodeIndex(repo, "", { refs: "Widget.Score" });
+    const hit = pack.hits.find(
+      (h) => h.refKind === "import" && h.name === "Widget.Score",
+    ) as CodeRefHit;
+    assert.ok(hit, "expected a Widget.Score alias hit");
+    assert.equal(hit.to, "src/App/Models/Widget.cs");
+  });
+
+  it("refs mode resolves target-typed new() with an explicit type", async () => {
+    write(
+      repo,
+      "src/App/Program.cs",
+      `using App.Models;
+
+namespace App
+{
+    public class Program
+    {
+        static void Main()
+        {
+            Widget w = new();
+            var n = w.Score;
+        }
+    }
+}
+`,
+    );
+    await syncCodeIndex(repo);
+    const pack = searchCodeIndex(repo, "", { refs: "Widget.Score" });
+    const hit = pack.hits.find(
+      (h) => h.refKind === "import" && h.name === "Widget.Score",
+    ) as CodeRefHit;
+    assert.ok(hit, "expected a Widget.Score target-typed hit");
+    assert.equal(hit.to, "src/App/Models/Widget.cs");
+  });
+
+  it("refs mode does not cross namespaces without a using directive", async () => {
+    write(
+      repo,
+      "src/App/Program.cs",
+      `namespace App
+{
+    public class Program
+    {
+        static void Main()
+        {
+            var w = new Widget();
+            var n = w.Score;
+        }
+    }
+}
+`,
+    );
+    await syncCodeIndex(repo);
+    const pack = searchCodeIndex(repo, "", { refs: "Widget.Score" });
+    assert.equal(pack.hits.filter((h) => h.refKind === "import" && h.name === "Widget.Score").length, 0);
+  });
+});

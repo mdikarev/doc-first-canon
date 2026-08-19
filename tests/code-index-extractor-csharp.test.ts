@@ -198,11 +198,11 @@ describe("extractFile (csharp) member-access references", () => {
 `;
     const { unresolvedMembers } = await extractFile("src/App/Program.cs", text, new Set());
     assert.deepEqual(unresolvedMembers, [
-      { file: "src/App/Program.cs", typeName: "Widget", memberName: "Score", line: 8 },
+      { file: "src/App/Program.cs", typeName: "Widget", memberName: "Score", line: 8, namespaces: ["App"] },
     ]);
   });
 
-  it("emits no edge for namespace-qualified new NS.Type()", async () => {
+  it("emits same-file edges for namespace-qualified new App.Widget()", async () => {
     const text = `namespace App
 {
     public class Widget
@@ -222,7 +222,10 @@ describe("extractFile (csharp) member-access references", () => {
 `;
     const { references } = await extractFile("src/App/Program.cs", text, new Set());
     const members = references.filter((r) => r.kind === "import" && r.name.includes("."));
-    assert.equal(members.length, 0);
+    assert.deepEqual(
+      members.map((r) => ({ name: r.name, to: r.to })),
+      [{ name: "Widget.Score", to: "src/App/Program.cs" }],
+    );
   });
 });
 
