@@ -11,7 +11,7 @@ const pkg = JSON.parse(readFileSync(path.join(root, "package.json"), "utf8")) as
 };
 
 describe("release.sh", () => {
-  it("is wired as npm run release and never tags or uses GitHub Actions", () => {
+  it("is wired as npm run release, tags after publish, and never uses GitHub Actions", () => {
     assert.equal(pkg.scripts?.release, "bash scripts/release.sh");
     assert.match(script, /npm test/);
     assert.match(script, /npm run build/);
@@ -22,8 +22,14 @@ describe("release.sh", () => {
     assert.match(script, /README\.md/);
     assert.match(script, /npm publish/);
     assert.match(script, /DRY_RUN|--dry-run/);
-    assert.doesNotMatch(script, /git tag/);
-    assert.doesNotMatch(script, /git push/);
+    assert.match(script, /git tag/);
+    assert.match(script, /git push/);
     assert.doesNotMatch(script, /\.github/);
+    // The tag step runs only after a real publish (dry-run exits before it), so
+    // every successful release always produces a v<version> tag.
+    const publishAt = script.indexOf("npm publish");
+    const tagAt = script.indexOf("git tag");
+    assert.ok(publishAt !== -1 && tagAt > publishAt, "git tag must appear after npm publish");
+    assert.match(script, /dry-run: skip npm publish/);
   });
 });

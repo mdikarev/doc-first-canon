@@ -235,7 +235,7 @@ npm run build
 npm test
 node bin/doc-canon.js --help
 DRY_RUN=1 npm run release    # test, build, validate, pack-check; no publish
-# after a real publish, tag/push git separately if you want a GitHub tag
+# a real `npm run release` also creates and pushes a `v<version>` git tag
 ```
 
 ---
@@ -479,5 +479,5 @@ npm run build
 npm test
 node bin/doc-canon.js --help
 DRY_RUN=1 npm run release    # test, build, validate, pack-check; без publish
-# после реального publish тег/push git отдельно, если нужен GitHub tag
+# реальный `npm run release` также создаёт и пушит git-тег `v<version>`
 ```

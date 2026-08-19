@@ -28,3 +28,11 @@ if [[ "$DRY" -eq 1 ]]; then
 fi
 
 npm publish
+
+# Always tag the released commit (lightweight v<version>) — a successful release
+# must carry its tag. Dry-run exits before publish, so dry-runs never tag.
+VERSION="$(node -p "require('./package.json').version")"
+if ! git rev-parse -q --verify "refs/tags/v$VERSION" >/dev/null 2>&1; then
+  git tag "v$VERSION"
+fi
+git push origin "v$VERSION" || echo "warning: tag v$VERSION created locally; push to origin failed"
