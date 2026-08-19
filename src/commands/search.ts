@@ -1,5 +1,7 @@
 import { resolveRoot } from "../paths.js";
 import { searchCanon, SearchError } from "../search/search.js";
+import { refreshStaleIndex } from "./auto-reindex.js";
+import { appendProbe } from "../probe-log.js";
 
 export type SearchCliOptions = {
   json?: boolean;
@@ -37,17 +39,37 @@ export async function searchCanonCli(
   }
 
   try {
-    const pack = searchCanon(root, query, { maxHits, snippetLines });
+    const runSearch = () => searchCanon(root, query, { maxHits, snippetLines });
+    let served = runSearch();
+    const reindexed = await refreshStaleIndex(root, "doc", served.freshness);
+    if (reindexed) {
+      served = runSearch();
+      if (!served.warnings.includes("auto_reindexed")) {
+        served.warnings = [...served.warnings, "auto_reindexed"];
+      }
+    }
+    appendProbe(root, {
+      ts: new Date().toISOString(),
+      kind: "doc",
+      query: query.trim(),
+      hits: served.hits.length,
+      freshness: served.freshness,
+      reindexed,
+    });
+
     if (opts.json) {
-      console.log(JSON.stringify(pack));
+      console.log(JSON.stringify(served));
     } else {
-      if (pack.freshness === "stale") {
+      if (reindexed) {
+        console.error("warning: auto_reindexed (stale index rebuilt before serving)");
+      }
+      if (served.freshness === "stale") {
         console.error("warning: index_stale (run doc-canon index to refresh)");
       }
-      if (pack.hits.length === 0) {
+      if (served.hits.length === 0) {
         console.log("no hits");
       }
-      for (const hit of pack.hits) {
+      for (const hit of served.hits) {
         console.log(`${hit.path}  score=${hit.score}`);
         for (const snip of hit.snippets) {
           console.log(`  L${snip.start_line}:`);
