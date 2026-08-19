@@ -88,7 +88,7 @@ describe("managed agent assets", () => {
     assert.match(block, /doc-canon search/i);
   });
 
-  it("documents working-set discipline in pointer rule and AGENTS block", () => {
+  it("documents working-set discipline in pointer rule and search-first gate in AGENTS block", () => {
     const rule = readEmbedded("rules", "doc-canon.mdc");
     assert.match(rule, /working set/i);
     assert.match(rule, /expand/i);
@@ -97,6 +97,8 @@ describe("managed agent assets", () => {
     const block = readEmbedded("agents", "AGENTS.block.md");
     assert.match(block, /working set/i);
     assert.match(block, /expand/i);
+    assert.match(block, /Search first/i);
+    assert.match(block, /doc_miss/i);
   });
 
   it("documents canon-first feature-change order in pointer, AGENTS, and canon-write", () => {
@@ -248,5 +250,35 @@ describe("managed agent assets", () => {
     ]) {
       assert.match(scenarios, new RegExp(phrase, "i"));
     }
+  });
+});
+
+describe("P7 strict search discipline phrases", () => {
+  it("AGENTS block makes search first mandatory", () => {
+    const block = readEmbedded("agents", "AGENTS.block.md");
+    assert.match(block, /Search first — it is mandatory when the index is available/);
+    assert.match(block, /doc_miss/);
+  });
+
+  it("pointer rule carries the mandatory gate and miss formats", () => {
+    const rule = readEmbedded("rules", "doc-canon.mdc");
+    assert.match(rule, /## Search-first is mandatory/);
+    assert.match(rule, /doc_miss: <query> -> docs:<path>/);
+    assert.match(rule, /code_miss: <query> -> source:<path>/);
+  });
+
+  it("canon-write hardens the Scout gate", () => {
+    const skill = readEmbedded("skills", "canon-write", "SKILL.md");
+    assert.match(skill, /Mandatory probe/);
+    assert.match(skill, /never licenses INDEX-first fallback/);
+    assert.match(skill, /doc_miss: <query> -> docs:<path>/);
+  });
+
+  it("canon-audit and canon-bootstrap mirror the gate", () => {
+    const audit = readEmbedded("skills", "canon-audit", "SKILL.md");
+    const bootstrap = readEmbedded("skills", "canon-bootstrap", "SKILL.md");
+    assert.match(audit, /doc_miss: <query> -> docs:<path>/);
+    assert.match(bootstrap, /doc_miss: <query> -> docs:<path>/);
+    assert.match(bootstrap, /mandatory when the indexes exist/);
   });
 });
