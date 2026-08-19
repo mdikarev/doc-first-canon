@@ -5,6 +5,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { indexWatchPidPath } from "../src/index/paths.js";
 
 const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const bin = path.join(repo, "bin", "doc-canon.js");
@@ -49,6 +50,8 @@ describe("doc-canon search cli", () => {
 
   it("warns on stderr when stale in human mode", () => {
     spawnSync("node", [bin, "index", "--root", root], { encoding: "utf8" });
+    // A live watch keeps stale warn + serve (exit 0); without it the index self-heals.
+    fs.writeFileSync(indexWatchPidPath(root), String(process.pid));
     fs.writeFileSync(
       path.join(root, "docs", "canon", "a.md"),
       "hello retrieval pack changed\n",
