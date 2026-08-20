@@ -12,7 +12,7 @@ Excludes per-language extraction details (see [CODE_INDEX.md](CODE_INDEX.md)), t
 
 ## Current state
 
-Both indexes ship in `doc-canon` 0.6.0. Each writes a deterministic dual artifact (manifest + payload)
+Both indexes ship in `doc-canon` 0.7.0. Each writes a deterministic dual artifact (manifest + payload)
 under `.doc-canon/`, uses stat-first freshness (size/mtime snapshot, content-hash-confirmed) so
 unchanged files are neither read nor hashed, and self-heals a stale index at the CLI layer when no
 watch owns it. Every successful search appends one probe-log line; `discipline` reports probe

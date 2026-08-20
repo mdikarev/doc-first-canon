@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.7.0
+
+- **perf:** stat-first freshness for both indexes — per-doc `size`/`mtime_ms` snapshots in the manifest prove unchanged docs (content neither read nor hashed), stat changes are content-hash-confirmed; new internal `.doc-canon/code-index-stats.json` sidecar (fingerprint-keyed, outside the byte-identical dual artifact) lets code freshness checks skip re-reading/re-hashing unchanged files
+- **feat:** new optional contract policy `policies.max_line_length` (default 500 via `init` scaffold) — `validate` warns on prose/list lines longer than the cap (table rows and fenced code blocks exempt); all five managed skills teach the rule; `SKILLS_STAMP` 0.15.0
+- **docs:** ARCHITECTURE split — indexing/retrieval detail moved to a new registered `INDEXING.md` canon section; all canon files wrapped to ≤500-char prose lines
+
 ## 0.6.0
 
 - **feat:** DSH (DeepSeek Harness) is a first-class managed harness: `init` / `upgrade-skills` / `migrate` write identical skill trees to `.dsh/skills/` alongside `.cursor/skills/` and `.claude/skills/`; DSH loads the always-on `AGENTS.md` / `CLAUDE.md` guidance and needs no dedicated rule file

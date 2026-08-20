@@ -78,7 +78,7 @@ gates on un-probed state.
 
 ## Tech & constraints
 
-- Node.js ≥20, TypeScript ESM package `doc-canon` 0.6.0
+- Node.js ≥20, TypeScript ESM package `doc-canon` 0.7.0
 - Dependencies: `commander`, `yaml`, `micromatch`, `@vscode/tree-sitter-wasm` (code-index extraction)
 - Unknown/incompatible major `schema_version` or too-old `skills_stamp` → validate fails closed
 - Extra template headings allowed; missing required headings fail validate

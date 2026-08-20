@@ -1,4 +1,4 @@
-export const PACKAGE_VERSION = "0.6.0";
+export const PACKAGE_VERSION = "0.7.0";
 export const DEFAULT_SCHEMA_VERSION = 1;
 /** Bump when managed skills/rules content changes incompatibly for validate. */
 export const SKILLS_STAMP = "0.15.0";
