@@ -94,4 +94,53 @@ describe("syncCanonIndex", () => {
     assert.equal(r.status, "updated");
     assert.equal(loadIndexPair(root).manifest.tokenizer_version, "1");
   });
+
+  it("records size and mtime in the manifest for each doc", async () => {
+    const r = await syncCanonIndex(root);
+    assert.equal(r.status, "updated");
+    const raw = JSON.parse(fs.readFileSync(indexManifestPath(root), "utf8"));
+    const meta = raw.docs["docs/canon/a.md"];
+    assert.equal(typeof meta.size, "number");
+    assert.ok(meta.size > 0);
+    assert.equal(typeof meta.mtime_ms, "number");
+  });
+
+  it("does not rebuild when only the mtime changed (content identical)", async () => {
+    await syncCanonIndex(root);
+    const doc = path.join(root, "docs/canon/a.md");
+    const future = new Date(Date.now() + 60_000);
+    fs.utimesSync(doc, future, future);
+    const r = await syncCanonIndex(root);
+    assert.equal(r.status, "fresh");
+  });
+
+  it("rebuilds when bm25-index.json is missing", async () => {
+    await syncCanonIndex(root);
+    fs.rmSync(bm25IndexPath(root));
+    const r = await syncCanonIndex(root);
+    assert.equal(r.status, "updated");
+    assert.ok(fs.existsSync(bm25IndexPath(root)));
+  });
+
+  it("upgrades a stats-less manifest on a fresh sync (one-time rewrite)", async () => {
+    await syncCanonIndex(root);
+    // Strip stat fields to simulate a pre-stats manifest; the bm25 artifact is
+    // left untouched, so the pair must stay consistent after the upgrade.
+    const manifestPath = indexManifestPath(root);
+    const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+    for (const meta of Object.values(manifest.docs)) {
+      delete meta.size;
+      delete meta.mtime_ms;
+    }
+    fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+    const before = fs.readFileSync(bm25IndexPath(root), "utf8");
+    const r = await syncCanonIndex(root);
+    assert.equal(r.status, "fresh");
+    const upgraded = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+    const meta = upgraded.docs["docs/canon/a.md"];
+    assert.equal(typeof meta.size, "number");
+    assert.equal(typeof meta.mtime_ms, "number");
+    assert.equal(fs.readFileSync(bm25IndexPath(root), "utf8"), before);
+    assert.equal(upgraded.index_id, loadIndexPair(root).bm25.index_id);
+  });
 });

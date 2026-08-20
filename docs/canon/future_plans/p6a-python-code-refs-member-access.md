@@ -25,4 +25,9 @@ Merged: `GLOSSARY.md` (`Member-access reference` term — Python bare-call const
 
 ## Open questions
 
-*Resolved by the design pass* (grounding rule: same-file `class` symbols count regardless of capitalization — kind-grounded, rejecting functions; imported names require PascalCase `/^[A-Z][A-Za-z0-9_]*$/` since import edges carry no kind; `from .module import Type` aliases canonicalized — the edge carries the canonical name; attribute callees (`util.Reader()`), absolute/external imports, and factory functions get no edge; exact tree-sitter-python CST shapes locked in extractor tests — `assignment[left, right=call]`, `call[function=identifier]`, `attribute[object, attribute]`, `aliased_import[name=dotted_name, identifier]`).
+*Resolved by the design pass* (grounding rule: same-file `class` symbols count regardless of capitalization —
+kind-grounded, rejecting functions; imported names require PascalCase `/^[A-Z][A-Za-z0-9_]*$/` since import
+edges carry no kind; `from .module import Type` aliases canonicalized — the edge carries the canonical name;
+attribute callees (`util.Reader()`), absolute/external imports, and factory functions get no edge; exact
+tree-sitter-python CST shapes locked in extractor tests — `assignment[left, right=call]`,
+`call[function=identifier]`, `attribute[object, attribute]`, `aliased_import[name=dotted_name, identifier]`).

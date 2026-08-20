@@ -8,7 +8,12 @@
 
 ## Intent
 
-The P2a code AST index is inert without a way to probe it. This initiative adds the CLI search interface agents use during code analysis: query the index by symbol, type, file, or references, and get bounded results with path/line/kind/snippet windows instead of whole files. At search time the code index's freshness is enforced: a stale code index warns, a missing code index fails closed with a hint to build it (P2a). This is the code-side analogue of `doc-canon search`, but over the code AST index, not the canon documentation index — `doc-canon search` stays documentation-only.
+The P2a code AST index is inert without a way to probe it. This initiative adds the CLI search interface
+agents use during code analysis: query the index by symbol, type, file, or references, and get bounded results
+with path/line/kind/snippet windows instead of whole files. At search time the code index's freshness is
+enforced: a stale code index warns, a missing code index fails closed with a hint to build it (P2a). This is
+the code-side analogue of `doc-canon search`, but over the code AST index, not the canon documentation index —
+`doc-canon search` stays documentation-only.
 
 ## In scope
 

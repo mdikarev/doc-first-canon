@@ -265,6 +265,30 @@ export function validateCanon(root: string): ValidateResult {
           `${section.path} exceeds max_lines ${contract.policies.max_lines}`,
         );
       }
+      const maxLineLength = contract.policies.max_line_length;
+      if (maxLineLength !== undefined) {
+        // Table rows and fenced code blocks are exempt: markdown table rows
+        // cannot be wrapped without breaking the table, and code blocks may
+        // carry intentionally long lines (URLs, examples).
+        let inCodeBlock = false;
+        const longLines = sectionMarkdown
+          .split("\n")
+          .map((line, index) => ({ line, index: index + 1 }))
+          .filter(({ line }) => {
+            if (line.startsWith("```")) {
+              inCodeBlock = !inCodeBlock;
+              return false;
+            }
+            if (inCodeBlock || line.startsWith("|")) return false;
+            return line.length > maxLineLength;
+          })
+          .map(({ index }) => index);
+        if (longLines.length > 0) {
+          warnings.push(
+            `${section.path} has ${longLines.length} line(s) longer than max_line_length ${maxLineLength}: ${longLines.join(", ")}`,
+          );
+        }
+      }
     }
 
     const indexFile = path.join(canonRoot, "INDEX.md");

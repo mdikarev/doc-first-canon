@@ -46,4 +46,28 @@ describe("openCanonIndex", () => {
       idx.manifest.docs["docs/canon/a.md"]?.hash,
     );
   });
+
+  it("liveHashes still matches the manifest when only mtime changed", async () => {
+    await syncCanonIndex(root);
+    const idx = openCanonIndex(root);
+    const doc = path.join(root, "docs/canon/a.md");
+    const future = new Date(Date.now() + 60_000);
+    fs.utimesSync(doc, future, future);
+    const live = idx.liveHashes();
+    assert.equal(
+      live["docs/canon/a.md"],
+      idx.manifest.docs["docs/canon/a.md"]?.hash,
+    );
+  });
+
+  it("liveHashes detects a content edit (stale)", async () => {
+    await syncCanonIndex(root);
+    const idx = openCanonIndex(root);
+    fs.writeFileSync(path.join(root, "docs/canon/a.md"), "retrieval canon changed");
+    const live = idx.liveHashes();
+    assert.notEqual(
+      live["docs/canon/a.md"],
+      idx.manifest.docs["docs/canon/a.md"]?.hash,
+    );
+  });
 });

@@ -168,6 +168,51 @@ describe("validateCanon", () => {
       cleanup();
     }
   });
+
+  it("warns on lines longer than max_line_length, skipping tables and code blocks", () => {
+    const { root, cleanup } = temporaryHappyCanon();
+    try {
+      const canonRoot = join(root, "docs", "canon");
+      const contractFile = join(canonRoot, "CANON_CONTRACT.md");
+      const sectionFile = join(canonRoot, "OVERVIEW.md");
+      writeFileSync(
+        contractFile,
+        readFileSync(contractFile, "utf8").replace(
+          "max_lines: 400",
+          "max_lines: 400\n  max_line_length: 50",
+        ),
+      );
+
+      writeFileSync(
+        sectionFile,
+        [
+          "# Overview",
+          "",
+          "## Purpose",
+          "",
+          "this line is longer than fifty characters by a wide margin",
+          "",
+          "| a | b |",
+          "| --- | --- |",
+          "| this table row is also longer than fifty characters but exempt | x |",
+          "",
+          "```text",
+          "this code block line is longer than fifty characters but exempt",
+          "```",
+        ].join("\n"),
+      );
+
+      const result = validateCanon(root);
+      const warning = result.warnings.find((w) =>
+        w.includes("max_line_length 50"),
+      );
+      assert.ok(warning, "expected a max_line_length warning");
+      assert.match(warning!, /OVERVIEW\.md.*1 line\(s\)/i);
+      assert.match(warning!, /:\s*5/); // only line 5 (the prose line) flagged
+    } finally {
+      cleanup();
+    }
+  });
 });
 
 describe("doc-canon validate", () => {

@@ -7,7 +7,12 @@
 
 ## Intent
 
-`docs/canon/GLOSSARY.md` is the canon's term registry, and `src/commands/check.ts` already extracts glossary terms (h3 headings under `Terms`) to build `text_hits` in the inventory. Search, however, treats the query as raw tokens with no knowledge of the glossary. A query using a non-canonical form or a canonical term with a long form (`SoT` vs `source of truth`, `docs_stale`) can return weak packs, making the Scout → Expand gate expand unnecessarily. This initiative makes `searchCanon` glossary-aware: boost documents that contain canonical terms and expand the query with glossary synonyms before scoring.
+`docs/canon/GLOSSARY.md` is the canon's term registry, and `src/commands/check.ts` already extracts glossary
+terms (h3 headings under `Terms`) to build `text_hits` in the inventory. Search, however, treats the query as
+raw tokens with no knowledge of the glossary. A query using a non-canonical form or a canonical term with a
+long form (`SoT` vs `source of truth`, `docs_stale`) can return weak packs, making the Scout → Expand gate
+expand unnecessarily. This initiative makes `searchCanon` glossary-aware: boost documents that contain
+canonical terms and expand the query with glossary synonyms before scoring.
 
 ## In scope
 

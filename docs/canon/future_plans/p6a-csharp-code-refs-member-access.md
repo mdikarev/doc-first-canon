@@ -27,4 +27,9 @@ Merged: `GLOSSARY.md` (`Member-access reference` term — C# `new Type(...)` pat
 
 ## Open questions
 
-*Resolved by the C# slice implementation* (binding forms: `var x = new Type();` and explicit-typed `Type x = new Type();` — both count via the `variable_declarator` → `object_creation_expression` form; target-typed `new()` has no `type` child → no edge; same-namespace resolution via the sync post-processing pass, namespace identity from the file's `module` symbol, zero/multiple same-named candidates → edge dropped; namespace-qualified `new App.Widget()` has a non-`identifier` `type` node → no edge; tree-sitter-csharp CST shapes locked in extractor tests).
+*Resolved by the C# slice implementation* (binding forms: `var x = new Type();` and explicit-typed `Type x =
+new Type();` — both count via the `variable_declarator` → `object_creation_expression` form; target-typed
+`new()` has no `type` child → no edge; same-namespace resolution via the sync post-processing pass, namespace
+identity from the file's `module` symbol, zero/multiple same-named candidates → edge dropped;
+namespace-qualified `new App.Widget()` has a non-`identifier` `type` node → no edge; tree-sitter-csharp CST
+shapes locked in extractor tests).

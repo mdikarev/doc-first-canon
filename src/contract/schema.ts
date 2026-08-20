@@ -86,6 +86,15 @@ function assertPolicies(value: unknown): Policies {
     throw new Error("policies.max_lines must be a number");
   }
 
+  const maxLineLength =
+    policies.max_line_length === undefined ? undefined : policies.max_line_length;
+  if (
+    maxLineLength !== undefined &&
+    (typeof maxLineLength !== "number" || !Number.isFinite(maxLineLength))
+  ) {
+    throw new Error("policies.max_line_length must be a number");
+  }
+
   const ignore = policies.ignore === undefined ? [] : policies.ignore;
   if (!Array.isArray(ignore) || !ignore.every((item) => typeof item === "string")) {
     throw new Error("policies.ignore must be an array of strings");
@@ -93,6 +102,7 @@ function assertPolicies(value: unknown): Policies {
 
   return {
     max_lines: maxLines,
+    max_line_length: maxLineLength,
     ignore,
   };
 }

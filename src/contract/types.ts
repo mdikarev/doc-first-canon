@@ -22,6 +22,8 @@ export interface TemplateDef {
 
 export interface Policies {
   max_lines: number;
+  /** Optional per-line character cap for registered canon sections. */
+  max_line_length?: number;
   ignore: string[];
 }
 

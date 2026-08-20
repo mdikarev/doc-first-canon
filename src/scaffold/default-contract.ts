@@ -65,6 +65,7 @@ templates:
 ${templates}
 policies:
   max_lines: 400
+  max_line_length: 500
   ignore: []
 \`\`\`
 

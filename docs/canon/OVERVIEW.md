@@ -50,7 +50,13 @@ Ad-hoc agent docs drift from code, contradict each other, and diverge in shape w
 
 ## Future plans (product feature)
 
-`future_plans/INDEX.md` is a required, scaffolded canon section (`init` creates it; `upgrade-skills` migrates existing repos onto it) that holds **directional** post-MVP initiatives — not behavioral SoT and not a development task tracker. This repository's own post-MVP direction (efficiency first, then hardening) is captured there as initiatives; see [future_plans/INDEX.md](future_plans/INDEX.md). After implementation, outcomes are absorbed into the living canon sections above and the initiative is marked `absorbed` or removed. Rationale: `docs/superpowers/specs/2026-08-09-production-path-roadmap-design.md`.
+`future_plans/INDEX.md` is a required, scaffolded canon section (`init` creates it; `upgrade-skills`
+migrates existing repos onto it) that holds **directional** post-MVP initiatives — not behavioral SoT
+and not a development task tracker. This repository's own post-MVP direction (efficiency first, then
+hardening) is captured there as initiatives; see
+[future_plans/INDEX.md](future_plans/INDEX.md). After implementation, outcomes are absorbed into the
+living canon sections above and the initiative is marked `absorbed` or removed. Rationale:
+`docs/superpowers/specs/2026-08-09-production-path-roadmap-design.md`.
 
 ## Related canon
 

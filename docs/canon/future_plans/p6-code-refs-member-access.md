@@ -7,7 +7,15 @@
 
 ## Intent
 
-`code-index search --refs` matches exact reference names across the syntactic kinds the index carries (`anchor`, `import`, `binding`), so member-access call sites are invisible: `handle.score(...)` where `handle` is a local binding is not linked to the `score` method declaration. Evidence from the A+B slice: `--refs Bm25Index.build` returns zero hits (the call-site edge for `Bm25Index.build(...)` is named `Bm25Index`, not `Bm25Index.build`), and `handle.score(...)` in `src/search/search.ts` is not linked to the `score` method in `src/index/bm25.ts`. This initiative closes that gap syntactically — when a local binding is initialized from `new ImportedName(...)`, member accesses on that binding emit a call-site edge carrying the member name, linked to the imported type — staying inside P2a's cheap-references tier: no name resolution, no type inference.
+`code-index search --refs` matches exact reference names across the syntactic kinds the index carries
+(`anchor`, `import`, `binding`), so member-access call sites are invisible: `handle.score(...)` where `handle`
+is a local binding is not linked to the `score` method declaration. Evidence from the A+B slice: `--refs
+Bm25Index.build` returns zero hits (the call-site edge for `Bm25Index.build(...)` is named `Bm25Index`, not
+`Bm25Index.build`), and `handle.score(...)` in `src/search/search.ts` is not linked to the `score` method in
+`src/index/bm25.ts`. This initiative closes that gap syntactically — when a local binding is initialized from
+`new ImportedName(...)`, member accesses on that binding emit a call-site edge carrying the member name,
+linked to the imported type — staying inside P2a's cheap-references tier: no name resolution, no type
+inference.
 
 ## In scope
 

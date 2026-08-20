@@ -41,7 +41,9 @@ function parseManifest(raw: unknown): IndexManifest {
     if (
       !isRecord(doc) ||
       typeof doc.hash !== "string" ||
-      !isNumber(doc.token_count)
+      !isNumber(doc.token_count) ||
+      (doc.size !== undefined && !isNumber(doc.size)) ||
+      (doc.mtime_ms !== undefined && !isNumber(doc.mtime_ms))
     ) {
       throw new Error("invalid manifest");
     }
@@ -98,6 +100,11 @@ export function saveIndexPair(
   writeJsonAtomic(indexManifestPath(root), manifest);
 }
 
+export function saveManifestOnly(root: string, manifest: IndexManifest): void {
+  fs.mkdirSync(docCanonDir(path.resolve(root)), { recursive: true });
+  writeJsonAtomic(indexManifestPath(root), manifest);
+}
+
 export function loadIndexPair(
   root: string,
 ): { manifest: IndexManifest; bm25: Bm25State } {
@@ -114,6 +121,14 @@ export function loadIndexPair(
     );
   }
   return { manifest, bm25 };
+}
+
+export function loadBm25(root: string): Bm25State {
+  const bm25Path = bm25IndexPath(root);
+  if (!fs.existsSync(bm25Path)) {
+    throw new Error("bm25 index not found");
+  }
+  return parseBm25(readJson(bm25Path));
 }
 
 export function tryLoadManifest(root: string): IndexManifest | null {

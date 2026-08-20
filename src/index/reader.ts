@@ -22,6 +22,22 @@ export function openCanonIndex(root: string): CanonIndexHandle {
       const out: Record<string, string> = {};
       for (const rel of listCanonMarkdown(root)) {
         const abs = path.join(root, ...rel.split("/"));
+        const prev = manifest.docs[rel];
+        if (
+          prev !== undefined &&
+          typeof prev.size === "number" &&
+          typeof prev.mtime_ms === "number"
+        ) {
+          try {
+            const st = fs.statSync(abs);
+            if (st.size === prev.size && st.mtimeMs === prev.mtime_ms) {
+              out[rel] = prev.hash;
+              continue;
+            }
+          } catch {
+            // Fall through: hashing surfaces the real file error.
+          }
+        }
         out[rel] = contentHash(fs.readFileSync(abs, "utf8"));
       }
       return out;

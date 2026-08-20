@@ -16,3 +16,7 @@ export function codeIndexWatchPidPath(root: string): string {
 export function codeIndexConfigPath(root: string): string {
   return path.join(docCanonDir(root), "code-index.json");
 }
+
+export function codeIndexStatsPath(root: string): string {
+  return path.join(docCanonDir(root), "code-index-stats.json");
+}

@@ -10,6 +10,7 @@ description: Change a project's canon contract and registered templates safely.
 - The source of truth (SoT) is `docs/canon/`; start from `docs/canon/INDEX.md`.
 - Never modify application code. Edit only `docs/canon/**`; managed paths may be changed only by CLI upgrade flows.
 - Always run `doc-canon validate` before claiming success on canon edits.
+- Keep prose and list lines within the contract's `policies.max_line_length` (default 500 chars); wrap long lines into continuation lines instead of single walls of text. Table rows and fenced code blocks are exempt (table rows cannot be wrapped).
 - If `doc-canon` is missing on PATH, stop and give an install hint: `npm install -g doc-canon` or use a local npx invocation. Do not continue without validation.
 
 ## Workflow

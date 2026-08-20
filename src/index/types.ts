@@ -1,4 +1,10 @@
-export type IndexDocMeta = { hash: string; token_count: number };
+export type IndexDocMeta = {
+  hash: string;
+  token_count: number;
+  /** Stat snapshot used to skip re-hashing unchanged files (optional; absent in pre-0.7 manifests). */
+  size?: number;
+  mtime_ms?: number;
+};
 
 export type IndexManifest = {
   schema_version: 1;

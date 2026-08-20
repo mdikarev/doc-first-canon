@@ -27,4 +27,9 @@ Merged: `GLOSSARY.md` (`Member-access reference` term — Go composite/pointer-l
 
 ## Open questions
 
-*Resolved by the design spec* (binding forms: `x := &T{}` / `x := T{}` / `var x = T{}` with a composite-literal initializer; `var x T` without an initializer excluded; `&T{}` counts via the `unary_expression` → `composite_literal` form; same-file, qualified-import (`reader.Handle{}` via the import edge map, edge carries the unqualified type), and same-package resolution via the sync post-processing pass; same-package ambiguity — zero or multiple same-named candidates → edge dropped; tree-sitter-go CST shapes locked in extractor tests).
+*Resolved by the design spec* (binding forms: `x := &T{}` / `x := T{}` / `var x = T{}` with a
+composite-literal initializer; `var x T` without an initializer excluded; `&T{}` counts via the
+`unary_expression` → `composite_literal` form; same-file, qualified-import (`reader.Handle{}` via the import
+edge map, edge carries the unqualified type), and same-package resolution via the sync post-processing pass;
+same-package ambiguity — zero or multiple same-named candidates → edge dropped; tree-sitter-go CST shapes
+locked in extractor tests).

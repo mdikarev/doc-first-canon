@@ -46,6 +46,17 @@ describe("openCodeIndex", () => {
     }
   });
 
+  it("liveHashes detects a content edit (stale)", async () => {
+    await syncCodeIndex(repo);
+    const handle = openCodeIndex(repo);
+    fs.writeFileSync(
+      path.join(repo, "src/reader.ts"),
+      "export class Reader { score(): number { return 2; } }",
+    );
+    const live = handle.liveHashes();
+    assert.notEqual(live["src/reader.ts"], handle.manifest.files["src/reader.ts"]?.hash);
+  });
+
   it("throws when the pair is missing", () => {
     assert.throws(() => openCodeIndex(repo), /not found/);
   });

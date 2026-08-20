@@ -10,7 +10,13 @@ Covers the five supported languages (TypeScript/JavaScript, Go, C#, Rust, Python
 
 ## Current state
 
-The pipeline lives in `src/code-index/*`: source-root discovery (manifest-driven for all five languages), a uniform tree-sitter WASM extraction pipeline normalized into the shared `{ name, kind, signature, file, line, endLine, scope }` model, syntactic references (anchors, import edges, in-scope bindings), member-access edges, and cross-file post-processing passes keyed by language in `src/code-index/resolvers/` (`CROSS_FILE_RESOLVERS`). `sync.ts` stays language-agnostic: it buckets `unresolvedMembers` by grammar language and dispatches each language's resolver from the registry.
+The pipeline lives in `src/code-index/*`: source-root discovery (manifest-driven for all five
+languages), a uniform tree-sitter WASM extraction pipeline normalized into the shared
+`{ name, kind, signature, file, line, endLine, scope }` model, syntactic references (anchors, import
+edges, in-scope bindings), member-access edges, and cross-file post-processing passes keyed by
+language in `src/code-index/resolvers/` (`CROSS_FILE_RESOLVERS`). `sync.ts` stays language-agnostic:
+it buckets `unresolvedMembers` by grammar language and dispatches each language's resolver from the
+registry.
 
 ## Responsibilities
 
@@ -36,7 +42,17 @@ The pipeline lives in `src/code-index/*`: source-root discovery (manifest-driven
 
 ### Cross-file resolution passes
 
-Member-access edges that cannot be resolved to a same-file type surface as `UnresolvedMember` entries from the extractor; `sync.ts` buckets them by grammar language and runs the registered resolver for that language (from `CROSS_FILE_RESOLVERS`). Currently registered: `go` → `resolveGoSamePackageReferences`, `c-sharp` → `resolveCSharpNamespaceReferences`. A resolver emits an edge only when exactly one candidate file matches; zero or multiple candidates drop the edge (deterministic ambiguity rule). For C#, `resolveCSharpNamespaceReferences` derives each unresolved candidate's search-set from a deterministic syntactic project model — the candidate file's namespaces (all `module` symbols, nested included) plus its per-file `using`-directive names, or a single qualified namespace for `new Ns.Type()` — resolves own-namespace-first, then the using-union, and applies the exactly-one-distinct-file rule; `using`-aliases resolve to their canonical type name, and target-typed `new()` requires an explicit non-`var` type anchor.
+Member-access edges that cannot be resolved to a same-file type surface as `UnresolvedMember` entries
+from the extractor; `sync.ts` buckets them by grammar language and runs the registered resolver for
+that language (from `CROSS_FILE_RESOLVERS`). Currently registered: `go` →
+`resolveGoSamePackageReferences`, `c-sharp` → `resolveCSharpNamespaceReferences`. A resolver emits an
+edge only when exactly one candidate file matches; zero or multiple candidates drop the edge
+(deterministic ambiguity rule). For C#, `resolveCSharpNamespaceReferences` derives each unresolved
+candidate's search-set from a deterministic syntactic project model — the candidate file's namespaces
+(all `module` symbols, nested included) plus its per-file `using`-directive names, or a single
+qualified namespace for `new Ns.Type()` — resolves own-namespace-first, then the using-union, and
+applies the exactly-one-distinct-file rule; `using`-aliases resolve to their canonical type name, and
+target-typed `new()` requires an explicit non-`var` type anchor.
 
 ## Dependencies
 
@@ -48,7 +64,7 @@ Member-access edges that cannot be resolved to a same-file type surface as `Unre
 - Deterministic: identical corpus → identical index bytes; resolver dispatch order derives from the stable file ordering.
 - Member-access resolution is syntactic: no name resolution or type inference; a binding's type is taken only from the constructor/literal CST node.
 - Each extractor fills only its own `unresolvedMembers`; the registry key is the grammar language reported by `grammarForFile`.
-- Freshness: hash-driven rebuild on any create/update/delete or `grammar_versions` divergence; `code_index_stale` warns, `code_index_missing` fails closed.
+- Freshness: stat-first, hash-confirmed — an internal fingerprint-keyed stat cache (`code-index-stats.json`, outside the dual artifact) skips re-hashing unchanged files; any create/update/delete or `grammar_versions` divergence triggers a full rebuild; `code_index_stale` warns, `code_index_missing` fails closed.
 
 ## Open questions
 

@@ -8,6 +8,7 @@ import { discoverSourceRoots, listSourceFiles } from "./discovery.js";
 import { extractFile, grammarForFile } from "./extractors/index.js";
 import { GRAMMAR_VERSIONS } from "./grammar-versions.js";
 import { saveCodeIndexPair, tryLoadCodeIndexManifest } from "./io.js";
+import { saveCodeIndexStats, tryLoadCodeIndexStats } from "./stats.js";
 import { CROSS_FILE_RESOLVERS } from "./resolvers/index.js";
 import type { CodeAstIndex, CodeIndexManifest, CodeReference, CodeSymbol, CodeSyncResult, UnresolvedMember } from "./types.js";
 
@@ -31,9 +32,33 @@ export async function syncCodeIndex(root: string): Promise<CodeSyncResult> {
     previous !== null &&
     JSON.stringify(previous.grammar_versions) !== JSON.stringify(GRAMMAR_VERSIONS);
 
+  // Stat fast path: with a stats cache matching the previous fingerprint,
+  // files whose (size, mtime_ms) are unchanged reuse the manifest hash without
+  // being read or hashed. Changed files are content-hashed and compared, so a
+  // touch/checkout with identical content does not trigger a rebuild.
+  const statsCache = tryLoadCodeIndexStats(vcsRoot);
+  const canTrustStats =
+    previous !== null &&
+    statsCache !== null &&
+    statsCache.fingerprint === previous.index_fingerprint;
+
   const hashes = new Map<string, string>();
   for (const rel of files) {
-    hashes.set(rel, contentHash(fs.readFileSync(path.join(vcsRoot, rel), "utf8")));
+    const abs = path.join(vcsRoot, rel);
+    const cached = canTrustStats ? statsCache.files[rel] : undefined;
+    const prevMeta = previous?.files[rel];
+    if (cached !== undefined && prevMeta !== undefined) {
+      try {
+        const st = fs.statSync(abs);
+        if (st.size === cached.size && st.mtimeMs === cached.mtime_ms) {
+          hashes.set(rel, prevMeta.hash);
+          continue;
+        }
+      } catch {
+        // Fall through to hashing; readFileSync surfaces the real error.
+      }
+    }
+    hashes.set(rel, contentHash(fs.readFileSync(abs, "utf8")));
   }
 
   const changed = [
@@ -93,6 +118,15 @@ export async function syncCodeIndex(root: string): Promise<CodeSyncResult> {
     references,
   };
   saveCodeIndexPair(vcsRoot, manifest, ast);
+  saveCodeIndexStats(vcsRoot, {
+    fingerprint,
+    files: Object.fromEntries(
+      files.map((rel) => {
+        const st = fs.statSync(path.join(vcsRoot, rel));
+        return [rel, { size: st.size, mtime_ms: st.mtimeMs }];
+      }),
+    ),
+  });
 
   return { status: "updated", indexed: files.length, changed: [...changed].sort() };
 }

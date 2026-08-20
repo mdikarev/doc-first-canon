@@ -1,7 +1,7 @@
 // src/code-index/discovery.ts
 import fs from "node:fs";
 import path from "node:path";
-import { isIgnored } from "../agnostic/ignore.js";
+import { createIgnoreMatcher } from "../agnostic/ignore.js";
 import { VCS_INDEXABLE_EXTENSIONS } from "./grammar-versions.js";
 import type { CodeIndexConfig } from "./types.js";
 
@@ -41,10 +41,11 @@ function hasManifest(entries: fs.Dirent[]): boolean {
 export function discoverManifestRoots(vcsRoot: string): string[] {
   const roots: string[] = [];
   const stack = [""];
+  const ignored = createIgnoreMatcher([]);
   while (stack.length > 0) {
     const rel = stack.pop()!;
     const abs = rel === "" ? vcsRoot : path.join(vcsRoot, rel);
-    if (isIgnored(rel, [])) continue;
+    if (ignored(rel)) continue;
     const entries = fs.readdirSync(abs, { withFileTypes: true });
     if (hasManifest(entries)) {
       roots.push(rel);
@@ -88,12 +89,13 @@ export function listSourceFiles(
 ): string[] {
   const seen = new Set<string>();
   const out: string[] = [];
+  const ignored = createIgnoreMatcher(ignoreGlobs);
 
   const walk = (relDir: string): void => {
     const abs = relDir === "" ? vcsRoot : path.join(vcsRoot, relDir);
     for (const ent of fs.readdirSync(abs, { withFileTypes: true })) {
       const rel = relDir === "" ? ent.name : path.posix.join(relDir, ent.name);
-      if (isIgnored(rel, ignoreGlobs)) continue;
+      if (ignored(rel)) continue;
       if (ent.isDirectory()) {
         walk(rel);
       } else if (ent.isFile() && isIndexableFile(rel)) {

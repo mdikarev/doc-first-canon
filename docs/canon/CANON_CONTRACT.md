@@ -18,7 +18,7 @@ Treat the machine contract as the source of truth for canon structure.
 ```yaml
 schema_version: 1
 cli_compat: ">=0.1.0"
-skills_stamp: "0.14.0"
+skills_stamp: "0.15.0"
 sections:
   - id: index
     path: INDEX.md
@@ -65,6 +65,11 @@ sections:
     role: section
     required: true
     template: MODULE
+  - id: indexing
+    path: INDEXING.md
+    role: section
+    required: true
+    template: MODULE
   - id: future-plans-index
     path: future_plans/INDEX.md
     role: section
@@ -97,6 +102,7 @@ templates:
     path: templates/FUTURE_PLAN.md
 policies:
   max_lines: 400
+  max_line_length: 500
   ignore: []
 ```
 

@@ -89,6 +89,27 @@ describe("syncCodeIndex", () => {
     assert.equal(r.status, "updated");
     assert.equal(r.indexed, 1);
   });
+
+  it("writes a stats sidecar tied to the fingerprint on rebuild", async () => {
+    const r = await syncCodeIndex(repo);
+    assert.equal(r.status, "updated");
+    const statsPath = path.join(repo, ".doc-canon", "code-index-stats.json");
+    assert.ok(fs.existsSync(statsPath));
+    const stats = JSON.parse(fs.readFileSync(statsPath, "utf8"));
+    const pair = loadCodeIndexPair(repo);
+    assert.equal(stats.fingerprint, pair.manifest.index_fingerprint);
+    assert.equal(typeof stats.files["src/reader.ts"].size, "number");
+    assert.equal(typeof stats.files["src/reader.ts"].mtime_ms, "number");
+  });
+
+  it("does not rebuild when only the mtime changed (content identical)", async () => {
+    await syncCodeIndex(repo);
+    const src = path.join(repo, "src/reader.ts");
+    const future = new Date(Date.now() + 60_000);
+    fs.utimesSync(src, future, future);
+    const r = await syncCodeIndex(repo);
+    assert.equal(r.status, "fresh");
+  });
 });
 
 const GO_SOURCE = `package reader

@@ -10,7 +10,13 @@
 
 ## Intent
 
-Skills and CLI need a durable, deterministic retrieval substrate so later search can select relevant canon without dumping every markdown file. Content hashes are the freshness mechanism for that index—not a standalone “skip re-scout” cache and not embeddings. On any create/update/delete detected via hash diff, the index does a logical full BM25 rebuild from the current corpus rather than true posting-level incremental updates — simpler and fit for small canons. A poll-based watcher (`doc-canon index --watch`, default 2000 ms, `--stop` to end it, pid lock to keep a single instance) keeps the index aligned with on-disk `docs/canon/**` without requiring native FS events.
+Skills and CLI need a durable, deterministic retrieval substrate so later search can select relevant canon
+without dumping every markdown file. Content hashes are the freshness mechanism for that index—not a
+standalone “skip re-scout” cache and not embeddings. On any create/update/delete detected via hash diff, the
+index does a logical full BM25 rebuild from the current corpus rather than true posting-level incremental
+updates — simpler and fit for small canons. A poll-based watcher (`doc-canon index --watch`, default 2000 ms,
+`--stop` to end it, pid lock to keep a single instance) keeps the index aligned with on-disk `docs/canon/**`
+without requiring native FS events.
 
 ## In scope
 

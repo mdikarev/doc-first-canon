@@ -6,7 +6,19 @@ Own the deterministic core of `doc-canon`: scaffold, structural validation, inve
 
 ## Scope
 
-**Covers:** commands `init`, `validate`, `check`, `report`, `upgrade-skills`, `migrate`, `index`, `search`, `discipline`, `code-index`; contract parse/schema; heading and INDEX agreement checks; ignore-aware inventory; CLI finding merge; embedding default templates/skills/rules into target repos (harness-selected: Cursor / Claude Code / DSH); required-gap ensure on existing canons (`migrate`); build/update a local BM25 index over `docs/canon/**/*.md` (`index`), including poll-based `--watch` (default 2000 ms, `--interval`) and `--stop`, writing `.doc-canon/index-manifest.json` + `.doc-canon/bm25-index.json`; one-shot `index` exits ≠0 if a watch process is running; search that index and return a bounded context pack, self-healing a stale index at the CLI layer (rebuild then serve) and recording every successful search in `.doc-canon/probe-log.jsonl`; report probe discipline via `discipline`; build/update a deterministic AST index over the project's discovered source roots (`code-index build`), writing `.doc-canon/code-index-manifest.json` + `.doc-canon/code-ast-index.json`, with the same poll `--watch`/`--stop` discipline and a separate watch pid; search that code index (`code-index search`) and return a bounded code pack with the same self-healing and probe logging.
+**Covers:** commands `init`, `validate`, `check`, `report`, `upgrade-skills`, `migrate`, `index`,
+`search`, `discipline`, `code-index`; contract parse/schema; heading and INDEX agreement checks;
+ignore-aware inventory; CLI finding merge; embedding default templates/skills/rules into target repos
+(harness-selected: Cursor / Claude Code / DSH); required-gap ensure on existing canons (`migrate`);
+build/update a local BM25 index over `docs/canon/**/*.md` (`index`), including poll-based `--watch`
+(default 2000 ms, `--interval`) and `--stop`, writing `.doc-canon/index-manifest.json` +
+`.doc-canon/bm25-index.json`; one-shot `index` exits ≠0 if a watch process is running; search that
+index and return a bounded context pack, self-healing a stale index at the CLI layer (rebuild then
+serve) and recording every successful search in `.doc-canon/probe-log.jsonl`; report probe discipline
+via `discipline`; build/update a deterministic AST index over the project's discovered source roots
+(`code-index build`), writing `.doc-canon/code-index-manifest.json` + `.doc-canon/code-ast-index.json`,
+with the same poll `--watch`/`--stop` discipline and a separate watch pid; search that code index
+(`code-index search`) and return a bounded code pack with the same self-healing and probe logging.
 
 **Excludes:** interview, semantic audit judgements, discrepancy dialogue, and any application-code edits (those belong to skills or coding agents).
 
@@ -16,7 +28,12 @@ Package `doc-canon@0.6.0` (Node ≥20, ESM). Entry: `bin/doc-canon.js` → compi
 
 ## Responsibilities
 
-- Materialize default canon + managed harness overlays on `init`, including a required `future_plans/INDEX.md` and its templates: identical skill trees under the selected harnesses' skill roots (`.cursor/skills/`, `.claude/skills/`, `.dsh/skills/`), Cursor pointer rule (`.cursor/rules/doc-canon.mdc`), short managed block in `AGENTS.md`, and full pointer-rule body (YAML frontmatter stripped) in `CLAUDE.md`; the `AGENTS.md`/`CLAUDE.md` blocks are always upserted (all three harnesses load them); DSH needs no dedicated rule file
+- Materialize default canon + managed harness overlays on `init`, including a required
+  `future_plans/INDEX.md` and its templates: identical skill trees under the selected harnesses'
+  skill roots (`.cursor/skills/`, `.claude/skills/`, `.dsh/skills/`), Cursor pointer rule
+  (`.cursor/rules/doc-canon.mdc`), short managed block in `AGENTS.md`, and full pointer-rule body
+  (YAML frontmatter stripped) in `CLAUDE.md`; the `AGENTS.md`/`CLAUDE.md` blocks are always upserted
+  (all three harnesses load them); DSH needs no dedicated rule file
 - Fail closed on invalid contract YAML, incompatible `schema_version`, missing required files/headings, INDEX≠contract, too-old `skills_stamp`
 - Refresh inventory and `source: cli` findings on `check` while preserving `source: skill`
 - Refresh managed skills/rules/`AGENTS.md`/`CLAUDE.md` overlays on `upgrade-skills` without wiping canon document content; refresh the skill trees of the harnesses present in the repo (`.cursor/skills/`, `.claude/skills/`, `.dsh/skills/` presence detection), unless `--harnesses` overrides the set
@@ -27,7 +44,18 @@ Package `doc-canon@0.6.0` (Node ≥20, ESM). Entry: `bin/doc-canon.js` → compi
 - After stripping obsolete initiative contract rows, any initiative file still on disk must appear in `future_plans/INDEX.md` Initiatives or `validate` fails: `upgrade-skills` does not auto-add Initiatives rows, so the user or `canon-future-plan` must reconcile the table
 - `migrate` does not rewrite section prose, initiative files, or `DISCREPANCIES.md`; `future_plans` contract-skeleton ensure stays on `upgrade-skills`
 - Discover code source roots (explicit config > manifest > extension scan) and build a deterministic, hash-driven AST index over them; report `code_index_stale` → warn and `code_index_missing` → fail closed with a hint to run `doc-canon code-index build`
-- Search the code AST index (`code-index search`): symbol mode is tokenized — every query token is a case-insensitive substring of `name` or, falling back, `signature`; ordering exact > prefix > name-tokens > signature-tokens, tie-break file then line — with kind/file filters, an optional `--body` snippet window (symbol mode only), and a syntactic reference mode (`--refs`; accepts `Class.method`, matching member-access edges for `new Type()`-initialized bindings (TS/JS and C#), Go composite/pointer-literal bindings (`x := &T{}` / `x := T{}` / `var x = T{}`), and Rust associated-function-constructor bindings (`Type::new()` / `Type::default()`), and Python bare-call constructor bindings (`Type(...)` — same-file classes or PascalCase imported names) — same-file, qualified-import, same-package, C# same-namespace/`using`-imported/`using`-alias (canonical name)/namespace-qualified/explicit-typed target-typed `new()`, imported-name (Rust), and imported-name (Python) — query stays exact/case-sensitive); report `code_index_stale` → warn and `code_index_missing` → fail closed with a hint to run `doc-canon code-index build`
+- Search the code AST index (`code-index search`): symbol mode is tokenized — every query token is a
+  case-insensitive substring of `name` or, falling back, `signature`; ordering exact > prefix >
+  name-tokens > signature-tokens, tie-break file then line — with kind/file filters, an optional
+  `--body` snippet window (symbol mode only), and a syntactic reference mode (`--refs`; accepts
+  `Class.method`, matching member-access edges for `new Type()`-initialized bindings (TS/JS and C#),
+  Go composite/pointer-literal bindings (`x := &T{}` / `x := T{}` / `var x = T{}`), Rust
+  associated-function-constructor bindings (`Type::new()` / `Type::default()`), and Python bare-call
+  constructor bindings (`Type(...)` — same-file classes or PascalCase imported names) — same-file,
+  qualified-import, same-package, C# same-namespace/`using`-imported/`using`-alias (canonical
+  name)/namespace-qualified/explicit-typed target-typed `new()`, imported-name (Rust), and
+  imported-name (Python) — query stays exact/case-sensitive); report `code_index_stale` → warn and
+  `code_index_missing` → fail closed with a hint to run `doc-canon code-index build`
 
 ## Interfaces
 
@@ -78,11 +106,27 @@ Selection rules:
 - `AGENTS.md` / `CLAUDE.md` blocks are always upserted regardless of selection — they are the cross-harness always-on guidance (Cursor, Claude Code, and DSH all load them).
 - `--yes` on `init` / `upgrade-skills` / `migrate` means "accept defaults, ask nothing".
 
-Artifacts: `.doc-canon/inventory.json`, `.doc-canon/report.json`, `.doc-canon/index-manifest.json`, `.doc-canon/bm25-index.json`, `.doc-canon/code-index-manifest.json`, `.doc-canon/code-ast-index.json`, `.doc-canon/probe-log.jsonl` (may be gitignored in target repos).
+Artifacts: `.doc-canon/inventory.json`, `.doc-canon/report.json`, `.doc-canon/index-manifest.json`, `.doc-canon/bm25-index.json`, `.doc-canon/code-index-manifest.json`, `.doc-canon/code-ast-index.json`, `.doc-canon/code-index-stats.json` (internal fingerprint-keyed stat cache for code freshness; absent or stale → readers fall back to full hashing), `.doc-canon/probe-log.jsonl` (may be gitignored in target repos).
 
-`search` fails with exit ≠0 for an empty or whitespace-only query and for a missing or corrupt index; index failures include a hint to run `doc-canon index`. A stale index is **self-healed at the CLI layer when no watch owns it**: the command rebuilds the index, re-runs the search, and serves a fresh pack with `warnings: ["auto_reindexed"]` in `--json` (human mode: `auto_reindexed` warning on stderr). If a live watch holds the index lock, the stale index is served with exit 0 and an `index_stale` signal instead: human mode prints a warning on stderr; `--json` includes `warnings` (and `freshness`) in the Pack on stdout with no stderr warning. Zero hits also exit 0. Every successful search appends one line to the probe log; searches never mutate the index while a watch is running. Ranking internally applies stemming, heading weights, the `future_plans/**` downweight, and glossary expansion (fail-open when `GLOSSARY.md` is absent) — no flags or output-shape changes.
+`search` fails with exit ≠0 for an empty or whitespace-only query and for a missing or corrupt index;
+index failures include a hint to run `doc-canon index`. A stale index is **self-healed at the CLI
+layer when no watch owns it**: the command rebuilds the index, re-runs the search, and serves a fresh
+pack with `warnings: ["auto_reindexed"]` in `--json` (human mode: `auto_reindexed` warning on stderr).
+If a live watch holds the index lock, the stale index is served with exit 0 and an `index_stale`
+signal instead: human mode prints a warning on stderr; `--json` includes `warnings` (and `freshness`)
+in the Pack on stdout with no stderr warning. Zero hits also exit 0. Every successful search appends
+one line to the probe log; searches never mutate the index while a watch is running. Ranking
+internally applies stemming, heading weights, the `future_plans/**` downweight, and glossary expansion
+(fail-open when `GLOSSARY.md` is absent) — no flags or output-shape changes.
 
-`code-index search` fails with exit ≠0 for an empty query, an empty `--refs` name, a missing/corrupt code index (hint to run `doc-canon code-index build`), invalid flags, `--refs` combined with a positional query / `--kind` / `--file`, and `--body` combined with `--refs`. A stale code index is **self-healed at the CLI layer when no watch owns it**: the command rebuilds the code index, re-runs the search, and serves a fresh pack with `warnings: ["auto_reindexed"]` (`--json`; `auto_reindexed` warning on stderr in human mode). If a live watch holds the code-index lock, the stale index is served with exit 0 and a `code_index_stale` warning (human mode on stderr; `--json` carries `warnings` + `freshness`). Zero hits exit 0. Every successful search appends one line to the probe log.
+`code-index search` fails with exit ≠0 for an empty query, an empty `--refs` name, a missing/corrupt
+code index (hint to run `doc-canon code-index build`), invalid flags, `--refs` combined with a
+positional query / `--kind` / `--file`, and `--body` combined with `--refs`. A stale code index is
+**self-healed at the CLI layer when no watch owns it**: the command rebuilds the code index, re-runs
+the search, and serves a fresh pack with `warnings: ["auto_reindexed"]` (`--json`; `auto_reindexed`
+warning on stderr in human mode). If a live watch holds the code-index lock, the stale index is served
+with exit 0 and a `code_index_stale` warning (human mode on stderr; `--json` carries `warnings` +
+`freshness`). Zero hits exit 0. Every successful search appends one line to the probe log.
 
 ## Usage guide: `code-index search`
 
@@ -98,7 +142,13 @@ doc-canon code-index search "search" --file "src/**"
 doc-canon code-index search "searchCanon" --body
 ```
 
-**Refs mode** (`--refs <name>`): finds usages. Exact, case-sensitive match over syntactic references — `anchor` (same-file usage), `import` (cross-file edges: import statements, call-site edges for identifier usages of imported names, and `Class.method` member-access edges for `new Type()`-initialized bindings (TS/JS and C#) and Go composite/pointer-literal bindings (`x := &T{}` / `x := T{}` / `var x = T{}`, same-file, qualified-import, same-package, or — C# — same-namespace, `using`-imported, `using`-alias (canonical name), namespace-qualified, or explicit-typed target-typed `new()`), aliased or same-file, canonical name), and `binding` (in-scope locals).
+**Refs mode** (`--refs <name>`): finds usages. Exact, case-sensitive match over syntactic references —
+`anchor` (same-file usage), `import` (cross-file edges: import statements, call-site edges for
+identifier usages of imported names, and `Class.method` member-access edges for `new Type()`-initialized
+bindings (TS/JS and C#) and Go composite/pointer-literal bindings (`x := &T{}` / `x := T{}` /
+`var x = T{}`, same-file, qualified-import, same-package, or — C# — same-namespace, `using`-imported,
+`using`-alias (canonical name), namespace-qualified, or explicit-typed target-typed `new()`), aliased
+or same-file, canonical name), and `binding` (in-scope locals).
 
 ```bash
 doc-canon code-index search --refs "searchCanon"      # import statement + call sites across files
@@ -108,7 +158,12 @@ doc-canon code-index search --refs "Handle.Score"     # Go member-access edge: c
 doc-canon code-index search --refs "Reader.Score"     # C# member-access edge: calls on new Reader() bindings (same-file, same-namespace, or `using`-imported); using R = App.Reader aliases resolve to canonical Reader.Score
 ```
 
-Each hit carries a bounded snippet window from the live source file. A missing/corrupt index fails closed with a hint to run `doc-canon code-index build`; a stale index is self-healed at the CLI layer when no watch owns it (rebuild then serve, `auto_reindexed` warning), otherwise serves the pack with a `code_index_stale` warning; zero hits exit 0. Agents follow the mandatory code-index-first gate: `code-index search` before whole-file source reads, and on empty/thin packs read source as evidence and note `code_miss: <query> -> source:<path>`.
+Each hit carries a bounded snippet window from the live source file. A missing/corrupt index fails
+closed with a hint to run `doc-canon code-index build`; a stale index is self-healed at the CLI layer
+when no watch owns it (rebuild then serve, `auto_reindexed` warning), otherwise serves the pack with a
+`code_index_stale` warning; zero hits exit 0. Agents follow the mandatory code-index-first gate:
+`code-index search` before whole-file source reads, and on empty/thin packs read source as evidence
+and note `code_miss: <query> -> source:<path>`.
 
 ## Dependencies
 

@@ -5,7 +5,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import path from "node:path";
-import { isIgnored } from "../agnostic/ignore.js";
+import { createIgnoreMatcher } from "../agnostic/ignore.js";
 import type { Inventory, InventoryEntry } from "./types.js";
 
 const BINARY_EXTENSIONS = new Set([
@@ -79,6 +79,8 @@ export function buildInventory(
   const absoluteRoot = path.resolve(root);
   const entries: InventoryEntry[] = [];
 
+  const ignored = createIgnoreMatcher(ignoreGlobs);
+
   function visit(directory: string, relativeDirectory = ""): void {
     const children = readdirSync(directory, { withFileTypes: true })
       .sort((left, right) => left.name.localeCompare(right.name));
@@ -87,7 +89,7 @@ export function buildInventory(
       const relativePath = relativeDirectory
         ? `${relativeDirectory}/${child.name}`
         : child.name;
-      if (isIgnored(relativePath, ignoreGlobs)) continue;
+      if (ignored(relativePath)) continue;
 
       const absolutePath = path.join(directory, child.name);
       if (child.isDirectory()) {

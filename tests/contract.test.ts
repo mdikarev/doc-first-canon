@@ -41,6 +41,29 @@ describe("parseContractMarkdown", () => {
     assert.equal(c.policies.max_lines, 400);
   });
 
+  it("parses max_line_length when present and omits it otherwise", () => {
+    const withCap = good.replace(
+      "max_lines: 400",
+      "max_lines: 400\n  max_line_length: 500",
+    );
+    const capped = parseContractMarkdown(withCap);
+    assert.equal(capped.policies.max_line_length, 500);
+
+    const uncapped = parseContractMarkdown(good);
+    assert.equal(uncapped.policies.max_line_length, undefined);
+  });
+
+  it("throws on malformed max_line_length", () => {
+    const md = good.replace(
+      "max_lines: 400",
+      "max_lines: 400\n  max_line_length: not-a-number",
+    );
+    assert.throws(
+      () => parseContractMarkdown(md),
+      /max_line_length must be a number/i,
+    );
+  });
+
   it("fails on missing yaml fence", () => {
     assert.throws(() => parseContractMarkdown("# no yaml"), /machine block/i);
   });

@@ -8,7 +8,14 @@
 
 ## Intent
 
-P6a-CSharp shipped the cheap syntactic tier for C#: `var x = new Type();` + `x.method()` emits a `Type.method`-named edge for same-file types and for a unique same-namespace type (via `resolveCSharpNamespaceReferences` in `sync.ts`). Deliberately out of scope there were target-typed `new()`, `using`-alias imports, namespace-qualified `new NS.Type()`, and `using`-imported types from other namespaces. This initiative resolves those deferred cases with a deterministic syntactic project model — file↔namespace from the collected `module` symbols (all namespaces declared in a file, nested included) plus per-file `using`-directive names parsed in the extractor — keeping the slice inside the cheap syntactic tier (no name resolution, no `.csproj`/`.sln` compile-item parsing).
+P6a-CSharp shipped the cheap syntactic tier for C#: `var x = new Type();` + `x.method()` emits a
+`Type.method`-named edge for same-file types and for a unique same-namespace type (via
+`resolveCSharpNamespaceReferences` in `sync.ts`). Deliberately out of scope there were target-typed `new()`,
+`using`-alias imports, namespace-qualified `new NS.Type()`, and `using`-imported types from other namespaces.
+This initiative resolves those deferred cases with a deterministic syntactic project model — file↔namespace
+from the collected `module` symbols (all namespaces declared in a file, nested included) plus per-file
+`using`-directive names parsed in the extractor — keeping the slice inside the cheap syntactic tier (no name
+resolution, no `.csproj`/`.sln` compile-item parsing).
 
 ## In scope
 
@@ -34,4 +41,11 @@ Merged: `ARCHITECTURE.md` (code AST index — C# imported-type resolution / synt
 
 ## Open questions
 
-*Resolved by the design spec Decisions and the slice implementation* (deterministic syntactic project model — file↔namespace from collected `module` symbols + per-file `using` names, no `.csproj`/`.sln` parse; target-typed `new()` only with an explicit non-`var` type anchor (`Widget w = new();`), `var w = new();` stays unresolved; `using static`/`global using` excluded; edge names canonical (`Widget.Score`, `Reader.Get`) — `--refs R.Score` (alias form) does not match; own-first then using-union priority, exactly one distinct candidate file → edge; nested namespaces via the all-module-symbols index; exact tree-sitter-csharp node shapes locked in extractor tests — `collectUsingDirectives`, extended `collectConstructorBindings`, `collectMemberAccessEdges` in `csharp.ts`).
+*Resolved by the design spec Decisions and the slice implementation* (deterministic syntactic project model —
+file↔namespace from collected `module` symbols + per-file `using` names, no `.csproj`/`.sln` parse;
+target-typed `new()` only with an explicit non-`var` type anchor (`Widget w = new();`), `var w = new();` stays
+unresolved; `using static`/`global using` excluded; edge names canonical (`Widget.Score`, `Reader.Get`) —
+`--refs R.Score` (alias form) does not match; own-first then using-union priority, exactly one distinct
+candidate file → edge; nested namespaces via the all-module-symbols index; exact tree-sitter-csharp node
+shapes locked in extractor tests — `collectUsingDirectives`, extended `collectConstructorBindings`,
+`collectMemberAccessEdges` in `csharp.ts`).

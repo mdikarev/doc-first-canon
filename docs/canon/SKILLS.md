@@ -12,9 +12,26 @@ Own the agent layer: interview, extract-then-freeze bootstrap, canon authorship,
 
 ## Current state
 
-Five skills ship in `embedded/skills/` and are written into the selected harnesses' skill trees (`.cursor/skills/`, `.claude/skills/`, `.dsh/skills/`) on `init` / `upgrade-skills`. `canon-future-plan` authors directional initiatives under `future_plans/`; validate enforces an INDEX-driven zone for that folder (see `ARCHITECTURE.md`, `CLI.md`). Acceptance scenarios live in `docs/acceptance/skill-scenarios.md` (import source; not SoT). Automated skill execution tests are out of MVP scope.
+Five skills ship in `embedded/skills/` and are written into the selected harnesses' skill trees
+(`.cursor/skills/`, `.claude/skills/`, `.dsh/skills/`) on `init` / `upgrade-skills`. `canon-future-plan`
+authors directional initiatives under `future_plans/`; validate enforces an INDEX-driven zone for that
+folder (see `ARCHITECTURE.md`, `CLI.md`). Acceptance scenarios live in
+`docs/acceptance/skill-scenarios.md` (import source; not SoT). Automated skill execution tests are out
+of MVP scope.
 
-Agents that use the canon follow a shared dual-audience recipe: **search first — mandatory when the index is available** — `doc-canon search "<topic>"` → Scout a working-set manifest → Expand gate (`sufficient` / `need more`) → Execute with targeted deep reads. A missing index is built first (`doc-canon index`; `code-index build` when covered source exists); only if building fails does the flow fall back to progressive disclosure from `INDEX.md`, with every deep read outside a pack noted (`doc_miss: <query> -> docs:<path>` / `code_miss: <query> -> source:<path>`). **Quality over thrift:** expand when doubtful; never silently under-read or invent facts to save tokens. For **code analysis** in a covered language (TypeScript/JavaScript, Go, C#, Rust, Python), agents apply the same discipline through the code index first: try `doc-canon code-index search` before whole-file source reads, then read source as evidence when the probe is empty or thin and note the miss (`code_miss: <query> -> source:<path>`). `canon-bootstrap` and `canon-audit` build the indexes first (`doc-canon index`, `doc-canon code-index build` when covered source exists) and prefer index search for their goals when the indexes exist.
+Agents that use the canon follow a shared dual-audience recipe: **search first — mandatory when the
+index is available** — `doc-canon search "<topic>"` → Scout a working-set manifest → Expand gate
+(`sufficient` / `need more`) → Execute with targeted deep reads. A missing index is built first
+(`doc-canon index`; `code-index build` when covered source exists); only if building fails does the
+flow fall back to progressive disclosure from `INDEX.md`, with every deep read outside a pack noted
+(`doc_miss: <query> -> docs:<path>` / `code_miss: <query> -> source:<path>`). **Quality over thrift:**
+expand when doubtful; never silently under-read or invent facts to save tokens. For **code analysis**
+in a covered language (TypeScript/JavaScript, Go, C#, Rust, Python), agents apply the same discipline
+through the code index first: try `doc-canon code-index search` before whole-file source reads, then
+read source as evidence when the probe is empty or thin and note the miss
+(`code_miss: <query> -> source:<path>`). `canon-bootstrap` and `canon-audit` build the indexes first
+(`doc-canon index`, `doc-canon code-index build` when covered source exists) and prefer index search
+for their goals when the indexes exist.
 
 Coding agents follow feature-change order for new or changed behavior and public contracts: invoke `canon-write` first, proceed to application code only after the canon-first flow in the pointer rule is satisfied, then close the cycle with `canon-audit` (spot write does not replace a full-topic semantic pass).
 
@@ -30,7 +47,16 @@ Coding agents follow feature-change order for new or changed behavior and public
 
 **Absorb split:** once an initiative ships, `canon-write` merges outcomes into the relevant living sections; `canon-future-plan` then sets the initiative's status to `absorbed` and updates `future_plans/INDEX.md`.
 
-Pointer rule / `AGENTS.md` / `CLAUDE.md`: always-on context priority — search first, **mandatory when the index is available** (`doc-canon search`; `doc-canon code-index search` for covered languages); fall back to `docs/canon/INDEX.md` only when the index is missing and building failed, noting every read outside a pack (`doc_miss` / `code_miss`); build a small working set and expand if unsure before deep reads (no mandatory chat ritual); for new/changed behavior use **canon-first** (`canon-write` → optional project-local spec/plan → code → closing `canon-audit`; substantial canon waits for user go-ahead; coding agents do not edit canon themselves); escalate docs↔code divergence; do not silently pick a side. Cursor loads the `.mdc` pointer rule; Claude Code loads the same policy body from `CLAUDE.md` (not `.cursor/rules`); DSH loads the same always-on guidance from both `AGENTS.md` and `CLAUDE.md` and runs managed skills from `.dsh/skills/`.
+Pointer rule / `AGENTS.md` / `CLAUDE.md`: always-on context priority — search first, **mandatory when
+the index is available** (`doc-canon search`; `doc-canon code-index search` for covered languages);
+fall back to `docs/canon/INDEX.md` only when the index is missing and building failed, noting every
+read outside a pack (`doc_miss` / `code_miss`); build a small working set and expand if unsure before
+deep reads (no mandatory chat ritual); for new/changed behavior use **canon-first** (`canon-write` →
+optional project-local spec/plan → code → closing `canon-audit`; substantial canon waits for user
+go-ahead; coding agents do not edit canon themselves); escalate docs↔code divergence; do not silently
+pick a side. Cursor loads the `.mdc` pointer rule; Claude Code loads the same policy body from
+`CLAUDE.md` (not `.cursor/rules`); DSH loads the same always-on guidance from both `AGENTS.md` and
+`CLAUDE.md` and runs managed skills from `.dsh/skills/`.
 
 ### Scout retrieval protocol
 

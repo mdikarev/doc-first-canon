@@ -8,7 +8,12 @@
 
 ## Intent
 
-The index and search tools are only worth their cost if agents actually use them. This initiative ships the rules: a managed `AGENTS.md` block / pointer rule and coding-agent guidance requiring code-index-first analysis, with expand-when-thin preserved — when the index returns nothing or a thin set, the agent may read source as evidence, mirroring the canon's Expand gate. A token-cost guard test locks in the payoff: a typical multi-file analysis via the index must read fewer tokens than naive source reads. The source files remain the evidence when a probe is thin or a claim needs grounding — quality over thrift.
+The index and search tools are only worth their cost if agents actually use them. This initiative ships the
+rules: a managed `AGENTS.md` block / pointer rule and coding-agent guidance requiring code-index-first
+analysis, with expand-when-thin preserved — when the index returns nothing or a thin set, the agent may read
+source as evidence, mirroring the canon's Expand gate. A token-cost guard test locks in the payoff: a typical
+multi-file analysis via the index must read fewer tokens than naive source reads. The source files remain the
+evidence when a probe is thin or a claim needs grounding — quality over thrift.
 
 ## In scope
 

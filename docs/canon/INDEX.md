@@ -11,9 +11,10 @@ Start here for agent context about this repository (`doc-canon` / doc-first-cano
 3. [CLI.md](CLI.md) — deterministic CLI surface
 4. [SKILLS.md](SKILLS.md) — agent skills and invariants
 5. [CODE_INDEX.md](CODE_INDEX.md) — per-language code-index extraction and resolution details
-6. [GLOSSARY.md](GLOSSARY.md) — shared terms
-7. [DISCREPANCIES.md](DISCREPANCIES.md) — open conflicts and coding tasks
-8. [CANON_CONTRACT.md](CANON_CONTRACT.md) — structural machine contract (when changing shape)
+6. [INDEXING.md](INDEXING.md) — index artifacts, freshness, and retrieval
+7. [GLOSSARY.md](GLOSSARY.md) — shared terms
+8. [DISCREPANCIES.md](DISCREPANCIES.md) — open conflicts and coding tasks
+9. [CANON_CONTRACT.md](CANON_CONTRACT.md) — structural machine contract (when changing shape)
 
 Required, but not behavioral SoT and not a development task tracker: [future_plans/INDEX.md](future_plans/INDEX.md) — directional post-MVP initiatives; refine separately, then absorb into living canon.
 
@@ -29,6 +30,7 @@ Required, but not behavioral SoT and not a development task tracker: [future_pla
 | cli | CLI.md | section | true |
 | skills | SKILLS.md | section | true |
 | code-index | CODE_INDEX.md | section | true |
+| indexing | INDEXING.md | section | true |
 | future-plans-index | future_plans/INDEX.md | section | true |
 
 ## Discrepancies

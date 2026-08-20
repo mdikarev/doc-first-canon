@@ -8,7 +8,13 @@
 
 ## Intent
 
-The index and search tools only pay for themselves if agents actually use them — and guidance alone leaks (observed: whole-file reads with the rule in context, silently stale index, suppressible warnings). This initiative reverses P1's "no auto-reindex inside `search`" at the CLI layer, adds a probe log plus a `discipline` command/findings that make skipped probes observable and CI-gateable, and hardens the search-first rule into a mandatory gate (search when an index is available; fallback only when building failed; every read outside a pack carries a machine-parseable `code_miss` / `doc_miss`). Quality over thrift is preserved: the expand valve and legal deep reads stay unchanged.
+The index and search tools only pay for themselves if agents actually use them — and guidance alone leaks
+(observed: whole-file reads with the rule in context, silently stale index, suppressible warnings). This
+initiative reverses P1's "no auto-reindex inside `search`" at the CLI layer, adds a probe log plus a
+`discipline` command/findings that make skipped probes observable and CI-gateable, and hardens the
+search-first rule into a mandatory gate (search when an index is available; fallback only when building
+failed; every read outside a pack carries a machine-parseable `code_miss` / `doc_miss`). Quality over thrift
+is preserved: the expand valve and legal deep reads stay unchanged.
 
 ## In scope
 
