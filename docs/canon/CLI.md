@@ -171,7 +171,7 @@ and note `code_miss: <query> -> source:<path>`.
 - `yaml` — machine-block parse
 - `micromatch` — ignore globs (via `src/agnostic/ignore.ts`)
 - `@vscode/tree-sitter-wasm` — pinned tree-sitter WASM runtime + grammar binaries for `code-index` extraction (no native modules)
-- `node:sqlite` (Node ≥22.16, built-in) — embedded SQLite store for the code index; prints a one-time `ExperimentalWarning` to stderr on first use (accepted, cosmetic)
+- `node:sqlite` (Node ≥22.16, built-in) — embedded SQLite store for the code index; its one-time `ExperimentalWarning` is filtered at the CLI entry (`bin/doc-canon.js`) so `doc-canon` commands stay stderr-clean (library consumers of `node:sqlite` still see it in their own processes)
 - Embedded files under `embedded/` published with the package
 
 ## Invariants

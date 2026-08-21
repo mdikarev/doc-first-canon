@@ -60,8 +60,9 @@ not incidental: both the writer and every reader materialize the entire index.
   (`sqlite3 .doc-canon/code-ast-index.sqlite 'SELECT * FROM symbols'`) and `openCodeIndex` remains the
   programmatic surface. A `dump` subcommand can be added later if the JSON-inspection regression bites.
 - **`node:sqlite` warning:** Node ≥ 22.16 prints a one-time `ExperimentalWarning: SQLite is an experimental
-  feature` to stderr on first use. Accepted and documented (cosmetic, stderr-only, once per process); not
-  suppressed, and it does not change stdout, exit codes, or flags.
+  feature` to stderr on first import. It is filtered at the CLI entry (`bin/doc-canon.js`) so `doc-canon`
+  commands stay stderr-clean; library consumers (`doc-canon/code-search`, `doc-canon/code-index-reader`)
+  are not filtered and still see it in their own processes. Stdout, exit codes, and flags are unaffected.
 - **Migration:** full rebuild into SQLite; the stale JSON artifact is deleted after a successful write.
   No JSON→SQLite data conversion.
 
@@ -203,8 +204,9 @@ of every `matchClass` match**, so the JS rank + `slice(maxHits)` always sees eve
 
 ### CLI surface
 
-No flag or stdout change. `doc-canon code-index build`/`search` behave identically; only the artifact
-file, the Node floor, and a one-time `ExperimentalWarning` on stderr change. `code_index_missing` /
+No flag, stdout, or stderr change. `doc-canon code-index build`/`search` behave identically; only the
+artifact and the Node floor change (the one-time `node:sqlite` `ExperimentalWarning` is filtered at the CLI
+entry). `code_index_missing` /
 `code_index_stale` / `auto_reindexed` semantics are unchanged.
 
 ## Error handling
@@ -268,8 +270,8 @@ revised at absorption.
 
 - Resolver input: can cross-file resolvers keep reading all symbols into memory at target scale, or must
   they query the store (deferred slice)? This is the one remaining O(corpus) in-memory structure.
-- `node:sqlite` is Stability 1 (active development) and still prints an `ExperimentalWarning`: accept its
-  API-churn risk and the warning, or pin a minimum Node minor as a stable dependency boundary.
+- `node:sqlite` is Stability 1 (active development): accept its API-churn risk, or pin a minimum Node
+  minor as a stable dependency boundary. (The one-time `ExperimentalWarning` is filtered at the CLI entry.)
 
 ## Related
 
