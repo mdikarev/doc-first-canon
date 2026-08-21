@@ -84,7 +84,10 @@ Schema and structure validation only (exit non-zero on errors).
 ```bash
 doc-canon validate
 doc-canon validate --root /path/to/repo
+doc-canon validate --json  # machine-readable issue report
 ```
+
+`--json` prints a structured issue report: `{schema_version: 1, ok, issues: [{message, kind, paths, severity}]}` — no English-message parsing needed.
 
 ### check
 
@@ -334,7 +337,10 @@ doc-canon init --harnesses cursor,dsh # выбор через запятую
 ```bash
 doc-canon validate
 doc-canon validate --root /path/to/repo
+doc-canon validate --json  # machine-readable отчёт об ошибках
 ```
+
+`--json` печатает структурированный отчёт об ошибках: `{schema_version: 1, ok, issues: [{message, kind, paths, severity}]}` — парсинг английских сообщений не нужен.
 
 ### check
 

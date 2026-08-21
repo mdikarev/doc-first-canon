@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.0
+
+- **feat:** `doc-canon validate --json` — structured issues (`{schema_version: 1, ok, issues: [{message, kind, paths, severity}]}`) replace English-message parsing; validators attach kind/paths at detection, `check` maps issues to findings directly; `SKILLS_STAMP` 0.16.0 — all five canon skills gate success on `validate --json`
+
 ## 0.8.0
 
 - **feat:** code AST index storage on an embedded SQLite store (Node built-in `node:sqlite`) — `code-index build` streams symbols/references into `.doc-canon/code-ast-index.sqlite` (replacing the monolithic `.doc-canon/code-ast-index.json`, whose single `JSON.stringify` exceeded V8's max-string length on large repositories), with a deterministic `content_fingerprint` (SHA-256 over canonical-ordered rows) in `code-index-manifest.json` (`schema_version: 2`); `code-index search` queries the store directly — FTS5 trigram index for substring matching, `name_lower` b-tree for exact/prefix, `LIKE` fallback for <3-char tokens — with the `matchClass` ranking, freshness, and CLI surface unchanged
