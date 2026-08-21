@@ -45,6 +45,11 @@ Design rationale: [`docs/superpowers/specs/2026-08-09-production-path-roadmap-de
 | 6a-python | Python code-refs member-access slice | absorbed | [p6a-python-code-refs-member-access.md](p6a-python-code-refs-member-access.md) |
 | 7 | Strict search discipline | absorbed | [p7-strict-search-discipline.md](p7-strict-search-discipline.md) |
 | 8 | Code index SQLite storage | absorbed | [p8-code-index-db-storage.md](p8-code-index-db-storage.md) |
+| 9 | CLI structured validate | draft | [p9-cli-structured-validate.md](p9-cli-structured-validate.md) |
+| 10 | CLI scout working set | draft | [p10-cli-scout-working-set.md](p10-cli-scout-working-set.md) |
+| 11 | CLI fix mechanical repairs | draft | [p11-cli-fix-mechanical-repairs.md](p11-cli-fix-mechanical-repairs.md) |
+| 12 | Report JSON filter flags | draft | [p12-report-json-filter-flags.md](p12-report-json-filter-flags.md) |
+| 13 | Search paths-only mode | draft | [p13-search-paths-only-mode.md](p13-search-paths-only-mode.md) |
 
 P0, P0c, P0b, P1, and P3 are absorbed. P2 split into three sequential initiatives — P2a (code AST
 index construction), P2b (code search tools), P2c (code analysis rules); P2a is fully absorbed (all
@@ -88,3 +93,7 @@ P8 (code index SQLite storage) is `absorbed`: it replaces the monolithic `.doc-c
 SQLite store via Node's built-in `node:sqlite`, streamed build writes and SQL-backed search with FTS5-trigram
 substring matching, and redefines determinism from byte-identity to a `content_fingerprint` over the
 canonical-sorted logical content; the Node engine floor rises `>=20` → `>=22.16`.
+
+P9–P13 are CLI/agent-interface hardening drafts, placed below the absorbed P0–P8 and ordered by
+value to agents: structured machine-readable `validate` (P9), `scout` working-set manifest (P10),
+mechanical `fix` (P11), `report` JSON/filter flags (P12), and `search` paths-only mode (P13).
