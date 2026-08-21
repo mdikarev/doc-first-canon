@@ -181,9 +181,11 @@ of every `matchClass` match**, so the JS rank + `slice(maxHits)` always sees eve
 - **Tokenize first in JS:** run `tokenize(q)` (same stemmer as `matchClass`); SQL narrowing runs on the
   **stemmed tokens**, never the raw query string (raw-string trigram would under-cover stemmed matches, e.g.
   `Readers` → `reader`). A query that tokenizes to zero tokens matches nothing, as today.
-- **Exact/prefix (class 0/1):** `name_lower = ?` (exact) or `name_lower LIKE ? || '%'` (prefix) on the
-  `name_lower` b-tree index, with `PRAGMA case_sensitive_like = ON` on the search connection (both sides are
-  pre-folded in JS, so a case-sensitive prefix scan is the correct, index-using comparison).
+- **Exact/prefix (class 0/1):** `name_lower = ?` (exact) or `name_lower LIKE ?` with the full prefix
+  pattern bound (`prefix + '%'`) on the `name_lower` b-tree index, with `PRAGMA case_sensitive_like = ON` on
+  the search connection (both sides are pre-folded in JS, so a case-sensitive prefix scan is the correct,
+  index-using comparison). The bound-whole-pattern form is required: `LIKE ? || '%'` defeats SQLite's LIKE
+  optimization and forces a full scan.
 - **Substring (class 2/3), token ≥ 3 chars:** `symbols_fts MATCH :token` — the token passed as a quoted FTS
   phrase over the folded `name_lower` + `signature_lower` (case-insensitive trigram substring). Multi-token:
   AND the quoted trigram terms — a superset of `all-tokens-in-name` ∪ `all-tokens-in-signature` (it also

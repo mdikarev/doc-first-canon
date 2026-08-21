@@ -56,8 +56,10 @@ function symbolCandidates(db: DatabaseSync, query: string, opts: CodeSearchOptio
   const clauses: string[] = [];
 
   // class 0/1 — exact + prefix over the pre-folded name (b-tree index).
-  clauses.push("s.name_lower = ?", "s.name_lower LIKE ? || '%'");
-  params.push(qLower, qLower);
+  // Prefix pattern is bound as a whole ("prefix%") so SQLite's LIKE optimization
+  // can range-scan symbols_name_lower (the "? || '%'" form forces a full scan).
+  clauses.push("s.name_lower = ?", "s.name_lower LIKE ?");
+  params.push(qLower, qLower + "%");
 
   // class 2/3 — every token a substring of name_lower or signature_lower.
   const ftsTokens = tokens.filter((t) => t.length >= 3);
