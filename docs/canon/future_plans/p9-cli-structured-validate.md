@@ -1,12 +1,13 @@
 # P9 — CLI structured validate (`--json`)
 
-- **Status:** draft
+- **Status:** refining
 - **Focus:** Return structured validation issues (`{message, kind, paths, severity}`) from each
   validator and expose them machine-readably on the CLI, so skills and agents stop parsing human
   English text to classify findings.
 - **Depends on:** None — pure CLI-surface hardening on the shipped `validate` / `check` pipeline.
 - **Unblocks:** Machine-parseable feedback loops for `canon-write`, `canon-audit`, and adopter CI
   gates.
+- **Design:** [`docs/superpowers/specs/2026-08-21-p9-structured-validate-design.md`](../../superpowers/specs/2026-08-21-p9-structured-validate-design.md) — SoT for the design.
 
 ## Intent
 
