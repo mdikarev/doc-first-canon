@@ -32,6 +32,7 @@
     "CHANGELOG.md"
   ],
   "scripts": {
+    "pretest": "npm run build",
     "build": "tsc -p tsconfig.json",
     "test": "node --disable-warning=ExperimentalWarning --import tsx --test tests/**/*.test.ts",
     "prepare": "npm run build",

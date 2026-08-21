@@ -25,7 +25,7 @@ export function findBrokenCanonLinks(
       issues.push({
         message: `${sourceRelative} links to missing ${href}`,
         kind: "consistency",
-        paths: [sourceRelative, href],
+        paths: [sourceRelative, targetWithoutAnchor],
         severity: "error",
       });
     }
