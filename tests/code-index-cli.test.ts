@@ -28,7 +28,7 @@ describe("doc-canon code-index cli", () => {
     });
     assert.equal(r.status, 0, r.stderr || r.stdout);
     assert.ok(fs.existsSync(path.join(repo, ".doc-canon", "code-index-manifest.json")));
-    assert.ok(fs.existsSync(path.join(repo, ".doc-canon", "code-ast-index.json")));
+    assert.ok(fs.existsSync(path.join(repo, ".doc-canon", "code-ast-index.sqlite")));
   });
 
   it("code-index build fails closed without a VCS root", () => {

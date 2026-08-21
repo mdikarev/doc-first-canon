@@ -5,7 +5,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { syncCodeIndex } from "../src/code-index/sync.js";
-import { loadCodeIndexPair } from "../src/code-index/io.js";
+import { loadCodeIndexManifest } from "../src/code-index/io.js";
 import { openCodeIndex } from "../src/code-index/reader.js";
 
 function makeRepo(): string {
@@ -42,10 +42,10 @@ describe("code-index integration (dogfood)", () => {
     const r = await syncCodeIndex(repo);
     assert.equal(r.status, "updated");
     assert.equal(r.indexed, 2);
-    const pair = loadCodeIndexPair(repo);
-    assert.deepEqual(pair.manifest.roots, ["", "packages/core"]);
-    assert.equal(pair.manifest.files["dist/bundle.js"], undefined);
-    assert.equal(pair.manifest.files["node_modules/x/index.js"], undefined);
+    const manifest = loadCodeIndexManifest(repo);
+    assert.deepEqual(manifest.roots, ["", "packages/core"]);
+    assert.equal(manifest.files["dist/bundle.js"], undefined);
+    assert.equal(manifest.files["node_modules/x/index.js"], undefined);
     const handle = openCodeIndex(repo);
     const importRefs = handle
       .references()
@@ -64,7 +64,7 @@ describe("code-index integration (dogfood)", () => {
     fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
     const r = await syncCodeIndex(repo);
     assert.equal(r.status, "updated");
-    const after = loadCodeIndexPair(repo);
-    assert.equal(after.manifest.grammar_versions.javascript, "0.25.0");
+    const after = loadCodeIndexManifest(repo);
+    assert.equal(after.grammar_versions.javascript, "0.25.0");
   });
 });

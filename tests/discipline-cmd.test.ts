@@ -114,7 +114,7 @@ describe("doc-canon discipline (code kind)", () => {
 
   it("exits 1 and reports corrupt when the code index pair is unreadable", () => {
     assert.equal(spawnSync("node", [bin, "code-index", "build", "--root", root], { encoding: "utf8" }).status, 0);
-    fs.writeFileSync(path.join(root, ".doc-canon", "code-ast-index.json"), "garbage");
+    fs.writeFileSync(path.join(root, ".doc-canon", "code-ast-index.sqlite"), "garbage");
     const { status, stdout } = run(root, []);
     assert.equal(status, 1);
     assert.match(stdout, /corrupt/);
