@@ -1,6 +1,6 @@
 # P8 — Code index storage on SQLite (`node:sqlite`)
 
-- **Status:** implementing
+- **Status:** absorbed
 - **Focus:** Move the code AST index off a single monolithic JSON file onto an embedded SQLite store
   via Node's built-in `node:sqlite`, so `doc-canon code-index build` and `code-index search` scale
   past the V8 maximum-string-length failure that today kills builds on large repositories — and speed up
