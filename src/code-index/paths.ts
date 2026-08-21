@@ -5,8 +5,8 @@ export function codeIndexManifestPath(root: string): string {
   return path.join(docCanonDir(root), "code-index-manifest.json");
 }
 
-export function codeAstIndexPath(root: string): string {
-  return path.join(docCanonDir(root), "code-ast-index.json");
+export function codeIndexStorePath(root: string): string {
+  return path.join(docCanonDir(root), "code-ast-index.sqlite");
 }
 
 export function codeIndexWatchPidPath(root: string): string {

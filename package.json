@@ -38,7 +38,7 @@
     "release": "bash scripts/release.sh"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22.13"
   },
   "dependencies": {
     "@vscode/tree-sitter-wasm": "0.3.1",
