@@ -23,6 +23,7 @@ describe("managed agent assets", () => {
     for (const skill of SKILLS) {
       const markdown = readEmbedded("skills", skill, "SKILL.md");
       assert.match(markdown, /doc-canon validate/, skill);
+      assert.match(markdown, /doc-canon validate --json/, skill);
       assert.match(markdown, /npm install -g doc-canon/, skill);
       assert.match(markdown, /local npx/, skill);
       assert.match(markdown, /Never modify application code/, skill);

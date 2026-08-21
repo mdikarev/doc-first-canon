@@ -9,7 +9,7 @@ description: Author and refine directional future-plans initiatives and keep fut
 
 - The source of truth (SoT) is `docs/canon/`; start from `docs/canon/INDEX.md`.
 - Never modify application code. Edit only `docs/canon/future_plans/**`; managed paths may be changed only by CLI upgrade flows.
-- Always run `doc-canon validate` before claiming success on canon edits.
+- Always run `doc-canon validate --json` before claiming success on canon edits; success requires exit 0 and zero `error`-severity issues.
 - Keep prose and list lines within the contract's `policies.max_line_length` (default 500 chars); wrap long lines into continuation lines instead of single walls of text. Table rows and fenced code blocks are exempt (table rows cannot be wrapped).
 - If `doc-canon` is missing on PATH, stop and give an install hint: `npm install -g doc-canon` or use a local npx invocation. Do not continue without validation.
 
@@ -49,7 +49,7 @@ After Scout → Expand, if invent-risk remains before writing or refining an ini
 6. Refuse checklists, sprint plans, task-tracker content, and coding-agent prompts inside initiative bodies; point the user to a roadmap, issue tracker, or `DISCREPANCIES.md` instead.
 7. Do not edit `CANON_CONTRACT.md`'s section list for a new initiative — initiative files are not registered per-file; only the `future-plans-index` section and the `FUTURE_PLAN` / `FUTURE_PLANS_INDEX` templates are contract-registered. If a genuinely new template kind is needed, stop and invoke `canon-contract`.
 8. Never edit application code or living canon sections outside `future_plans/`.
-9. Run `doc-canon validate`. Claim success only after it passes.
+9. Run `doc-canon validate --json`; claim success only after it passes (exit 0, zero `error`-severity issues).
 
 ## Absorb handoff
 
@@ -57,7 +57,7 @@ When an initiative's outcomes have already shipped and the user asks only to upd
 
 1. Confirm the relevant living canon sections were already updated (via `canon-write`). If they were not, stop and tell the user to run `canon-write` first to absorb outcomes into living SoT — this skill does not rewrite living canon sections.
 2. Set the initiative's status to `absorbed` (or the project's local terminal label) and update its `future_plans/INDEX.md` row.
-3. Run `doc-canon validate` and claim success only after it passes.
+3. Run `doc-canon validate --json` and claim success only after it passes.
 
 ## Status vocabulary
 

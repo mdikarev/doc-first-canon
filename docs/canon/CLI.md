@@ -62,7 +62,7 @@ Package `doc-canon@0.7.0` (Node ≥22.16, ESM — the `node:sqlite` floor for th
 | Command | Behavior |
 | --- | --- |
 | `init` | Scaffold `docs/canon/`, templates, default contract (including required `future_plans/INDEX.md`), skill trees for the selected harnesses (`.cursor` / `.claude` / `.dsh`), Cursor pointer rule, short `AGENTS.md` block, full-body `CLAUDE.md`; interactive TTY checkbox prompt (all three checked by default), `--yes` (all three, ask nothing), `--harnesses <cursor,claude,dsh>`, `--force-skills`, `--root` |
-| `validate` | Schema + structure; exit ≠0 on errors; need not write report; does not require presence of IDE overlay paths on disk (stamp-only for managed-asset currency) |
+| `validate` | Schema + structure; exit ≠0 on errors; need not write report; does not require presence of IDE overlay paths on disk (stamp-only for managed-asset currency); `--json` prints structured issues `{schema_version: 1, ok, issues: [{message, kind, paths, severity}]}` to stdout, warnings included as `severity: "warning"` issues, exit code unchanged |
 | `check` | validate + inventory + merge CLI findings into `.doc-canon/report.json` |
 | `report` | Print last report.json to stdout (read-only) |
 | `discipline` | Read `.doc-canon/probe-log.jsonl` (last doc/code probe age, probe count) plus the index manifests (files changed since each probe) and print a probe-discipline report: human table on stdout, `--json` for machine use; exit ≠0 when an index exists and relevant files changed after the last probe of that kind (un-probed state), or when an index exists but is unreadable (corrupt — report says `corrupt index (unreadable)`); missing index or never-probed fresh clone → not-applicable, exit 0; `--root` |
@@ -82,7 +82,7 @@ A flag not listed here does not exist: any other option fails closed with `error
 | `init` | `--root <path>` (default `.`), `--force-skills`, `--harnesses <cursor,claude,dsh>`, `--yes` |
 | `upgrade-skills` | `--root <path>` (default `.`), `--harnesses <cursor,claude,dsh>`, `--yes` |
 | `migrate` | `--root <path>` (default `.`), `--harnesses <cursor,claude,dsh>`, `--yes` |
-| `validate` | `--root <path>` (default `.`) |
+| `validate` | `--root <path>` (default `.`), `--json` |
 | `check` | `--root <path>` (default `.`) |
 | `report` | `--root <path>` (default `.`); always prints JSON on stdout — **no** `--json` |
 | `discipline` | `--root <path>` (default `.`), `--json` |

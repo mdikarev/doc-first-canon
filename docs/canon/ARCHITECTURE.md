@@ -34,7 +34,7 @@ gates on un-probed state.
 - **CLI entry & shared** (`src/cli.ts`, `src/paths.ts`, `src/version.ts`) — commander wiring, root/`.doc-canon` path helpers, package/`skills_stamp` constants
 - **CLI commands** (`src/commands/*`) — `init`, `upgrade-skills`, `migrate`, `validate`, `check`, `report`, `index`, `search`
 - **Contract** (`src/contract/*`) — parse and schema-check the YAML machine block in `CANON_CONTRACT.md`
-- **Validate** (`src/validate/*`) — required files, headings, INDEX↔contract agreement, stamp checks
+- **Validate** (`src/validate/*`) — required files, headings, INDEX↔contract agreement, stamp checks; validators return structured issues (`kind`/`paths`/`severity`) and the CLI exposes `--json`
 - **Agnostic ignore** (`src/agnostic/*`) — default exclude globs plus contract `policies.ignore` matching (via `micromatch`)
 - **Inventory** (`src/inventory/*`) — language-agnostic tree walk; applies ignore helpers when listing the repo
 - **Report** (`src/report/*`) — merge CLI findings; preserve `source: skill`

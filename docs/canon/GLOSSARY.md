@@ -27,6 +27,9 @@ Language-agnostic listing of repository paths (and glossary hits) produced by `d
 ### Finding
 A machine-readable issue in `.doc-canon/report.json` with `source: cli` or `source: skill`. CLI check refreshes CLI findings and must preserve skill findings.
 
+### Validation issue
+A structured validation finding {message, kind, paths, severity} emitted by the validate pipeline; consumed by `doc-canon validate --json` and mapped to report findings by `check`.
+
 ### Discrepancy
 A human-tracked docs↔code (or related) conflict entry in `DISCREPANCIES.md` with lifecycle fields (`status`, `decision`, evidence, optional `coding_agent_prompt`).
 

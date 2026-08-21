@@ -9,7 +9,7 @@ description: Author, refactor, and synchronize canon documentation.
 
 - The source of truth (SoT) is `docs/canon/`; start from `docs/canon/INDEX.md`.
 - Never modify application code. Edit only `docs/canon/**`; managed paths may be changed only by CLI upgrade flows.
-- Always run `doc-canon validate` before claiming success on canon edits.
+- Always run `doc-canon validate --json` before claiming success on canon edits; success requires exit 0 and zero `error`-severity issues.
 - Keep prose and list lines within the contract's `policies.max_line_length` (default 500 chars); wrap long lines into continuation lines instead of single walls of text. Table rows and fenced code blocks are exempt (table rows cannot be wrapped).
 - If `doc-canon` is missing on PATH, stop and give an install hint: `npm install -g doc-canon` or use a local npx invocation. Do not continue without validation.
 
@@ -71,6 +71,6 @@ Canon sections are living behavioral SoT. When authoring or refactoring a sectio
 7. If canon and code diverge, ask the user which side is stale. Never edit application code. Record code work through `DISCREPANCIES.md`.
 8. Do **not** create or refine initiatives, or edit `future_plans/**` for status/INDEX sync — stop and tell the user to run `canon-future-plan`.
 9. When absorbing a finished initiative, update living SoT sections only, validate, then instruct the user to run `canon-future-plan` to mark it `absorbed` and sync `future_plans/INDEX.md`.
-10. Validate after edits by running `doc-canon validate`. Claim success only after it passes.
+10. Validate after edits by running `doc-canon validate --json`. Claim success only after it passes.
 11. After any successful **substantive** write to `docs/canon/**`, run one-shot `doc-canon index`. If a watch holds the index lock, surface the failure and rely on the watch or suggest `doc-canon index --stop`; do not reindex inside `search`.
 12. A docs-stale discrepancy may move from Open to Resolved in this session only after the canon fix validates. A code-stale entry remains Open until a later audit confirms that code has aligned.

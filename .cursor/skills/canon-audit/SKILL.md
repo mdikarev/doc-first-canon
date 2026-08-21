@@ -9,13 +9,13 @@ description: Audit canon semantics, resolve divergence, and maintain discrepancy
 
 - The source of truth (SoT) is `docs/canon/`; start from `docs/canon/INDEX.md`.
 - Never modify application code. Edit only `docs/canon/**`; managed paths may be changed only by CLI upgrade flows.
-- Always run `doc-canon validate` before claiming success on canon edits.
+- Always run `doc-canon validate --json` before claiming success on canon edits; success requires exit 0 and zero `error`-severity issues.
 - Keep prose and list lines within the contract's `policies.max_line_length` (default 500 chars); wrap long lines into continuation lines instead of single walls of text. Table rows and fenced code blocks are exempt (table rows cannot be wrapped).
 - If `doc-canon` is missing on PATH, stop and give an install hint: `npm install -g doc-canon` or use a local npx invocation. Do not continue without validation.
 
 ## Audit flow
 
-1. Run `doc-canon validate` first. If it fails, stop the semantic pass and repair structure through canon-write or the contract through canon-contract.
+1. Run `doc-canon validate --json` first. If it fails (exit ≠0 or `error`-severity issues), stop the semantic pass and repair structure through canon-write or the contract through canon-contract.
 2. Run `doc-canon check` to refresh the language-agnostic inventory and CLI findings (Scout inputs).
 3. **Try search first:** ensure the indexes are built — hint `doc-canon index` when the canon index is missing, and when covered source is in scope for code-divergence evidence, `doc-canon code-index build`. Then run `doc-canon search "<topic>"` (and `code-index search` for code evidence) and seed the working set from pack paths and snippet stubs. If search fails closed, run `doc-canon index` (and `code-index build` when covered source is in scope), then re-run the search; only if building fails, fall back to INDEX-first Scout and record `doc_miss: <query> -> docs:<path>` for every file read outside the pack. If `index_stale`, surface the warning and continue; Expand when thin.
 4. **Scout:** from search results (or `INDEX.md` fallback), contract, fresh inventory/report, build a working-set manifest (`path`, `role`, short free-form `stub`). Include likely evidence paths for claims you will make. Do not preload every markdown file.
@@ -57,8 +57,8 @@ After the semantic pass, before writing `.doc-canon/report.json`:
 1. Present evidence and ask the user whether docs or code are stale. Never silently choose.
 2. Before adding an Open entry, deduplicate by overlapping canon/code paths. Assign a new `D-NNN` from the greatest existing ID and never reuse IDs. A new unresolved entry has `decision: pending`.
 3. Follow this strict order: successful apply → set the decision → then move Open → Resolved when appropriate. If apply is interrupted or validation fails, leave `decision: pending`.
-4. For `docs_stale`, edit the canon from its template and run `doc-canon validate`. Only after validation succeeds, set `decision: docs_stale`, then move the entry to Resolved in the same session.
+4. For `docs_stale`, edit the canon from its template and run `doc-canon validate --json`. Only after it succeeds, set `decision: docs_stale`, then move the entry to Resolved in the same session.
 5. For `code_stale`, write or update the Open discrepancy task and its `coding_agent_prompt` first. Include what to study, what diverges, evidence paths, and questions requiring user clarification. Only after that write succeeds, set `decision: code_stale`. It must stay Open until a later audit confirms the code no longer diverges; only that later audit may move it to Resolved.
 6. A later audit may also move a linked Open entry to Resolved when its conflict no longer reproduces and docs validate. `doc-canon check` itself never edits `DISCREPANCIES.md`.
 
-Finish by running `doc-canon validate` again after any canon edits and report remaining open decisions.
+Finish by running `doc-canon validate --json` again after any canon edits and report remaining open decisions.

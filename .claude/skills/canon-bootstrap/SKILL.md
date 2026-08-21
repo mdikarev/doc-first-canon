@@ -9,7 +9,7 @@ description: Bootstrap or import a repository's documentation canon.
 
 - The source of truth (SoT) is `docs/canon/`; start from `docs/canon/INDEX.md`.
 - Never modify application code. Edit only `docs/canon/**`; managed paths may be changed only by CLI upgrade flows.
-- Always run `doc-canon validate` before claiming success on canon edits.
+- Always run `doc-canon validate --json` before claiming success on canon edits; success requires exit 0 and zero `error`-severity issues.
 - Keep prose and list lines within the contract's `policies.max_line_length` (default 500 chars); wrap long lines into continuation lines instead of single walls of text. Table rows and fenced code blocks are exempt (table rows cannot be wrapped).
 - If `doc-canon` is missing on PATH, stop and give an install hint: `npm install -g doc-canon` or use a local npx invocation. Do not continue without validation.
 
@@ -34,7 +34,7 @@ When filling canon sections (mandatory or agreed extras), cover each required co
    - Read README files, existing docs, and agent instructions as import sources, not as authority.
    - Propose extra sections, interview the user, and use the contract workflow for confirmed structural changes.
    - Extract agreed facts into files created from registered templates, then refresh `INDEX.md`.
-5. Run `doc-canon validate`. After it succeeds, import sources outside `docs/canon/` are not SoT. Do not delete or silently update those legacy files.
+5. Run `doc-canon validate --json`. After it succeeds, import sources outside `docs/canon/` are not SoT. Do not delete or silently update those legacy files.
 6. Build the retrieval indexes: run `doc-canon index` (canon BM25) and, when covered source exists, `doc-canon code-index build`. Later goal steps run `doc-canon search` / `code-index search` first — mandatory when the indexes exist — and on empty/thin probe results read source as evidence and note the miss (`code_miss: <query> -> source:<path>` / `doc_miss: <query> -> docs:<path>`).
 7. After init, confirm `future_plans/INDEX.md` exists. Do not invent initiatives unless the user asks.
 8. Surface docs↔code conflicts for user resolution; never silently merge or choose a side.

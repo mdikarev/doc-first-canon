@@ -100,7 +100,7 @@ Canon sections are living behavioral SoT: each section, when authored or revised
 - Never bypass contract for new section kinds
 - `future_plans/**` holds directional initiatives only; never convert it into a task tracker, checklist, or coding-agent prompt list — execution work belongs in `DISCREPANCIES.md` / project task tools
 - Authored canon sections cover the documentation coverage checklist categories (Public interfaces, Workflows, Usage examples, Operational runbooks, Failure modes, Success criteria) or explicitly exclude a category in Scope with a reason
-- Always `doc-canon validate` before claiming success on canon edits
+- Always `doc-canon validate --json` before claiming success on canon edits (exit 0, zero `error`-severity issues)
 - `canon-write` must not invent material facts for substantial edits: clarify (MCQ + recommendation) or skip only when the request already resolves ambiguity
 - `check` does not close discrepancies; only audit applies the lifecycle when appropriate
 
