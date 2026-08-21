@@ -135,6 +135,30 @@ program
     },
   );
 program
+  .command("scout")
+  .description("Emit a generated working-set manifest (docs + optional code) for a topic")
+  .argument("<query>", "topic query")
+  .option("--root <path>", "target repo root", ".")
+  .option("--json", "emit ScoutManifest JSON on stdout")
+  .option("--max-hits <n>", "max ranked documents", "10")
+  .option("--snippet-lines <n>", "lines per snippet window", "4")
+  .option("--no-code", "skip the code-index probe")
+  .action(
+    async (
+      query: string,
+      opts: {
+        root: string;
+        json?: boolean;
+        maxHits?: string;
+        snippetLines?: string;
+        noCode?: boolean;
+      },
+    ) => {
+      const { scoutCanonCli } = await import("./commands/scout.js");
+      process.exitCode = await scoutCanonCli(opts.root, query, opts);
+    },
+  );
+program
   .command("discipline")
   .description("Report probe discipline; exit ≠0 when the index is un-probed or corrupt")
   .option("--root <path>", "target repo root", ".")
