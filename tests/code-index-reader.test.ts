@@ -6,7 +6,8 @@ import os from "node:os";
 import path from "node:path";
 import { syncCodeIndex } from "../src/code-index/sync.js";
 import { openCodeIndex } from "../src/code-index/reader.js";
-import { codeAstIndexPath, codeIndexManifestPath } from "../src/code-index/paths.js";
+import { openCodeStore } from "../src/code-index/store.js";
+import { codeIndexStorePath } from "../src/code-index/paths.js";
 
 function makeRepo(): string {
   const repo = fs.mkdtempSync(path.join(os.tmpdir(), "code-index-reader-"));
@@ -37,6 +38,27 @@ describe("openCodeIndex", () => {
     assert.ok(handle.references().some((r) => r.kind === "import" && r.to === "src/reader.ts"));
   });
 
+  it("symbols/references materialize from the SQLite store with frozen field names", async () => {
+    await syncCodeIndex(repo);
+    const handle = openCodeIndex(repo);
+    const sym = handle.symbols().find((s) => s.name === "Reader")!;
+    assert.equal(sym.kind, "class");
+    assert.equal(sym.endLine, 1);
+    assert.ok(!("name_lower" in sym));      // internal columns never leak
+    const ref = handle.references().find((r) => r.kind === "import")!;
+    assert.equal(ref.from, "src/main.ts");
+    assert.equal(ref.to, "src/reader.ts");
+    assert.ok(!("to_file" in ref));          // mapped back to frozen `to`
+  });
+
+  it("fails closed when the store content_fingerprint does not match the manifest", async () => {
+    await syncCodeIndex(repo);
+    const db = openCodeStore(repo);
+    db.exec("INSERT INTO symbols (name, name_lower, kind, signature, signature_lower, file, line, end_line, scope) VALUES ('X','x','class','class X{}','class x{}','x.ts',1,1,'')");
+    db.close();
+    assert.throws(() => openCodeIndex(repo).symbols(), /content_fingerprint mismatch/);
+  });
+
   it("liveHashes matches manifest hashes when unchanged", async () => {
     await syncCodeIndex(repo);
     const handle = openCodeIndex(repo);
@@ -57,13 +79,13 @@ describe("openCodeIndex", () => {
     assert.notEqual(live["src/reader.ts"], handle.manifest.files["src/reader.ts"]?.hash);
   });
 
-  it("throws when the pair is missing", () => {
+  it("throws when the manifest is missing", () => {
     assert.throws(() => openCodeIndex(repo), /not found/);
   });
 
-  it("throws when the pair is corrupt", async () => {
+  it("throws when the store is corrupt", async () => {
     await syncCodeIndex(repo);
-    fs.writeFileSync(codeAstIndexPath(repo), JSON.stringify({ schema_version: 1 }));
-    assert.throws(() => openCodeIndex(repo), /invalid/i);
+    fs.writeFileSync(codeIndexStorePath(repo), "garbage-not-a-sqlite-database");
+    assert.throws(() => openCodeIndex(repo));
   });
 });
