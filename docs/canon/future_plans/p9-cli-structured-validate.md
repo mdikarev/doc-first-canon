@@ -1,6 +1,6 @@
 # P9 — CLI structured validate (`--json`)
 
-- **Status:** refining
+- **Status:** absorbed
 - **Focus:** Return structured validation issues (`{message, kind, paths, severity}`) from each
   validator and expose them machine-readably on the CLI, so skills and agents stop parsing human
   English text to classify findings.

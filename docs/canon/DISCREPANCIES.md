@@ -16,6 +16,22 @@ Never silently pick a side. Never edit application code from canon skills.
 
 ## Resolved
 
+### D-017: SKILLS.md skills-table rows omit `--json` from the validate success gate
+- **status:** resolved
+- **decision:** docs_stale
+- **canon_paths:** `docs/canon/SKILLS.md`
+- **code_paths:** `embedded/skills/canon-bootstrap/SKILL.md`, `embedded/skills/canon-contract/SKILL.md`,
+  `embedded/skills/canon-future-plan/SKILL.md`
+- **evidence:** The P9 closing canon-audit surfaced a doc↔doc conflict in the SKILLS.md skills table:
+  the `canon-bootstrap` (`; validate`), `canon-future-plan` ("run `doc-canon validate` before claiming
+  success"), and `canon-contract` (`; validate`) rows ended with a bare `doc-canon validate` gate, while
+  the SKILLS.md:103 invariant requires "Always `doc-canon validate --json` before claiming success on
+  canon edits" and all 13 embedded skill-body mentions carry `--json` (and the CLI implements `--json`
+  per CLI.md `validate` row + `src/commands/validate.ts`). Docs stale side: the three table rows lost
+  the `--json` flag. Aligned all three rows to `validate --json`; `doc-canon validate --json` succeeded
+  in the same session (exit 0, zero `error`-severity issues).
+- **finding_ids:** `F-013`
+
 ### D-016: Canon described freshness as purely hash-driven and the code-index artifact set as closed; fixes 1-3 made freshness stat-first with a stats sidecar
 - **status:** resolved
 - **decision:** docs_stale
