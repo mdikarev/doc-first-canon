@@ -46,7 +46,7 @@ Design rationale: [`docs/superpowers/specs/2026-08-09-production-path-roadmap-de
 | 7 | Strict search discipline | absorbed | [p7-strict-search-discipline.md](p7-strict-search-discipline.md) |
 | 8 | Code index SQLite storage | absorbed | [p8-code-index-db-storage.md](p8-code-index-db-storage.md) |
 | 9 | CLI structured validate | absorbed | [p9-cli-structured-validate.md](p9-cli-structured-validate.md) |
-| 10 | CLI scout working set | draft | [p10-cli-scout-working-set.md](p10-cli-scout-working-set.md) |
+| 10 | CLI scout working set | refining | [p10-cli-scout-working-set.md](p10-cli-scout-working-set.md) |
 | 11 | CLI fix mechanical repairs | draft | [p11-cli-fix-mechanical-repairs.md](p11-cli-fix-mechanical-repairs.md) |
 | 12 | Report JSON filter flags | draft | [p12-report-json-filter-flags.md](p12-report-json-filter-flags.md) |
 | 13 | Search paths-only mode | draft | [p13-search-paths-only-mode.md](p13-search-paths-only-mode.md) |
