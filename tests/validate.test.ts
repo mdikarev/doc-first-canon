@@ -30,27 +30,26 @@ describe("validateCanon", () => {
   it("accepts a complete canon", () => {
     assert.deepEqual(validateCanon(fixture("happy-canon")), {
       ok: true,
-      errors: [],
-      warnings: [],
+      issues: [],
     });
   });
 
   it("rejects a missing required section", () => {
     const result = validateCanon(fixture("missing-section"));
     assert.equal(result.ok, false);
-    assert.match(result.errors.join("\n"), /missing required section.*OVERVIEW\.md/i);
+    assert.match(result.issues.map((i) => i.message).join("\n"), /missing required section.*OVERVIEW\.md/i);
   });
 
   it("rejects a section missing template headings", () => {
     const result = validateCanon(fixture("missing-headings"));
     assert.equal(result.ok, false);
-    assert.match(result.errors.join("\n"), /OVERVIEW\.md.*missing required headings.*Scope/i);
+    assert.match(result.issues.map((i) => i.message).join("\n"), /OVERVIEW\.md.*missing required headings.*Scope/i);
   });
 
   it("rejects INDEX paths that disagree with the contract", () => {
     const result = validateCanon(fixture("index-mismatch"));
     assert.equal(result.ok, false);
-    assert.match(result.errors.join("\n"), /INDEX.*OVERVIEW\.md/i);
+    assert.match(result.issues.map((i) => i.message).join("\n"), /INDEX.*OVERVIEW\.md/i);
   });
 
   it("rejects section paths that escape the canon root", () => {
@@ -69,7 +68,7 @@ describe("validateCanon", () => {
       const result = validateCanon(root);
 
       assert.equal(result.ok, false);
-      assert.match(result.errors.join("\n"), /section.*\.\.\/outside\.md.*outside.*canon/i);
+      assert.match(result.issues.map((i) => i.message).join("\n"), /section.*\.\.\/outside\.md.*outside.*canon/i);
     } finally {
       cleanup();
     }
@@ -99,7 +98,7 @@ describe("validateCanon", () => {
       const result = validateCanon(root);
 
       assert.equal(result.ok, false);
-      assert.match(result.errors.join("\n"), /section.*OVERVIEW\.md.*outside.*canon/i);
+      assert.match(result.issues.map((i) => i.message).join("\n"), /section.*OVERVIEW\.md.*outside.*canon/i);
     } finally {
       cleanup();
     }
@@ -120,7 +119,7 @@ describe("validateCanon", () => {
       const result = validateCanon(root);
 
       assert.equal(result.ok, false);
-      assert.match(result.errors.join("\n"), /skills_stamp.*1\.x.*dotted.*numeric/i);
+      assert.match(result.issues.map((i) => i.message).join("\n"), /skills_stamp.*1\.x.*dotted.*numeric/i);
     } finally {
       cleanup();
     }
@@ -136,7 +135,7 @@ describe("validateCanon", () => {
       const result = validateCanon(root);
 
       assert.equal(result.ok, false);
-      assert.match(result.errors.join("\n"), /OVERVIEW\.md.*not a file/i);
+      assert.match(result.issues.map((i) => i.message).join("\n"), /OVERVIEW\.md.*not a file/i);
     } finally {
       cleanup();
     }
@@ -159,11 +158,11 @@ describe("validateCanon", () => {
       writeFileSync(sectionFile, exactBoundary);
 
       const exact = validateCanon(root);
-      assert.doesNotMatch(exact.warnings.join("\n"), /OVERVIEW\.md.*max_lines/i);
+      assert.doesNotMatch(exact.issues.map((i) => i.message).join("\n"), /OVERVIEW\.md.*max_lines/i);
 
       writeFileSync(sectionFile, `${exactBoundary}extra line\n`);
       const above = validateCanon(root);
-      assert.match(above.warnings.join("\n"), /OVERVIEW\.md.*max_lines 9/i);
+      assert.match(above.issues.map((i) => i.message).join("\n"), /OVERVIEW\.md.*max_lines 9/i);
     } finally {
       cleanup();
     }
@@ -203,15 +202,42 @@ describe("validateCanon", () => {
       );
 
       const result = validateCanon(root);
-      const warning = result.warnings.find((w) =>
-        w.includes("max_line_length 50"),
+      const warning = result.issues.find(
+        (i) => i.severity === "warning" && i.message.includes("max_line_length 50"),
       );
       assert.ok(warning, "expected a max_line_length warning");
-      assert.match(warning!, /OVERVIEW\.md.*1 line\(s\)/i);
-      assert.match(warning!, /:\s*5/); // only line 5 (the prose line) flagged
+      assert.match(warning!.message, /OVERVIEW\.md.*1 line\(s\)/i);
+      assert.match(warning!.message, /:\s*5/); // only line 5 (the prose line) flagged
     } finally {
       cleanup();
     }
+  });
+
+  it("marks broken links as consistency issues with source and href paths", () => {
+    const result = validateCanon(fixture("broken-link"));
+    const link = result.issues.find((i) => i.kind === "consistency");
+    assert.ok(link);
+    assert.equal(link.paths.length, 2);
+    assert.match(link.paths[0]!, /\.md$/);
+    assert.match(link.message, /links to missing/);
+  });
+
+  it("marks missing sections as structure issues with the section path", () => {
+    const result = validateCanon(fixture("missing-section"));
+    const issue = result.issues.find((i) =>
+      i.message.match(/missing required section/i),
+    );
+    assert.ok(issue);
+    assert.equal(issue.kind, "structure");
+    assert.deepEqual(issue.severity, "error");
+    assert.deepEqual(issue.paths, ["OVERVIEW.md"]);
+  });
+
+  it("keeps max_line_length as a warning severity issue", () => {
+    const result = validateCanon(fixture("long-lines"));
+    const issue = result.issues.find((i) => i.message.match(/max_line_length/));
+    assert.ok(issue);
+    assert.deepEqual(issue.severity, "warning");
   });
 });
 

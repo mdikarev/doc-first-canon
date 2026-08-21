@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import type { ValidationIssue } from "./types.js";
 
 const MARKDOWN_LINK_RE = /(?<!!)\[[^\]]*]\(([^)\s]+)(?:\s+"[^"]*")?\)/g;
 
@@ -7,8 +8,8 @@ export function findBrokenCanonLinks(
   markdown: string,
   sourcePath: string,
   canonRoot: string,
-): string[] {
-  const broken: string[] = [];
+): ValidationIssue[] {
+  const issues: ValidationIssue[] = [];
   for (const match of markdown.matchAll(MARKDOWN_LINK_RE)) {
     const href = match[1]!;
     if (/^(?:[a-z]+:|\/|#)/i.test(href)) continue;
@@ -20,8 +21,14 @@ export function findBrokenCanonLinks(
     const relative = path.relative(canonRoot, target);
     if (relative.startsWith("..") || path.isAbsolute(relative)) continue;
     if (!fs.existsSync(target)) {
-      broken.push(`${path.relative(canonRoot, sourcePath)} links to missing ${href}`);
+      const sourceRelative = path.relative(canonRoot, sourcePath);
+      issues.push({
+        message: `${sourceRelative} links to missing ${href}`,
+        kind: "consistency",
+        paths: [sourceRelative, href],
+        severity: "error",
+      });
     }
   }
-  return broken;
+  return issues;
 }

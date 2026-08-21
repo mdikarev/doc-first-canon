@@ -23,28 +23,22 @@ import {
 import { validateIndexAgreement } from "./index-agreement.js";
 import { findBrokenCanonLinks } from "./links.js";
 import type { FindingKind } from "../report/types.js";
-
-export interface ValidateResult {
-  ok: boolean;
-  errors: string[];
-  warnings: string[];
-}
+import type {
+  ValidationIssue,
+  ValidationResult,
+  ValidationSeverity,
+} from "./types.js";
 
 const DOTTED_NUMERIC_STAMP = /^\d+(?:\.\d+)*$/;
-const BROKEN_LINK_ERROR = /\blinks to missing\b/i;
-// TODO: Return structured validation issues ({ message, kind, paths }) from
-// each validator and remove English-message classification/parsing.
-const MARKDOWN_PATH = /(?:^|\s)([^\s,;:()]+\.md)(?=$|\s|[,;:()])/gi;
 
-export function validationErrorKind(error: string): FindingKind {
-  return BROKEN_LINK_ERROR.test(error) ? "consistency" : "structure";
-}
-
-export function validationErrorPaths(error: string): string[] {
-  const paths = [...error.matchAll(MARKDOWN_PATH)].map((match) =>
-    match[1]!.replaceAll("\\", "/"),
-  );
-  return [...new Set(paths)];
+function addIssue(
+  issues: ValidationIssue[],
+  message: string,
+  kind: FindingKind,
+  paths: string[],
+  severity: ValidationSeverity = "error",
+): void {
+  issues.push({ message, kind, paths, severity });
 }
 
 export function cmpStamp(a: string, b: string): number {
@@ -73,7 +67,7 @@ function resolveCanonFile(
   canonRoot: string,
   relativePath: string,
   kind: "Section" | "Template",
-  errors: string[],
+  issues: ValidationIssue[],
 ): string | undefined {
   const file = path.resolve(canonRoot, relativePath);
   const relative = path.relative(canonRoot, file);
@@ -82,8 +76,11 @@ function resolveCanonFile(
     relative.startsWith(`..${path.sep}`) ||
     path.isAbsolute(relative)
   ) {
-    errors.push(
+    addIssue(
+      issues,
       `${kind} path ${relativePath} resolves outside the canon root`,
+      "structure",
+      [relativePath],
     );
     return undefined;
   }
@@ -97,14 +94,20 @@ function resolveCanonFile(
         realRelative.startsWith(`..${path.sep}`) ||
         path.isAbsolute(realRelative)
       ) {
-        errors.push(
+        addIssue(
+          issues,
           `${kind} path ${relativePath} resolves outside the canon root`,
+          "structure",
+          [relativePath],
         );
         return undefined;
       }
     } catch (error) {
-      errors.push(
+      addIssue(
+        issues,
         `Could not resolve ${kind.toLowerCase()} path ${relativePath}: ${error instanceof Error ? error.message : String(error)}`,
+        "structure",
+        [relativePath],
       );
       return undefined;
     }
@@ -115,17 +118,20 @@ function resolveCanonFile(
 function isFile(
   file: string,
   displayPath: string,
-  errors: string[],
+  issues: ValidationIssue[],
 ): boolean {
   try {
     if (!fs.statSync(file).isFile()) {
-      errors.push(`${displayPath} is not a file`);
+      addIssue(issues, `${displayPath} is not a file`, "structure", [displayPath]);
       return false;
     }
     return true;
   } catch (error) {
-    errors.push(
+    addIssue(
+      issues,
       `Could not inspect ${displayPath}: ${error instanceof Error ? error.message : String(error)}`,
+      "structure",
+      [displayPath],
     );
     return false;
   }
@@ -134,13 +140,16 @@ function isFile(
 function readTextFile(
   file: string,
   displayPath: string,
-  errors: string[],
+  issues: ValidationIssue[],
 ): string | undefined {
   try {
     return fs.readFileSync(file, "utf8");
   } catch (error) {
-    errors.push(
+    addIssue(
+      issues,
       `Could not read ${displayPath}: ${error instanceof Error ? error.message : String(error)}`,
+      "structure",
+      [displayPath],
     );
     return undefined;
   }
@@ -152,51 +161,67 @@ function lineCount(markdown: string): number {
   return lines.length;
 }
 
-function readContract(root: string, errors: string[]): Contract | undefined {
+function readContract(root: string, issues: ValidationIssue[]): Contract | undefined {
   const file = contractPath(root);
   if (!fs.existsSync(file)) {
-    errors.push("CANON_CONTRACT.md does not exist");
+    addIssue(issues, "CANON_CONTRACT.md does not exist", "structure", [
+      "CANON_CONTRACT.md",
+    ]);
     return undefined;
   }
-  if (!isFile(file, "CANON_CONTRACT.md", errors)) return undefined;
-  const markdown = readTextFile(file, "CANON_CONTRACT.md", errors);
+  if (!isFile(file, "CANON_CONTRACT.md", issues)) return undefined;
+  const markdown = readTextFile(file, "CANON_CONTRACT.md", issues);
   if (markdown === undefined) return undefined;
   try {
     return parseContractMarkdown(markdown);
   } catch (error) {
-    errors.push(
+    addIssue(
+      issues,
       `CANON_CONTRACT.md is invalid: ${error instanceof Error ? error.message : String(error)}`,
+      "structure",
+      ["CANON_CONTRACT.md"],
     );
     return undefined;
   }
 }
 
-export function validateCanon(root: string): ValidateResult {
-  const errors: string[] = [];
-  const warnings: string[] = [];
+export function validateCanon(root: string): ValidationResult {
+  const issues: ValidationIssue[] = [];
   let resolvedRoot: string;
   try {
     resolvedRoot = resolveRoot(process.cwd(), root);
   } catch (error) {
     return {
       ok: false,
-      errors: [error instanceof Error ? error.message : String(error)],
-      warnings,
+      issues: [
+        {
+          message: error instanceof Error ? error.message : String(error),
+          kind: "structure",
+          paths: [],
+          severity: "error",
+        },
+      ],
     };
   }
 
   const canonRoot = canonDir(resolvedRoot);
   try {
-    const contract = readContract(resolvedRoot, errors);
-    if (!contract) return { ok: false, errors, warnings };
+    const contract = readContract(resolvedRoot, issues);
+    if (!contract) return { ok: false, issues };
 
     if (!DOTTED_NUMERIC_STAMP.test(contract.skills_stamp)) {
-      errors.push(
+      addIssue(
+        issues,
         `skills_stamp ${contract.skills_stamp} must use dotted-numeric format`,
+        "structure",
+        ["CANON_CONTRACT.md"],
       );
     } else if (cmpStamp(contract.skills_stamp, MIN_SKILLS_STAMP) < 0) {
-      errors.push(
+      addIssue(
+        issues,
         `skills_stamp ${contract.skills_stamp} is older than ${MIN_SKILLS_STAMP}; upgrade skills via doc-canon upgrade-skills (CLI ${PACKAGE_VERSION}, current stamp ${SKILLS_STAMP})`,
+        "structure",
+        ["CANON_CONTRACT.md"],
       );
     }
 
@@ -208,20 +233,28 @@ export function validateCanon(root: string): ValidateResult {
         canonRoot,
         section.path,
         "Section",
-        errors,
+        issues,
       );
       if (!sectionFile) continue;
       const sectionExists = fs.existsSync(sectionFile);
       if (section.required && !sectionExists) {
-        errors.push(`Missing required section ${section.path}`);
+        addIssue(
+          issues,
+          `Missing required section ${section.path}`,
+          "structure",
+          [section.path],
+        );
       }
       const sectionIsFile =
-        sectionExists && isFile(sectionFile, section.path, errors);
+        sectionExists && isFile(sectionFile, section.path, issues);
 
       const templateRelativePath = templates.get(section.template);
       if (!templateRelativePath) {
-        errors.push(
+        addIssue(
+          issues,
           `Section ${section.path} references unknown template ${section.template}`,
+          "structure",
+          [section.path],
         );
         continue;
       }
@@ -229,23 +262,26 @@ export function validateCanon(root: string): ValidateResult {
         canonRoot,
         templateRelativePath,
         "Template",
-        errors,
+        issues,
       );
       if (!templateFile) continue;
       if (!fs.existsSync(templateFile)) {
-        errors.push(
+        addIssue(
+          issues,
           `Template ${section.template} does not exist at ${templateRelativePath}`,
+          "structure",
+          [templateRelativePath],
         );
         continue;
       }
-      if (!isFile(templateFile, templateRelativePath, errors)) continue;
+      if (!isFile(templateFile, templateRelativePath, issues)) continue;
       if (!sectionIsFile) continue;
 
-      const sectionMarkdown = readTextFile(sectionFile, section.path, errors);
+      const sectionMarkdown = readTextFile(sectionFile, section.path, issues);
       const templateMarkdown = readTextFile(
         templateFile,
         templateRelativePath,
-        errors,
+        issues,
       );
       if (sectionMarkdown === undefined || templateMarkdown === undefined) {
         continue;
@@ -256,13 +292,20 @@ export function validateCanon(root: string): ValidateResult {
         requiredHeadings,
       );
       if (missingHeadings.length > 0) {
-        errors.push(
+        addIssue(
+          issues,
           `${section.path} is missing required headings: ${missingHeadings.join(", ")}`,
+          "structure",
+          [section.path],
         );
       }
       if (lineCount(sectionMarkdown) > contract.policies.max_lines) {
-        warnings.push(
+        addIssue(
+          issues,
           `${section.path} exceeds max_lines ${contract.policies.max_lines}`,
+          "structure",
+          [section.path],
+          "warning",
         );
       }
       const maxLineLength = contract.policies.max_line_length;
@@ -284,8 +327,12 @@ export function validateCanon(root: string): ValidateResult {
           })
           .map(({ index }) => index);
         if (longLines.length > 0) {
-          warnings.push(
+          addIssue(
+            issues,
             `${section.path} has ${longLines.length} line(s) longer than max_line_length ${maxLineLength}: ${longLines.join(", ")}`,
+            "structure",
+            [section.path],
+            "warning",
           );
         }
       }
@@ -293,15 +340,15 @@ export function validateCanon(root: string): ValidateResult {
 
     const indexFile = path.join(canonRoot, "INDEX.md");
     if (!fs.existsSync(indexFile)) {
-      errors.push("INDEX.md does not exist");
-    } else if (isFile(indexFile, "INDEX.md", errors)) {
-      const indexMarkdown = readTextFile(indexFile, "INDEX.md", errors);
+      addIssue(issues, "INDEX.md does not exist", "structure", ["INDEX.md"]);
+    } else if (isFile(indexFile, "INDEX.md", issues)) {
+      const indexMarkdown = readTextFile(indexFile, "INDEX.md", issues);
       if (indexMarkdown !== undefined) {
-        errors.push(...validateIndexAgreement(indexMarkdown, contract));
+        issues.push(...validateIndexAgreement(indexMarkdown, contract));
       }
     }
 
-    errors.push(...validateFuturePlansZone(canonRoot, contract));
+    issues.push(...validateFuturePlansZone(canonRoot, contract));
 
     const contractedPaths = new Set(
       contract.sections.map((section) => path.normalize(section.path)),
@@ -314,14 +361,17 @@ export function validateCanon(root: string): ValidateResult {
         !contractedPaths.has(path.normalize(relative)) &&
         !isFuturePlansInitiativePath(relative.replaceAll("\\", "/"))
       ) {
-        errors.push(
+        addIssue(
+          issues,
           `Orphan canon file ${relative} is not listed in the contract`,
+          "structure",
+          [relative],
         );
       }
       if (!relative.startsWith(`templates${path.sep}`)) {
-        const markdown = readTextFile(markdownFile, relative, errors);
+        const markdown = readTextFile(markdownFile, relative, issues);
         if (markdown !== undefined) {
-          errors.push(
+          issues.push(
             ...findBrokenCanonLinks(
               markdown,
               markdownFile,
@@ -332,10 +382,13 @@ export function validateCanon(root: string): ValidateResult {
       }
     }
   } catch (error) {
-    errors.push(
+    addIssue(
+      issues,
       `Validation failed: ${error instanceof Error ? error.message : String(error)}`,
+      "structure",
+      [],
     );
   }
 
-  return { ok: errors.length === 0, errors, warnings };
+  return { ok: issues.every((issue) => issue.severity !== "error"), issues };
 }

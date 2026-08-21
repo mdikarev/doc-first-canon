@@ -5,6 +5,7 @@ import {
   assertRequiredHeadings,
   requiredHeadingsFromTemplate,
 } from "./headings.js";
+import type { ValidationIssue } from "./types.js";
 
 const FUTURE_PLANS_DIR = "future_plans";
 const FUTURE_PLANS_INDEX = "future_plans/INDEX.md";
@@ -52,10 +53,10 @@ export function initiativePathsFromFuturePlansIndex(
 export function validateFuturePlansZone(
   canonRoot: string,
   contract: Contract,
-): string[] {
-  const errors: string[] = [];
+): ValidationIssue[] {
+  const issues: ValidationIssue[] = [];
   const indexAbs = path.join(canonRoot, FUTURE_PLANS_INDEX);
-  if (!fs.existsSync(indexAbs)) return errors;
+  if (!fs.existsSync(indexAbs)) return issues;
 
   const indexMarkdown = fs.readFileSync(indexAbs, "utf8");
   const indexed = new Set(
@@ -76,34 +77,49 @@ export function validateFuturePlansZone(
   for (const indexedPath of indexed) {
     const abs = path.join(canonRoot, indexedPath);
     if (!fs.existsSync(abs)) {
-      errors.push(
-        `future_plans Initiatives table links to missing file ${indexedPath}`,
-      );
+      issues.push({
+        message: `future_plans Initiatives table links to missing file ${indexedPath}`,
+        kind: "structure",
+        paths: [indexedPath],
+        severity: "error",
+      });
     }
   }
 
   for (const diskPath of diskInitiatives) {
     if (!indexed.has(diskPath)) {
-      errors.push(
-        `Orphan future_plans file ${diskPath} is not listed in future_plans/INDEX.md Initiatives`,
-      );
+      issues.push({
+        message: `Orphan future_plans file ${diskPath} is not listed in future_plans/INDEX.md Initiatives`,
+        kind: "structure",
+        paths: [diskPath],
+        severity: "error",
+      });
     }
   }
 
   const templateEntry = contract.templates.find((t) => t.id === "FUTURE_PLAN");
   if (!templateEntry) {
     if (indexed.size > 0) {
-      errors.push(
-        `Initiatives require template FUTURE_PLAN but it is not registered`,
-      );
+      issues.push({
+        message:
+          "Initiatives require template FUTURE_PLAN but it is not registered",
+        kind: "structure",
+        paths: [FUTURE_PLANS_INDEX],
+        severity: "error",
+      });
     }
-    return errors;
+    return issues;
   }
 
   const templateAbs = path.join(canonRoot, templateEntry.path);
   if (!fs.existsSync(templateAbs)) {
-    errors.push(`Template FUTURE_PLAN does not exist at ${templateEntry.path}`);
-    return errors;
+    issues.push({
+      message: `Template FUTURE_PLAN does not exist at ${templateEntry.path}`,
+      kind: "structure",
+      paths: [templateEntry.path],
+      severity: "error",
+    });
+    return issues;
   }
 
   const required = requiredHeadingsFromTemplate(
@@ -118,11 +134,14 @@ export function validateFuturePlansZone(
       required,
     );
     if (missing.length > 0) {
-      errors.push(
-        `${indexedPath} is missing required headings: ${missing.join(", ")}`,
-      );
+      issues.push({
+        message: `${indexedPath} is missing required headings: ${missing.join(", ")}`,
+        kind: "structure",
+        paths: [indexedPath],
+        severity: "error",
+      });
     }
   }
 
-  return errors;
+  return issues;
 }

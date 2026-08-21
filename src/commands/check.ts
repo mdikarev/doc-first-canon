@@ -13,11 +13,7 @@ import { mergeCliFindings } from "../report/merge.js";
 import type { Finding } from "../report/types.js";
 import { computeDisciplineState, type KindState } from "../discipline/state.js";
 import { extractMarkdownHeadings } from "../validate/headings.js";
-import {
-  validateCanon,
-  validationErrorKind,
-  validationErrorPaths,
-} from "../validate/validate.js";
+import { validateCanon } from "../validate/validate.js";
 
 function inventoryConfiguration(root: string): {
   ignoreGlobs: string[];
@@ -74,19 +70,16 @@ export async function checkCanon(root: string): Promise<number> {
   writeInventory(resolvedRoot, inventory);
 
   const existing = readReport(resolvedRoot);
-  const cliFindings: Finding[] = validation.errors.map((error) => {
-    const kind = validationErrorKind(error);
-    const paths = validationErrorPaths(error);
-    const finding: Finding = {
-      id: stableFindingId(kind, paths, error),
-      kind,
-      paths,
-      summary: error,
-      status: "open",
-      source: "cli",
-    };
-    return finding;
-  });
+  const cliFindings: Finding[] = validation.issues
+    .filter((issue) => issue.severity === "error")
+    .map((issue) => ({
+      id: stableFindingId(issue.kind, issue.paths, issue.message),
+      kind: issue.kind,
+      paths: issue.paths,
+      summary: issue.message,
+      status: "open" as const,
+      source: "cli" as const,
+    }));
 
   const discipline = computeDisciplineState(resolvedRoot);
   const disciplineFindings: Finding[] = [];

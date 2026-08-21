@@ -120,6 +120,25 @@ describe("checkCanon", () => {
     }
   });
 
+  it("writes CLI findings with kind and paths from structured issues", async () => {
+    const { root, cleanup } = temporaryHappyCanon();
+    try {
+      const overview = join(root, "docs", "canon", "OVERVIEW.md");
+      writeFileSync(
+        overview,
+        readFileSync(overview, "utf8") + "\n[broken](missing.md)\n",
+      );
+      assert.equal(await checkCanon(root), 1);
+      const report = readReport(root);
+      const finding = report!.findings.find((f) => f.kind === "consistency");
+      assert.ok(finding);
+      assert.equal(finding.paths.length, 2);
+      assert.equal(finding.source, "cli");
+    } finally {
+      cleanup();
+    }
+  });
+
   it("adds glossary term hits to the inventory", async () => {
     const { root, cleanup } = temporaryHappyCanon();
     try {

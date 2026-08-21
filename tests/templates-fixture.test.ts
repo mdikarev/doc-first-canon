@@ -125,8 +125,7 @@ ${MANDATORY_SECTIONS.map(
 
       assert.deepEqual(validateCanon(root), {
         ok: true,
-        errors: [],
-        warnings: [],
+        issues: [],
       });
     } finally {
       rmSync(root, { recursive: true, force: true });

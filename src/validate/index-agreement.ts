@@ -1,4 +1,5 @@
 import type { Contract } from "../contract/types.js";
+import type { ValidationIssue } from "./types.js";
 
 function tableCellPath(cell: string): string | undefined {
   const value = cell.trim().replace(/^`|`$/g, "");
@@ -27,20 +28,30 @@ export function sectionPathsFromIndex(indexMarkdown: string): string[] {
 export function validateIndexAgreement(
   indexMarkdown: string,
   contract: Contract,
-): string[] {
+): ValidationIssue[] {
   const indexed = new Set(sectionPathsFromIndex(indexMarkdown));
   const contracted = new Set(contract.sections.map((section) => section.path));
-  const errors: string[] = [];
+  const issues: ValidationIssue[] = [];
 
   for (const section of contract.sections) {
     if (section.required && !indexed.has(section.path)) {
-      errors.push(`INDEX Sections table is missing required path ${section.path}`);
+      issues.push({
+        message: `INDEX Sections table is missing required path ${section.path}`,
+        kind: "structure",
+        paths: ["INDEX.md"],
+        severity: "error",
+      });
     }
   }
   for (const indexedPath of indexed) {
     if (!contracted.has(indexedPath)) {
-      errors.push(`INDEX Sections table path ${indexedPath} is not in the contract`);
+      issues.push({
+        message: `INDEX Sections table path ${indexedPath} is not in the contract`,
+        kind: "structure",
+        paths: ["INDEX.md"],
+        severity: "error",
+      });
     }
   }
-  return errors;
+  return issues;
 }

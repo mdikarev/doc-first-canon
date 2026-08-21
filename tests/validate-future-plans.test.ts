@@ -123,7 +123,7 @@ y
 `,
       );
       const result = validateCanon(root);
-      assert.equal(result.ok, true, result.errors.join("\n"));
+      assert.equal(result.ok, true, result.issues.map((i) => i.message).join("\n"));
     } finally {
       cleanup();
     }
@@ -138,7 +138,7 @@ y
       );
       const result = validateCanon(root);
       assert.equal(result.ok, false);
-      assert.match(result.errors.join("\n"), /orphan\.md|not listed|Initiatives/i);
+      assert.match(result.issues.map((i) => i.message).join("\n"), /orphan\.md|not listed|Initiatives/i);
     } finally {
       cleanup();
     }
@@ -157,7 +157,7 @@ y
       const result = validateCanon(root);
       assert.equal(result.ok, false);
       assert.match(
-        result.errors.join("\n"),
+        result.issues.map((i) => i.message).join("\n"),
         /Orphan canon file .*future_plans[\\/]notes[\\/]orphan\.md.*not listed in the contract/i,
       );
     } finally {
@@ -187,7 +187,7 @@ y
       );
       const result = validateCanon(root);
       assert.equal(result.ok, false);
-      assert.match(result.errors.join("\n"), /missing\.md/i);
+      assert.match(result.issues.map((i) => i.message).join("\n"), /missing\.md/i);
     } finally {
       cleanup();
     }
@@ -217,7 +217,7 @@ y
       );
       const result = validateCanon(root);
       assert.equal(result.ok, false);
-      assert.match(result.errors.join("\n"), /missing required headings/i);
+      assert.match(result.issues.map((i) => i.message).join("\n"), /missing required headings/i);
     } finally {
       cleanup();
     }

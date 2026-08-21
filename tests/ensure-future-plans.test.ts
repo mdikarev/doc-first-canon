@@ -315,7 +315,7 @@ templates:
     assert.doesNotMatch(updatedRootIndex, /future_plans\/demo-initiative\.md/);
     assert.equal(existsSync(initiativePath), true);
     const validation = validateCanon(root);
-    assert.equal(validation.ok, true, validation.errors.join("\n"));
+    assert.equal(validation.ok, true, validation.issues.map((i) => i.message).join("\n"));
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
