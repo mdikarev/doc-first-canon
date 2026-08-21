@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.8.0
+
+- **feat:** code AST index storage on an embedded SQLite store (Node built-in `node:sqlite`) — `code-index build` streams symbols/references into `.doc-canon/code-ast-index.sqlite` (replacing the monolithic `.doc-canon/code-ast-index.json`, whose single `JSON.stringify` exceeded V8's max-string length on large repositories), with a deterministic `content_fingerprint` (SHA-256 over canonical-ordered rows) in `code-index-manifest.json` (`schema_version: 2`); `code-index search` queries the store directly — FTS5 trigram index for substring matching, `name_lower` b-tree for exact/prefix, `LIKE` fallback for <3-char tokens — with the `matchClass` ranking, freshness, and CLI surface unchanged
+- **chore:** Node engine floor `>=20` → `>=22.16` (`node:sqlite` ships FTS5 only from 22.16); `node:sqlite` prints a one-time `ExperimentalWarning` to stderr (accepted, cosmetic)
+- **perf:** prefix symbol search binds the full prefix pattern so `name_lower LIKE ?` uses the `name_lower` b-tree index (the previous `? || '%'` form forced a full scan)
+
 ## 0.7.0
 
 - **perf:** stat-first freshness for both indexes — per-doc `size`/`mtime_ms` snapshots in the manifest prove unchanged docs (content neither read nor hashed), stat changes are content-hash-confirmed; new internal `.doc-canon/code-index-stats.json` sidecar (fingerprint-keyed, outside the byte-identical dual artifact) lets code freshness checks skip re-reading/re-hashing unchanged files
