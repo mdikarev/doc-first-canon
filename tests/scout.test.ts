@@ -5,6 +5,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { syncCanonIndex } from "../src/index/sync.js";
+import { syncCodeIndex } from "../src/code-index/sync.js";
 import { buildScoutManifest } from "../src/scout/build.js";
 import { SearchError } from "../src/search/search.js";
 import { readProbeLog } from "../src/probe-log.js";
@@ -99,5 +100,52 @@ describe("buildScoutManifest", () => {
     await buildScoutManifest(root, "retrieval");
     const entries = readProbeLog(root);
     assert.ok(entries.some((e) => e.kind === "doc" && e.query === "retrieval"));
+  });
+
+  it("omits code when no code index exists (docs-only, no error)", async () => {
+    fs.mkdirSync(path.join(root, ".git"));
+    fs.writeFileSync(path.join(root, "package.json"), "{}");
+    await syncCanonIndex(root);
+    const manifest = await buildScoutManifest(root, "retrieval");
+    assert.equal(manifest.code, undefined);
+  });
+
+  it("includes code hits when a code index exists", async () => {
+    fs.mkdirSync(path.join(root, ".git"));
+    fs.writeFileSync(path.join(root, "package.json"), "{}");
+    fs.mkdirSync(path.join(root, "src"), { recursive: true });
+    fs.writeFileSync(path.join(root, "src/reader.ts"), "export class Reader {}\n");
+    await syncCanonIndex(root);
+    await syncCodeIndex(root);
+    const manifest = await buildScoutManifest(root, "Reader");
+    assert.ok(manifest.code);
+    assert.ok(manifest.code!.length >= 1);
+    assert.equal(manifest.code![0]!.name, "Reader");
+  });
+
+  it("skips code probe with code: false", async () => {
+    fs.mkdirSync(path.join(root, ".git"));
+    fs.writeFileSync(path.join(root, "package.json"), "{}");
+    fs.mkdirSync(path.join(root, "src"), { recursive: true });
+    fs.writeFileSync(path.join(root, "src/reader.ts"), "export class Reader {}\n");
+    await syncCanonIndex(root);
+    await syncCodeIndex(root);
+    const manifest = await buildScoutManifest(root, "Reader", { code: false });
+    assert.equal(manifest.code, undefined);
+  });
+
+  it("records doc and code probes in the probe log", async () => {
+    fs.mkdirSync(path.join(root, ".git"));
+    fs.writeFileSync(path.join(root, "package.json"), "{}");
+    fs.mkdirSync(path.join(root, "src"), { recursive: true });
+    fs.writeFileSync(path.join(root, "src/reader.ts"), "export class Reader {}\n");
+    await syncCanonIndex(root);
+    await syncCodeIndex(root);
+    await buildScoutManifest(root, "Reader");
+    const entries = readProbeLog(root);
+    assert.ok(entries.some((e) => e.kind === "doc" && e.query === "Reader"));
+    assert.ok(
+      entries.some((e) => e.kind === "code" && e.query === "Reader" && e.mode === "symbols"),
+    );
   });
 });

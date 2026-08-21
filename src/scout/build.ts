@@ -6,6 +6,9 @@ import { appendProbe } from "../probe-log.js";
 import { contractPath } from "../paths.js";
 import { SearchError, searchCanon } from "../search/search.js";
 import { refreshStaleIndex } from "../commands/auto-reindex.js";
+import { CodeSearchError, searchCodeIndex, type CodeSearchHit } from "../code-search/search.js";
+import { findVcsRoot } from "../code-index/discovery.js";
+import type { ScoutCodeHit } from "./types.js";
 import type { ScoutDocHit, ScoutManifest, ScoutOptions } from "./types.js";
 
 export const MIN_DOC_HITS = 2;
@@ -84,5 +87,42 @@ export async function buildScoutManifest(
       ? "0 hits; no top score"
       : `${docs.length} ${docs.length === 1 ? "hit" : "hits"}; top score ${formatScore(topScore)} ${verdict === "sufficient" ? ">=" : "<"} ${TOP_SCORE_FLOOR_TEXT}`;
 
-  return { query: trimmed, verdict, reason, docs, warnings };
+  let code: ScoutCodeHit[] | undefined;
+  if (options?.code !== false) {
+    try {
+      const runCode = () => searchCodeIndex(root, trimmed, { maxHits, snippetLines });
+      let codePack = runCode();
+      const vcsRoot = findVcsRoot(root);
+      const codeReindexed = await refreshStaleIndex(vcsRoot, "code", codePack.freshness);
+      if (codeReindexed) {
+        codePack = runCode();
+        if (!codePack.warnings.includes("auto_reindexed")) {
+          codePack.warnings = [...codePack.warnings, "auto_reindexed"];
+        }
+      }
+      appendProbe(root, {
+        ts: new Date().toISOString(),
+        kind: "code",
+        query: trimmed,
+        mode: "symbols",
+        hits: codePack.hits.length,
+        freshness: codePack.freshness,
+        reindexed: codeReindexed,
+      });
+      for (const w of codePack.warnings) {
+        if (!warnings.includes(w)) warnings.push(w);
+      }
+      code = (codePack.hits as CodeSearchHit[]).map((hit) => ({
+        file: hit.file,
+        line: hit.line,
+        kind: hit.kind,
+        name: hit.name,
+      }));
+    } catch (error) {
+      // Best-effort: missing/unbuildable code index → docs-only, never an error.
+      if (error instanceof CodeSearchError && error.code === "empty_query") throw error;
+    }
+  }
+
+  return { query: trimmed, verdict, reason, docs, code, warnings };
 }
