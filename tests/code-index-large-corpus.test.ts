@@ -6,12 +6,13 @@ import path from "node:path";
 import { syncCodeIndex } from "../src/code-index/sync.js";
 import { searchCodeIndex } from "../src/code-search/search.js";
 
-// A corpus whose flattened symbol text would exceed V8's ~512 MB max-string if
-// serialized via JSON.stringify(..., null, 2). The count below stays bounded so
-// the test is fast; the assertion is that the SQLite build completes and search
-// returns the expected top hit instead of throwing a max-string error.
+// A smoke test that a large corpus (~400k symbols ≈ 24 MB source) builds and
+// searches via SQLite without materializing a single giant JSON string — a
+// regression guard for the storage swap from a monolithic JSON artifact to the
+// embedded SQLite store. It does not attempt to cross V8's ~512 MB max-string
+// limit; it only asserts the build completes and search returns the top hit.
 describe("large corpus", () => {
-  it("builds and searches a corpus that exceeds the old single-string path", async () => {
+  it("builds and searches a large corpus via SQLite without a giant JSON string", async () => {
     const repo = fs.mkdtempSync(path.join(os.tmpdir(), "code-large-"));
     try {
       fs.mkdirSync(path.join(repo, ".git"));

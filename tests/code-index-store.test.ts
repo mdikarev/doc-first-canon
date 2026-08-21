@@ -87,6 +87,14 @@ describe("code-index store", () => {
     assert.throws(() => openCodeStore(dir), /application_id/);
   });
 
+  it("openCodeStore fails closed on a wrong user_version", () => {
+    seed();
+    const db = new DatabaseSync(storePath());
+    db.exec("PRAGMA user_version = 9999;");
+    db.close();
+    assert.throws(() => openCodeStore(dir), /user_version/);
+  });
+
   it("openCodeStore throws without creating a stray file when the store is missing", () => {
     assert.throws(() => openCodeStore(dir), /code index store not found/);
     assert.equal(fs.existsSync(storePath()), false);

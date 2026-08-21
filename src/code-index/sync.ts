@@ -2,6 +2,7 @@
 import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
+import type { DatabaseSync } from "node:sqlite";
 import { contentHash } from "../index/hash.js";
 import { docCanonDir } from "../paths.js";
 import { loadCodeIndexConfig } from "./config.js";
@@ -79,10 +80,11 @@ export async function syncCodeIndex(root: string): Promise<CodeSyncResult> {
 
   fs.mkdirSync(docCanonDir(vcsRoot), { recursive: true });
   const storeTmp = codeIndexStorePath(vcsRoot) + ".tmp";
-  const db = createCodeStore(storeTmp);
-  const stmts = storeStatements(db);
-  db.exec("BEGIN");
+  let db: DatabaseSync | undefined;
   try {
+    db = createCodeStore(storeTmp);
+    const stmts = storeStatements(db);
+    db.exec("BEGIN");
     for (const rel of files) {
       const abs = path.join(vcsRoot, rel);
       const text = fs.readFileSync(abs, "utf8");
@@ -115,6 +117,7 @@ export async function syncCodeIndex(root: string): Promise<CodeSyncResult> {
     const contentFingerprint = computeContentFingerprint(db);
     db.exec("COMMIT");
     db.close();
+    db = undefined;
 
     const relHashes = [...hashes.entries()].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
     const fingerprint = computeFingerprint(relHashes);
@@ -142,8 +145,10 @@ export async function syncCodeIndex(root: string): Promise<CodeSyncResult> {
       })),
     });
   } catch (e) {
-    try { db.exec("ROLLBACK"); } catch { /* already closed */ }
-    try { db.close(); } catch { /* ignore */ }
+    if (db) {
+      try { db.exec("ROLLBACK"); } catch { /* already closed */ }
+      try { db.close(); } catch { /* ignore */ }
+    }
     try { if (fs.existsSync(storeTmp)) fs.rmSync(storeTmp); } catch { /* ignore */ }
     throw e;
   }

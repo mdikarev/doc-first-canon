@@ -39,9 +39,14 @@ CREATE VIRTUAL TABLE symbols_fts USING fts5(
 
 export function createCodeStore(dbPath: string): DatabaseSync {
   const db = new DatabaseSync(dbPath);
-  db.exec(`PRAGMA application_id = ${APPLICATION_ID};`);
-  db.exec(`PRAGMA user_version = ${USER_VERSION};`);
-  db.exec(SCHEMA_SQL);
+  try {
+    db.exec(`PRAGMA application_id = ${APPLICATION_ID};`);
+    db.exec(`PRAGMA user_version = ${USER_VERSION};`);
+    db.exec(SCHEMA_SQL);
+  } catch (e) {
+    db.close();
+    throw e;
+  }
   return db;
 }
 

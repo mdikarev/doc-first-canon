@@ -26,7 +26,7 @@ npm install -g doc-canon
 npx doc-canon --help
 ```
 
-Requires **Node.js ≥ 22.13** (the built-in `node:sqlite` store used by `code-index`).
+Requires **Node.js ≥ 22.16** (the built-in `node:sqlite` store used by `code-index`).
 
 From this repository (development):
 
@@ -276,7 +276,7 @@ npm install -g doc-canon
 npx doc-canon --help
 ```
 
-Требуется **Node.js ≥ 22.13** (встроенный `node:sqlite` для хранения `code-index`).
+Требуется **Node.js ≥ 22.16** (встроенный `node:sqlite` для хранения `code-index`).
 
 Из этого репозитория (разработка):
 

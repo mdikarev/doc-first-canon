@@ -6,13 +6,13 @@
 
 **Architecture:** A new `src/code-index/store.ts` owns the SQLite schema, identity (`application_id`/`user_version`), insert statements, FTS5 rebuild, and the streamed `content_fingerprint`. `sync.ts` streams extracted rows into a temp store, runs cross-file resolvers, rebuilds FTS, computes the fingerprint, renames the store into place, then writes the manifest **last**. `reader.ts` becomes a facade that SELECTs model columns on demand with a lazy fingerprint check; `search.ts` queries the store directly (FTS trigram + `LIKE` fallback + `matchClass` rank in JS).
 
-**Tech Stack:** Node ≥ 22.13 (`node:sqlite` `DatabaseSync`, FTS5 trigram), TypeScript ESM (`NodeNext`), `@vscode/tree-sitter-wasm` (unchanged), `tsx --test` for tests.
+**Tech Stack:** Node ≥ 22.16 (`node:sqlite` `DatabaseSync`, FTS5 trigram), TypeScript ESM (`NodeNext`), `@vscode/tree-sitter-wasm` (unchanged), `tsx --test` for tests.
 
 **Spec:** `docs/superpowers/specs/2026-08-21-code-index-db-storage-design.md` (SoT — the plan argues from it; executors read both).
 
 ## Global Constraints
 
-- Node ≥ 22.13 (`engines.node`); `node:sqlite` is built-in — no new dependency, no native module, no external process.
+- Node ≥ 22.16 (`engines.node`); `node:sqlite` is built-in — no new dependency, no native module, no external process.
 - Artifact: `.doc-canon/code-ast-index.sqlite` replaces `.doc-canon/code-ast-index.json`; `code-index-manifest.json` bumps `schema_version` 1 → 2 and gains `content_fingerprint`.
 - Determinism: `content_fingerprint` = SHA-256 over canonical-ordered rows, streamed via `SELECT ... ORDER BY`; symbols sorted by all model columns (`name, kind, signature, file, line, end_line, scope`), refs by `kind, from_file, to_file, name, line`. Internal columns (`id`, `name_lower`, `signature_lower`) and `symbols_fts` are excluded.
 - Store identity: `PRAGMA application_id = 0x434F4445` (`"CODE"`), `PRAGMA user_version = 2`; mismatch → fail closed like a corrupt store.
@@ -30,7 +30,7 @@
 - `tests/code-index-store.test.ts` — store round-trip, fingerprint determinism, identity fail-closed.
 
 **Modify:**
-- `package.json` — `engines.node` `>=20` → `>=22.13`.
+- `package.json` — `engines.node` `>=20` → `>=22.16.0`.
 - `src/code-index/paths.ts` — `codeAstIndexPath` → `codeIndexStorePath` (returns `.code-ast-index.sqlite`).
 - `src/code-index/types.ts` — `CodeIndexManifest.schema_version` `1` → `2`, add `content_fingerprint`, drop `CodeAstIndex`.
 - `src/code-index/io.ts` — manifest-only (save/load/tryLoad manifest); remove `parseAst`/`saveCodeIndexPair`/`loadCodeIndexPair`.
@@ -236,7 +236,7 @@ export function computeContentFingerprint(db: DatabaseSync): string {
 - [ ] **Step 4: Bump engines in `package.json`**
 
 ```json
-"engines": { "node": ">=22.13" }
+"engines": { "node": ">=22.16.0" }
 ```
 
 - [ ] **Step 5: Run tests to verify they pass**

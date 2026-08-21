@@ -32,8 +32,8 @@ not incidental: both the writer and every reader materialize the entire index.
 
 ## Decisions
 
-- **Backend:** `node:sqlite` (`DatabaseSync`), built into Node ≥ 22.13. `engines.node` bumps `>=20` →
-  `>=22.13`. No new dependency.
+- **Backend:** `node:sqlite` (`DatabaseSync`), built into Node ≥ 22.16. `engines.node` bumps `>=20` →
+  `>=22.16.0`. No new dependency.
 - **Artifact:** `.doc-canon/code-ast-index.sqlite` replaces `.doc-canon/code-ast-index.json`.
   `code-index-manifest.json` stays JSON and bumps `schema_version` 1 → 2.
 - **Determinism:** byte-identity is replaced by a `content_fingerprint` — SHA-256 over the logical rows
@@ -48,7 +48,7 @@ not incidental: both the writer and every reader materialize the entire index.
   (both JS-folded via `toLowerCase()`, so folding is full-Unicode and SQL never folds case) narrows substring
   candidates with an index. Queries are built from the **stemmed** `tokenize(q)` tokens, not the raw string, so
   the trigram candidate set is a superset of every `matchClass` match; the JS `matchClass` rank and `LIMIT` are
-  unchanged, and `LIKE` covers sub-3-character tokens. Confirmed available in `node:sqlite` (Node ≥ 22.13
+  unchanged, and `LIKE` covers sub-3-character tokens. Confirmed available in `node:sqlite` (Node ≥ 22.16
   bundles FTS5 + trigram).
 - **Case-insensitive exact/prefix:** a JS-computed `name_lower` column (full-Unicode `toLowerCase()`) with a
   b-tree index serves class-0/1 matches; `name` is kept as-extracted for round-trip fidelity. No reliance on
@@ -59,7 +59,7 @@ not incidental: both the writer and every reader materialize the entire index.
 - **Inspection:** no dump/export command in this initiative — the store is inspectable with any SQLite tool
   (`sqlite3 .doc-canon/code-ast-index.sqlite 'SELECT * FROM symbols'`) and `openCodeIndex` remains the
   programmatic surface. A `dump` subcommand can be added later if the JSON-inspection regression bites.
-- **`node:sqlite` warning:** Node ≥ 22.13 prints a one-time `ExperimentalWarning: SQLite is an experimental
+- **`node:sqlite` warning:** Node ≥ 22.16 prints a one-time `ExperimentalWarning: SQLite is an experimental
   feature` to stderr on first use. Accepted and documented (cosmetic, stderr-only, once per process); not
   suppressed, and it does not change stdout, exit codes, or flags.
 - **Migration:** full rebuild into SQLite; the stale JSON artifact is deleted after a successful write.
@@ -230,7 +230,7 @@ file, the Node floor, and a one-time `ExperimentalWarning` on stderr change. `co
   `EXPLAIN QUERY PLAN` check guards that exact/prefix use the `name_lower` index.
 - **Migration:** a repo with a legacy JSON artifact rebuilds cleanly into SQLite and drops the JSON; a
   simulated crash mid-build leaves the previous artifact pair intact and the next build self-heals.
-- **Node floor:** guard or document that `node:sqlite` requires ≥ 22.13.
+- **Node floor:** guard or document that `node:sqlite` requires ≥ 22.16.
 - **Store identity:** wrong `application_id` / `user_version` fails closed as missing; `user_version` and
   manifest `schema_version` bump together.
 

@@ -53,7 +53,7 @@ export function openCodeIndex(root: string): CodeIndexHandle {
       verify();
       const db = openCodeStore(root);
       try {
-        const rows = db.prepare("SELECT name, kind, signature, file, line, end_line, scope FROM symbols ORDER BY file, line").all() as Array<Record<string, unknown>>;
+        const rows = db.prepare("SELECT name, kind, signature, file, line, end_line, scope FROM symbols ORDER BY file, line, id").all() as Array<Record<string, unknown>>;
         return rows.map((r) => ({ name: r.name, kind: r.kind, signature: r.signature, file: r.file, line: r.line, endLine: r.end_line, scope: r.scope })) as CodeSymbol[];
       } finally { db.close(); }
     },
@@ -61,7 +61,7 @@ export function openCodeIndex(root: string): CodeIndexHandle {
       verify();
       const db = openCodeStore(root);
       try {
-        const rows = db.prepare("SELECT kind, from_file, to_file, name, line FROM refs ORDER BY from_file, line").all() as Array<Record<string, unknown>>;
+        const rows = db.prepare("SELECT kind, from_file, to_file, name, line FROM refs ORDER BY from_file, line, rowid").all() as Array<Record<string, unknown>>;
         return rows.map((r) => ({ kind: r.kind, from: r.from_file, to: r.to_file, name: r.name, line: r.line })) as CodeReference[];
       } finally { db.close(); }
     },
