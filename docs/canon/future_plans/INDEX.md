@@ -50,6 +50,7 @@ Design rationale: [`docs/superpowers/specs/2026-08-09-production-path-roadmap-de
 | 11 | CLI fix mechanical repairs | draft | [p11-cli-fix-mechanical-repairs.md](p11-cli-fix-mechanical-repairs.md) |
 | 12 | Report JSON filter flags | draft | [p12-report-json-filter-flags.md](p12-report-json-filter-flags.md) |
 | 13 | Search paths-only mode | draft | [p13-search-paths-only-mode.md](p13-search-paths-only-mode.md) |
+| 14 | Always-on scout-first propagation | draft | [p14-always-on-scout-first.md](p14-always-on-scout-first.md) |
 
 P0, P0c, P0b, P1, and P3 are absorbed. P2 split into three sequential initiatives — P2a (code AST
 index construction), P2b (code search tools), P2c (code analysis rules); P2a is fully absorbed (all
@@ -98,4 +99,6 @@ P9 and P10 are absorbed — P10 shipped `doc-canon scout` (one-call working-set 
 contract-role annotations, snippet stubs, and a verdict hint) and its outcomes are merged into living
 canon (`CLI.md`, `SKILLS.md`, `ARCHITECTURE.md`, `GLOSSARY.md`); P11–P13 are CLI/agent-interface
 hardening drafts, placed below the absorbed P0–P10 and ordered by value to agents: mechanical `fix`
-(P11), `report` JSON/filter flags (P12), and `search` paths-only mode (P13).
+(P11), `report` JSON/filter flags (P12), and `search` paths-only mode (P13). P14 is a draft
+follow-up to P10: it propagates the scout-first protocol to the always-on managed templates
+(`AGENTS.md` / `CLAUDE.md` / pointer rule) and tracks D-018 (`code_stale`).
