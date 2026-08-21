@@ -87,4 +87,4 @@ P8 (code index SQLite storage) is `implementing`: it replaces the monolithic `.d
 (a single `JSON.stringify` that exceeds V8's maximum string length on large repositories) with an embedded
 SQLite store via Node's built-in `node:sqlite`, streamed build writes and SQL-backed search with FTS5-trigram
 substring matching, and redefines determinism from byte-identity to a `content_fingerprint` over the
-canonical-sorted logical content; the Node engine floor rises `>=20` → `>=22.13`.
+canonical-sorted logical content; the Node engine floor rises `>=20` → `>=22.16`.

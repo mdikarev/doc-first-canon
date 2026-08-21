@@ -24,7 +24,7 @@ with the same poll `--watch`/`--stop` discipline and a separate watch pid; searc
 
 ## Current state
 
-Package `doc-canon@0.7.0` (Node ≥22.13, ESM — the `node:sqlite` floor for the code-index SQLite store). Entry: `bin/doc-canon.js` → compiled `dist/`. Commands: `init`, `validate`, `check`, `report`, `upgrade-skills`, `migrate`, `index`, `search`, `discipline`, plus the `code-index` subcommands `build` (tree-sitter WASM extraction over discovered source roots) and `search` (search over that code AST index). All commands accept `--root <path>` (default: cwd).
+Package `doc-canon@0.7.0` (Node ≥22.16, ESM — the `node:sqlite` floor for the code-index SQLite store). Entry: `bin/doc-canon.js` → compiled `dist/`. Commands: `init`, `validate`, `check`, `report`, `upgrade-skills`, `migrate`, `index`, `search`, `discipline`, plus the `code-index` subcommands `build` (tree-sitter WASM extraction over discovered source roots) and `search` (search over that code AST index). All commands accept `--root <path>` (default: cwd).
 
 ## Responsibilities
 
@@ -171,7 +171,7 @@ and note `code_miss: <query> -> source:<path>`.
 - `yaml` — machine-block parse
 - `micromatch` — ignore globs (via `src/agnostic/ignore.ts`)
 - `@vscode/tree-sitter-wasm` — pinned tree-sitter WASM runtime + grammar binaries for `code-index` extraction (no native modules)
-- `node:sqlite` (Node ≥22.13, built-in) — embedded SQLite store for the code index; prints a one-time `ExperimentalWarning` to stderr on first use (accepted, cosmetic)
+- `node:sqlite` (Node ≥22.16, built-in) — embedded SQLite store for the code index; prints a one-time `ExperimentalWarning` to stderr on first use (accepted, cosmetic)
 - Embedded files under `embedded/` published with the package
 
 ## Invariants

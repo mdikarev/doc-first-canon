@@ -44,7 +44,7 @@ reader facade's data path, and the determinism guarantee change.
 - **Reader facade:** `openCodeIndex` keeps its frozen shape — `symbols()`/`references()` materialize
   from SQLite on demand; the CLI/search no longer depend on full materialization.
 - **Determinism:** redefine byte-identical → deterministic logical content, verified by `content_fingerprint`.
-- **Compatibility:** `engines.node` `>=20` → `>=22.13`; `schema_version: 1 → 2`; a full rebuild migrates
+- **Compatibility:** `engines.node` `>=20` → `>=22.16`; `schema_version: 1 → 2`; a full rebuild migrates
   an existing JSON index (old JSON dropped), and a missing/corrupt SQLite store fails closed with the existing
   `code_index_missing` hint.
 - **Tests:** SQLite round-trip, content-fingerprint determinism, and a synthetic large-corpus build that
@@ -65,7 +65,7 @@ reader facade's data path, and the determinism guarantee change.
 ## Absorbs into
 
 Likely: `ARCHITECTURE.md` (code-index building block: SQLite storage, streaming build, content
-fingerprint), `CLI.md` (artifacts list, Node ≥ 22.13, `code-index build`/`search` storage note),
+fingerprint), `CLI.md` (artifacts list, Node ≥ 22.16, `code-index build`/`search` storage note),
 `INDEXING.md` (dual-artifact description), `CODE_INDEX.md` (determinism note), `GLOSSARY.md`
 (`code-ast-index` and `code-index-manifest` redefined), `OVERVIEW.md` (Node engine / artifact note),
 `README.md`. Any docs↔code divergence flows through the normal `DISCREPANCIES.md` path.

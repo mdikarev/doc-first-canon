@@ -67,7 +67,7 @@ currency and exits ≠0 on un-probed or corrupt state.
     per-language extraction differences (import conventions, member-access constructor patterns,
     resolution boundaries) are detailed in [CODE_INDEX.md](CODE_INDEX.md)
   - **Default ignore** — excludes add `.worktrees` (the shared default ignore prunes worktree clones from code-source-root discovery and the language-agnostic repo inventory; the canon `docs/canon/**` corpus — built over `<root>/docs/canon` without ignore filtering — is unaffected)
-  - **Dual artifact** — deterministic `.doc-canon/code-index-manifest.json` (identity + freshness + a `content_fingerprint` over canonical-ordered rows) + `.doc-canon/code-ast-index.sqlite` (embedded SQLite store of symbols + refs via `node:sqlite`, built into Node ≥ 22.13) read via an `openCodeIndex` reader-facade (the same manifest-first dual-artifact pattern as `openCanonIndex`)
+  - **Dual artifact** — deterministic `.doc-canon/code-index-manifest.json` (identity + freshness + a `content_fingerprint` over canonical-ordered rows) + `.doc-canon/code-ast-index.sqlite` (embedded SQLite store of symbols + refs via `node:sqlite`, built into Node ≥ 22.16) read via an `openCodeIndex` reader-facade (the same manifest-first dual-artifact pattern as `openCanonIndex`)
   - **Freshness** — stat-first via an internal fingerprint-keyed stat cache
     (`.doc-canon/code-index-stats.json`, outside the deterministic pair so `content_fingerprint` stability is preserved)
     that skips re-reading/re-hashing unchanged files; any create/update/delete or
