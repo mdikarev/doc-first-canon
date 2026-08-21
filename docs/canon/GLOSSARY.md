@@ -202,11 +202,13 @@ Per-language tree-sitter WASM pipeline that parses a source file and normalizes 
 A same-file syntactic reference from a usage of a symbol to its declaration, resolved by the CST without cross-file name resolution.
 
 ### code-index-manifest
-`.doc-canon/code-index-manifest.json`: deterministic, byte-identical code AST index manifest (`schema_version`, `corpus`, `grammar_versions`, `roots`, per-file `hash`/`language`/`symbols`); has no `index_id`/`built_at`, so identical input produces an identical artifact. `grammar_versions` divergence triggers a full rebuild.
+`.doc-canon/code-index-manifest.json`: deterministic code AST index manifest (`schema_version: 2`, `corpus`, `grammar_versions`, `roots`, per-file `hash`/`language`/`symbols`, and a `content_fingerprint` — SHA-256 over the canonical-ordered symbol/ref rows); has no `index_id`/`built_at`. `grammar_versions` divergence triggers a full rebuild, and a `content_fingerprint` mismatch vs. the SQLite store fails closed.
 
 ### code-ast-index
-`.doc-canon/code-ast-index.json`: serialized symbols and syntactic references (anchors, import edges,
-in-scope bindings) for the discovered source roots, sharing its companion `code-index-manifest`.
+`.doc-canon/code-ast-index.sqlite`: embedded SQLite store (Node's built-in `node:sqlite`) of the
+symbols and syntactic references (anchors, import edges, in-scope bindings) for the discovered source
+roots, sharing its companion `code-index-manifest`; it replaces the former single
+`.doc-canon/code-ast-index.json` so build and search no longer materialize the whole index.
 `import` edges resolve ESM `.js`/`.jsx`/`.mjs`/`.cjs` import specifiers to their TS/TSX sources and
 include call-site edges — identifier usages of imported names emit an `import`-kind edge to the
 definition file. Member-access references extend this: a local binding initialized from
@@ -218,7 +220,10 @@ model, Rust associated-function constructors and Python bare-call constructors r
 import edge map with no cross-file pass) — see [CODE_INDEX.md](CODE_INDEX.md).
 
 ### code-index-stats
-`.doc-canon/code-index-stats.json`: internal stat cache (`fingerprint` + per-file `size`/`mtime_ms`) that lets code freshness checks skip re-reading and re-hashing unchanged source files. Deliberately **outside** the deterministic dual artifact (the manifest/ast pair stays byte-identical across rebuilds); keyed by `index_fingerprint` — when absent or stale, readers fall back to full content hashing.
+`.doc-canon/code-index-stats.json`: internal stat cache (`fingerprint` + per-file `size`/`mtime_ms`) that lets code freshness checks skip re-reading and re-hashing unchanged source files. Deliberately **outside** the deterministic pair (the manifest/`.sqlite` store stays content-stable across rebuilds); keyed by `index_fingerprint` — when absent or stale, readers fall back to full content hashing.
+
+### content_fingerprint
+A `sha256:<hex>` hash over the code index's canonical-ordered logical rows (symbols sorted by all model columns; refs sorted by `kind, from_file, to_file, name, line`), streamed via `SELECT ... ORDER BY` and stored in `code-index-manifest`. It replaces byte-identity as the determinism check for the SQLite store (SQLite files are not byte-deterministic); a mismatch vs. the store on load fails closed.
 
 ### code_index_stale
 A non-fatal freshness signal for the code AST index: one or more indexed source hashes differ from the live tree. `code-index search` self-heals at the CLI layer when no watch owns the index (rebuild then serve, `auto_reindexed` warning); with a live watch the stale pack is served with `code_index_stale`. Reported independently of the canon `index_stale`.

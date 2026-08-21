@@ -26,6 +26,8 @@ npm install -g doc-canon
 npx doc-canon --help
 ```
 
+Requires **Node.js ≥ 22.13** (the built-in `node:sqlite` store used by `code-index`).
+
 From this repository (development):
 
 ```bash
@@ -170,7 +172,7 @@ doc-canon search "topic" --root /path/to/repo
 
 ### code-index build
 
-Build or refresh the local AST index over the project's discovered source roots (writes `.doc-canon/code-index-manifest.json` and `.doc-canon/code-ast-index.json`). Covers TypeScript/JavaScript, Go, C#, Rust, and Python via pinned tree-sitter WASM grammars. One-shot exits non-zero if a watch process is already running. Same `--watch` / `--interval` / `--stop` discipline as `index`, with a separate watch pid.
+Build or refresh the local AST index over the project's discovered source roots (writes `.doc-canon/code-index-manifest.json` and `.doc-canon/code-ast-index.sqlite`). Covers TypeScript/JavaScript, Go, C#, Rust, and Python via pinned tree-sitter WASM grammars. One-shot exits non-zero if a watch process is already running. Same `--watch` / `--interval` / `--stop` discipline as `index`, with a separate watch pid.
 
 ```bash
 doc-canon code-index build
@@ -222,7 +224,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
       - run: npm install -g doc-canon
       - run: doc-canon validate
 ```
@@ -273,6 +275,8 @@ npm install -g doc-canon
 # или одноразово:
 npx doc-canon --help
 ```
+
+Требуется **Node.js ≥ 22.13** (встроенный `node:sqlite` для хранения `code-index`).
 
 Из этого репозитория (разработка):
 
@@ -418,7 +422,7 @@ doc-canon search "topic" --root /path/to/repo
 
 ### code-index build
 
-Сборка или обновление локального AST-индекса по обнаруженным source-roots проекта (пишет `.doc-canon/code-index-manifest.json` и `.doc-canon/code-ast-index.json`). Покрывает TypeScript/JavaScript, Go, C#, Rust и Python через закреплённые tree-sitter WASM-грамматики. One-shot завершается с ненулевым кодом, если уже запущен watch. Та же дисциплина `--watch` / `--interval` / `--stop`, что и у `index`, но с отдельным watch-pid.
+Сборка или обновление локального AST-индекса по обнаруженным source-roots проекта (пишет `.doc-canon/code-index-manifest.json` и `.doc-canon/code-ast-index.sqlite`). Покрывает TypeScript/JavaScript, Go, C#, Rust и Python через закреплённые tree-sitter WASM-грамматики. One-shot завершается с ненулевым кодом, если уже запущен watch. Та же дисциплина `--watch` / `--interval` / `--stop`, что и у `index`, но с отдельным watch-pid.
 
 ```bash
 doc-canon code-index build
@@ -470,7 +474,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
       - run: npm install -g doc-canon
       - run: doc-canon validate
 ```

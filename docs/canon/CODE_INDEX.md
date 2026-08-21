@@ -24,7 +24,7 @@ registry.
 - Per-language import-edge resolution, where the language's import syntax is file-resolvable syntactically.
 - Member-access edges (`<Type>.<member>`) for constructor-backed local bindings, per language.
 - Cross-file member-access resolution passes (`src/code-index/resolvers/`), keyed by grammar language.
-- Deterministic byte-identical dual artifact (`.doc-canon/code-index-manifest.json` + `.doc-canon/code-ast-index.json`).
+- Deterministic dual artifact: `.doc-canon/code-index-manifest.json` (identity + freshness + a `content_fingerprint` over the canonical-ordered rows) + `.doc-canon/code-ast-index.sqlite` (embedded SQLite store of symbols + refs via Node's built-in `node:sqlite`).
 
 ## Interfaces
 
@@ -60,8 +60,8 @@ target-typed `new()` requires an explicit non-`var` type anchor.
 
 ## Invariants
 
-- Index schema (`schema_version` 1, `ReferenceKind = anchor | import | binding`) and `CodePack` shape unchanged by language slices.
-- Deterministic: identical corpus → identical index bytes; resolver dispatch order derives from the stable file ordering.
+- Index schema (`schema_version` 2, `ReferenceKind = anchor | import | binding`) and `CodePack` shape unchanged by language slices.
+- Deterministic: identical corpus → identical logical content, verified by the manifest `content_fingerprint` (streamed over canonical-ordered rows); resolver dispatch order derives from the stable file ordering.
 - Member-access resolution is syntactic: no name resolution or type inference; a binding's type is taken only from the constructor/literal CST node.
 - Each extractor fills only its own `unresolvedMembers`; the registry key is the grammar language reported by `grammarForFile`.
 - Freshness: stat-first, hash-confirmed — an internal fingerprint-keyed stat cache (`code-index-stats.json`, outside the dual artifact) skips re-hashing unchanged files; any create/update/delete or `grammar_versions` divergence triggers a full rebuild; `code_index_stale` warns, `code_index_missing` fails closed.

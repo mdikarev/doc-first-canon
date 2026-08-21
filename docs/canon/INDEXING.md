@@ -12,8 +12,9 @@ Excludes per-language extraction details (see [CODE_INDEX.md](CODE_INDEX.md)), t
 
 ## Current state
 
-Both indexes ship in `doc-canon` 0.7.0. Each writes a deterministic dual artifact (manifest + payload)
-under `.doc-canon/`, uses stat-first freshness (size/mtime snapshot, content-hash-confirmed) so
+Both indexes ship in `doc-canon` 0.7.0. Each writes a deterministic manifest + bulk store under
+`.doc-canon/` (BM25: `index-manifest.json` + `bm25-index.json`; code: `code-index-manifest.json` +
+`code-ast-index.sqlite`), uses stat-first freshness (size/mtime snapshot, content-hash-confirmed) so
 unchanged files are neither read nor hashed, and self-heals a stale index at the CLI layer when no
 watch owns it. Every successful search appends one probe-log line; `discipline` reports probe
 currency and exits ≠0 on un-probed or corrupt state.
@@ -66,9 +67,9 @@ currency and exits ≠0 on un-probed or corrupt state.
     per-language extraction differences (import conventions, member-access constructor patterns,
     resolution boundaries) are detailed in [CODE_INDEX.md](CODE_INDEX.md)
   - **Default ignore** — excludes add `.worktrees` (the shared default ignore prunes worktree clones from code-source-root discovery and the language-agnostic repo inventory; the canon `docs/canon/**` corpus — built over `<root>/docs/canon` without ignore filtering — is unaffected)
-  - **Dual artifact** — deterministic byte-identical `.doc-canon/code-index-manifest.json` + `.doc-canon/code-ast-index.json` read via an `openCodeIndex` reader-facade (same dual-artifact pattern as `openCanonIndex`)
+  - **Dual artifact** — deterministic `.doc-canon/code-index-manifest.json` (identity + freshness + a `content_fingerprint` over canonical-ordered rows) + `.doc-canon/code-ast-index.sqlite` (embedded SQLite store of symbols + refs via `node:sqlite`, built into Node ≥ 22.13) read via an `openCodeIndex` reader-facade (the same manifest-first dual-artifact pattern as `openCanonIndex`)
   - **Freshness** — stat-first via an internal fingerprint-keyed stat cache
-    (`.doc-canon/code-index-stats.json`, outside the dual artifact so byte-identity is preserved)
+    (`.doc-canon/code-index-stats.json`, outside the deterministic pair so `content_fingerprint` stability is preserved)
     that skips re-reading/re-hashing unchanged files; any create/update/delete or
     `grammar_versions` divergence triggers a full rebuild with poll-based watch and a separate
     pid-lock; freshness is reported independently (`code_index_stale` → warn,
@@ -83,7 +84,7 @@ currency and exits ≠0 on un-probed or corrupt state.
 
 - `openCanonIndex` (`doc-canon/index-reader`) — stable reader facade over the canon dual artifact
 - `searchCanon` (`doc-canon/search`) — ranked canon search returning a bounded context pack
-- `openCodeIndex` (`doc-canon/code-index-reader`) — stable reader facade over the code dual artifact
+- `openCodeIndex` (`doc-canon/code-index-reader`) — stable reader facade over the code manifest + SQLite store
 - `searchCodeIndex` (`doc-canon/code-search`) — code symbol/refs search returning a bounded code pack
 - CLI: `index`, `search`, `code-index build`, `code-index search`, `discipline` (see [CLI.md](CLI.md))
 
@@ -96,8 +97,8 @@ currency and exits ≠0 on un-probed or corrupt state.
    artifact IO, hashes, or watch behavior. Since P7, a stale index is self-healed at the CLI layer
    when no watch owns it, and every successful search is recorded in the probe log.
 2. **Build code AST index** — `doc-canon code-index build` discovers source roots, parses source
-   files with tree-sitter WASM into the normalized model, and writes the deterministic dual
-   artifact; unchanged hashes are a no-op, any change or `grammar_versions` divergence triggers a
+   files with tree-sitter WASM into the normalized model, and writes the deterministic manifest +
+   SQLite store; unchanged hashes are a no-op, any change or `grammar_versions` divergence triggers a
    full rebuild. `code-index search` queries that artifact at search time; agent rules for
    code-index-first analysis land with P2c.
 
@@ -109,7 +110,7 @@ currency and exits ≠0 on un-probed or corrupt state.
 
 ## Invariants
 
-- Deterministic dual artifacts: identical corpus → identical index bytes; freshness caches live outside the byte-identical pair.
+- Deterministic artifacts: identical corpus → identical logical content, verified by the manifest `content_fingerprint`; freshness caches live outside the deterministic pair.
 - Stat-first freshness: unchanged files are neither read nor hashed; stat changes are content-hash-confirmed before a rebuild is triggered.
 - Tokenizer/grammar changes force a full rebuild (`tokenizer_version` / `grammar_versions`) — a content hash alone cannot detect them.
 - Stale indexes self-heal at the CLI layer when no watch owns them; `index_stale` / `code_index_stale` warn, missing index fails closed.
