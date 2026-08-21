@@ -19,9 +19,9 @@ folder (see `ARCHITECTURE.md`, `CLI.md`). Acceptance scenarios live in
 `docs/acceptance/skill-scenarios.md` (import source; not SoT). Automated skill execution tests are out
 of MVP scope.
 
-Agents that use the canon follow a shared dual-audience recipe: **search first — mandatory when the
-index is available** — `doc-canon search "<topic>"` → Scout a working-set manifest → Expand gate
-(`sufficient` / `need more`) → Execute with targeted deep reads. A missing index is built first
+Agents that use the canon follow a shared dual-audience recipe: **scout first — mandatory when the
+index is available** — `doc-canon scout "<topic>"` → working-set manifest (roles, snippet stubs,
+verdict hint) → Expand gate (`sufficient` / `need more`) → Execute with targeted deep reads. A missing index is built first
 (`doc-canon index`; `code-index build` when covered source exists); only if building fails does the
 flow fall back to progressive disclosure from `INDEX.md`, with every deep read outside a pack noted
 (`doc_miss: <query> -> docs:<path>` / `code_miss: <query> -> source:<path>`). **Quality over thrift:**
@@ -60,9 +60,9 @@ pick a side. Cursor loads the `.mdc` pointer rule; Claude Code loads the same po
 
 ### Scout retrieval protocol
 
-1. Scout always runs `doc-canon search "<topic>"` first (and `doc-canon code-index search` when covered source is in scope) and builds the working-set stub from the returned pack paths and snippets.
-2. If search fails closed because the index is missing or corrupt, run `doc-canon index` (and `code-index build` when covered source exists), then re-run the search. Only if building fails do we continue with INDEX-first Scout, recording `doc_miss: <query> -> docs:<path>` for every file read outside the pack. Search failure alone never licenses INDEX-first fallback.
-3. If search returns `index_stale`, note that the CLI self-heals when no watch owns the index; with a live watch, surface the warning, continue using the pack, and Expand when the evidence is thin.
+1. Scout runs `doc-canon scout "<topic>"` to get the working-set manifest (ranked paths with contract roles, snippet stubs, verdict hint) in one call; scout seeds the code pack automatically when a code index exists (docs-only otherwise). The agent keeps the semantic Expand decision — `need_more` triggers Expand; `sufficient` still allows Expand on doubt.
+2. If scout fails closed because the index is missing or corrupt, run `doc-canon index` (and `code-index build` when covered source exists), then re-run the scout. Only if building fails do we continue with INDEX-first Scout, recording `doc_miss: <query> -> docs:<path>` for every file read outside the pack. Scout failure alone never licenses INDEX-first fallback.
+3. If scout returns `index_stale`, note that the CLI self-heals when no watch owns the index; with a live watch, surface the warning, continue using the pack, and Expand when the evidence is thin.
 4. Thin or empty results require an alternate query, INDEX section ids, or targeted reads. Search never licenses under-reading.
 
 After any successful substantive write to `docs/canon/**`, the responsible managed skill runs one-shot `doc-canon index`. If a running watch holds the index lock, surface the one-shot failure and rely on the watch, or suggest `doc-canon index --stop` before re-indexing; do not fight the lock. (`search` self-heals a stale index only when no watch owns it.)

@@ -49,10 +49,10 @@ Skills (identical trees under `.cursor/skills/`, `.claude/skills/`, and `.dsh/sk
 A coding-agent host that consumes doc-canon's managed assets: Cursor (`.cursor/skills/` + `.cursor/rules/doc-canon.mdc` + short `AGENTS.md` block), Claude Code (`.claude/skills/` + full pointer-rule body in `CLAUDE.md`), and DSH — the DeepSeek Harness (`.dsh/skills/` + the same `AGENTS.md`/`CLAUDE.md` blocks; no dedicated rule file). `init` / `upgrade-skills` / `migrate` select which harnesses get skill trees — interactively, via `--harnesses`, or by installed-harness detection.
 
 ### Working set
-The small list of canon/artifact paths an agent intends to use for the current task. Discover via `doc-canon search` first (pack paths and snippet stubs); fall back to INDEX (and CLI inventory/report when needed) when search fails closed. Build the set before deep-reading file bodies.
+The small list of canon/artifact paths an agent intends to use for the current task. Discover via `doc-canon scout "<topic>"` (generated manifest: paths, roles, snippet stubs, verdict); fall back to `doc-canon search` / INDEX when scout fails closed. Build the set before deep-reading file bodies.
 
 ### Scout
-Phase that builds a working-set manifest (`path`, `role`, short why-in-set stub) without loading full file bodies or inventing structure.
+Phase that builds a working-set manifest (`path`, `role`, short why-in-set stub) without loading full file bodies or inventing structure. `doc-canon scout` generates the manifest mechanically; the Expand decision stays with the agent.
 
 ### Expand gate
 Check that the working set is **sufficient** or **need more** before deep reads. Doubt → expand. Managed canon skills briefly show the set and verdict in chat; coding agents apply the same discipline without a mandatory chat ritual.

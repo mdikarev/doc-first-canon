@@ -46,7 +46,7 @@ Design rationale: [`docs/superpowers/specs/2026-08-09-production-path-roadmap-de
 | 7 | Strict search discipline | absorbed | [p7-strict-search-discipline.md](p7-strict-search-discipline.md) |
 | 8 | Code index SQLite storage | absorbed | [p8-code-index-db-storage.md](p8-code-index-db-storage.md) |
 | 9 | CLI structured validate | absorbed | [p9-cli-structured-validate.md](p9-cli-structured-validate.md) |
-| 10 | CLI scout working set | refining | [p10-cli-scout-working-set.md](p10-cli-scout-working-set.md) |
+| 10 | CLI scout working set | absorbed | [p10-cli-scout-working-set.md](p10-cli-scout-working-set.md) |
 | 11 | CLI fix mechanical repairs | draft | [p11-cli-fix-mechanical-repairs.md](p11-cli-fix-mechanical-repairs.md) |
 | 12 | Report JSON filter flags | draft | [p12-report-json-filter-flags.md](p12-report-json-filter-flags.md) |
 | 13 | Search paths-only mode | draft | [p13-search-paths-only-mode.md](p13-search-paths-only-mode.md) |
@@ -94,6 +94,8 @@ SQLite store via Node's built-in `node:sqlite`, streamed build writes and SQL-ba
 substring matching, and redefines determinism from byte-identity to a `content_fingerprint` over the
 canonical-sorted logical content; the Node engine floor rises `>=20` → `>=22.16`.
 
-P9 (CLI structured validate) is absorbed; P10–P13 are CLI/agent-interface hardening drafts, placed
-below the absorbed P0–P9 and ordered by value to agents: `scout` working-set manifest (P10),
-mechanical `fix` (P11), `report` JSON/filter flags (P12), and `search` paths-only mode (P13).
+P9 and P10 are absorbed — P10 shipped `doc-canon scout` (one-call working-set manifest with
+contract-role annotations, snippet stubs, and a verdict hint) and its outcomes are merged into living
+canon (`CLI.md`, `SKILLS.md`, `ARCHITECTURE.md`, `GLOSSARY.md`); P11–P13 are CLI/agent-interface
+hardening drafts, placed below the absorbed P0–P10 and ordered by value to agents: mechanical `fix`
+(P11), `report` JSON/filter flags (P12), and `search` paths-only mode (P13).

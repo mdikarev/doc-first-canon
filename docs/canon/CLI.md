@@ -7,7 +7,7 @@ Own the deterministic core of `doc-canon`: scaffold, structural validation, inve
 ## Scope
 
 **Covers:** commands `init`, `validate`, `check`, `report`, `upgrade-skills`, `migrate`, `index`,
-`search`, `discipline`, `code-index`; contract parse/schema; heading and INDEX agreement checks;
+`search`, `scout`, `discipline`, `code-index`; contract parse/schema; heading and INDEX agreement checks;
 ignore-aware inventory; CLI finding merge; embedding default templates/skills/rules into target repos
 (harness-selected: Cursor / Claude Code / DSH); required-gap ensure on existing canons (`migrate`);
 build/update a local BM25 index over `docs/canon/**/*.md` (`index`), including poll-based `--watch`
@@ -24,7 +24,13 @@ with the same poll `--watch`/`--stop` discipline and a separate watch pid; searc
 
 ## Current state
 
-Package `doc-canon@0.9.0` (Node ≥22.16, ESM — the `node:sqlite` floor for the code-index SQLite store). Entry: `bin/doc-canon.js` → compiled `dist/`. Commands: `init`, `validate`, `check`, `report`, `upgrade-skills`, `migrate`, `index`, `search`, `discipline`, plus the `code-index` subcommands `build` (tree-sitter WASM extraction over discovered source roots) and `search` (search over that code AST index). All commands accept `--root <path>` (default: cwd).
+Package `doc-canon@0.10.0` (Node ≥22.16, ESM — the `node:sqlite` floor for the code-index
+SQLite store). Entry: `bin/doc-canon.js` → compiled `dist/`. Commands: `init`, `validate`, `check`,
+`report`, `upgrade-skills`, `migrate`, `index`, `search`, `scout`, `discipline`, plus the `code-index`
+subcommands `build` (tree-sitter WASM extraction over discovered source roots) and `search` (search
+over that code AST index). `scout <query>` emits a working-set manifest (docs hits with contract roles
++ snippet stubs + verdict hint; code hits when a code index exists). All commands accept `--root
+<path>` (default: cwd).
 
 ## Responsibilities
 
@@ -56,6 +62,9 @@ Package `doc-canon@0.9.0` (Node ≥22.16, ESM — the `node:sqlite` floor for th
   name)/namespace-qualified/explicit-typed target-typed `new()`, imported-name (Rust), and
   imported-name (Python) — query stays exact/case-sensitive); report `code_index_stale` → warn and
   `code_index_missing` → fail closed with a hint to run `doc-canon code-index build`
+- `scout` composes the docs pack and (when a code index exists) the code pack into a working-set
+  manifest with contract-role annotations and a deterministic verdict hint; self-heals stale indexes
+  like `search`; records doc/code probes
 
 ## Interfaces
 
@@ -70,6 +79,7 @@ Package `doc-canon@0.9.0` (Node ≥22.16, ESM — the `node:sqlite` floor for th
 | `migrate` | Require existing canon + parseable `CANON_CONTRACT.md` (else fail closed; that path is `init`); reject `schema_version` other than `1` before writes (no YAML rewrite); create missing **required** section files and listed templates from the **target contract** (never overwrite; never inject default-kit sections); add missing INDEX Sections rows for contract sections; then run `upgrade-skills`. Flags: `--root`, `--harnesses <cursor,claude,dsh>`, `--yes`. |
 | `index` | Build/update a local BM25 index for `docs/canon/**/*.md`; one-shot exits ≠0 if a watch is running; `--watch` polls (default 2000 ms, `--interval <ms>`, min 200) and keeps artifacts in sync; `--stop` stops a running watch via its pid file; `--root` |
 | `search <query>` | Search the existing index and print a ranked context pack; ranking applies light EN/RU stemming (inside the tokenizer), a 1.5× heading-token weight, a 0.5× `future_plans/**` downweight, and glossary-aware query expansion from a live glossary read (all internal — no surface change); human output on stdout; `--json`; `--max-hits <N>` (default 10); `--snippet-lines <N>` (default 4); `--root <path>` |
+| `scout <query>` | Emit a working-set manifest (docs hits with contract roles + snippet stubs + verdict hint; code hits when a code index exists); human output on stdout; `--json`; `--max-hits <N>` (default 10); `--snippet-lines <N>` (default 4); `--no-code`; `--root <path>` |
 | `code-index build` | Discover source roots (config > manifests > extension scan), extract symbols/references via tree-sitter WASM into the shared normalized model, and write a deterministic `.doc-canon/code-index-manifest.json` + `.doc-canon/code-ast-index.sqlite`; `--watch` polls (default 2000 ms, `--interval <ms>`, min 200) and keeps artifacts in sync; `--stop` stops a running watch via its pid file; `--root`. Separate artifact from `index` (docs, not code); freshness reported independently |
 | `code-index search <query>` | Search the code AST index and print a bounded code pack; symbol mode matches tokenized (every query token is a case-insensitive substring of `name` or, falling back, `signature`; ordering exact > prefix > name-tokens > signature-tokens, tie-break file then line) with `--kind <type>` / `--file <glob>`; `--body` widens symbol-mode snippet windows from the declaration start to the symbol's `endLine` (symbol mode only; `--body` + `--refs` fails closed); `--refs <name>` for syntactic references (anchor/import/binding, incl. `Class.method` member-access edges for `new Type()`-initialized bindings (TS/JS and C#), Go composite/pointer-literal bindings, Rust associated-function-constructor bindings, and Python bare-call constructor bindings — same-file, qualified-import, same-package, C# same-namespace/`using`-imported/`using`-alias (canonical name)/namespace-qualified/explicit-typed target-typed `new()`, imported-name (Rust), and imported-name (Python)); `--json`; `--max-hits <N>` (default 10); `--snippet-lines <N>` (default 4); `--root <path>` |
 
@@ -88,6 +98,7 @@ A flag not listed here does not exist: any other option fails closed with `error
 | `discipline` | `--root <path>` (default `.`), `--json` |
 | `index` | `--root <path>` (default `.`), `--watch`, `--stop`, `--interval <ms>` |
 | `search <query>` | `--root <path>` (default `.`), `--json`, `--max-hits <n>` (default `10`), `--snippet-lines <n>` (default `4`) |
+| `scout <query>` | `--root <path>` (default `.`), `--json`, `--max-hits <n>` (default `10`), `--snippet-lines <n>` (default `4`), `--no-code` |
 | `code-index build` | `--root <path>` (default `.`), `--watch`, `--stop`, `--interval <ms>` |
 | `code-index search [query]` | `--root <path>` (default `.`), `--json`, `--max-hits <n>` (default `10`), `--snippet-lines <n>` (default `4`), `--kind <type>`, `--file <glob>`, `--refs <name>`, `--body` |
 
@@ -118,6 +129,11 @@ in the Pack on stdout with no stderr warning. Zero hits also exit 0. Every succe
 one line to the probe log; searches never mutate the index while a watch is running. Ranking
 internally applies stemming, heading weights, the `future_plans/**` downweight, and glossary expansion
 (fail-open when `GLOSSARY.md` is absent) — no flags or output-shape changes.
+
+`scout` fails closed on a missing/corrupt docs index with the standard `doc-canon index` hint; stale
+indexes self-heal at the CLI layer exactly like `search` (`auto_reindexed` / `index_stale` warnings);
+`need_more` is a valid result (exit 0) — the agent decides to Expand; the code probe is best-effort
+(missing code index → docs-only, no error); every probe is recorded in the probe log.
 
 `code-index search` fails with exit ≠0 for an empty query, an empty `--refs` name, a missing/corrupt
 code index (hint to run `doc-canon code-index build`), invalid flags, `--refs` combined with a

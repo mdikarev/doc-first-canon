@@ -1,6 +1,6 @@
 # P10 — CLI scout: generated working-set manifest
 
-- **Status:** refining
+- **Status:** absorbed
 - **Focus:** One command that turns a topic query into a ready-made working-set manifest (paths +
   contract role + snippet stubs + a sufficient/need-more verdict hint), replacing the hand-built
   Scout step in the managed skills.

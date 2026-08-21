@@ -16,7 +16,8 @@ a small working set before deep reads and fall back to INDEX-first Scout when se
 quality over thrift. Search-first is mandatory when the index is available: `doc-canon search` /
 `code-index search` self-heal a stale index at the CLI layer (rebuild then serve) and record every
 successful search in `.doc-canon/probe-log.jsonl`; `doc-canon discipline` reports probe currency and
-gates on un-probed state.
+gates on un-probed state. `doc-canon scout` composes both packs into a working-set manifest
+(contract-role annotations + verdict hint) for the Scout step.
 
 ## System context
 
@@ -32,7 +33,7 @@ gates on un-probed state.
 ## Building blocks
 
 - **CLI entry & shared** (`src/cli.ts`, `src/paths.ts`, `src/version.ts`) — commander wiring, root/`.doc-canon` path helpers, package/`skills_stamp` constants
-- **CLI commands** (`src/commands/*`) — `init`, `upgrade-skills`, `migrate`, `validate`, `check`, `report`, `index`, `search`
+- **CLI commands** (`src/commands/*`) — `init`, `upgrade-skills`, `migrate`, `validate`, `check`, `report`, `index`, `search`, `scout`
 - **Contract** (`src/contract/*`) — parse and schema-check the YAML machine block in `CANON_CONTRACT.md`
 - **Validate** (`src/validate/*`) — required files, headings, INDEX↔contract agreement, stamp checks; validators return structured issues (`kind`/`paths`/`severity`) and the CLI exposes `--json`
 - **Agnostic ignore** (`src/agnostic/*`) — default exclude globs plus contract `policies.ignore` matching (via `micromatch`)
