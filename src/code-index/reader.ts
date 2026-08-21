@@ -42,7 +42,7 @@ export function openCodeIndex(root: string): CodeIndexHandle {
     try {
       const fp = computeContentFingerprint(db);
       if (fp !== manifest.content_fingerprint) {
-        throw new Error(`content_fingerprint mismatch: manifest=${manifest.content_fingerprint} store=${fp}`);
+        throw new Error(`content_fingerprint mismatch: manifest=${manifest.content_fingerprint} store=${fp}; run: doc-canon code-index build`);
       }
     } finally { db.close(); }
     verified = true;

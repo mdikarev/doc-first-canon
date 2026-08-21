@@ -56,7 +56,7 @@ describe("openCodeIndex", () => {
     const db = openCodeStore(repo);
     db.exec("INSERT INTO symbols (name, name_lower, kind, signature, signature_lower, file, line, end_line, scope) VALUES ('X','x','class','class X{}','class x{}','x.ts',1,1,'')");
     db.close();
-    assert.throws(() => openCodeIndex(repo).symbols(), /content_fingerprint mismatch/);
+    assert.throws(() => openCodeIndex(repo).symbols(), /run: doc-canon code-index build/);
   });
 
   it("liveHashes matches manifest hashes when unchanged", async () => {
