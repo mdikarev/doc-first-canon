@@ -73,9 +73,10 @@ program
   .command("validate")
   .description("Schema + structure validation")
   .option("--root <path>", "target repo root", ".")
-  .action(async (opts: { root: string }) => {
+  .option("--json", "emit structured issues JSON on stdout")
+  .action(async (opts: { root: string; json?: boolean }) => {
     const { validateCanon } = await import("./commands/validate.js");
-    process.exitCode = await validateCanon(opts.root);
+    process.exitCode = await validateCanon(opts.root, { json: opts.json });
   });
 program
   .command("check")
