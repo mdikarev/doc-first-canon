@@ -240,6 +240,20 @@ describe("searchCodeIndex", () => {
     assert.ok(names.includes("normalize"));
   });
 
+  it("stemmed-token queries match identically (Readers -> reader)", async () => {
+    write(repo, "src/r.ts", "export class Reader {}\n");
+    await syncCodeIndex(repo);
+    const pack = searchCodeIndex(repo, "Readers");
+    assert.ok(pack.hits.some((h) => h.name === "Reader"), "stemmed 'Readers' must match 'Reader'");
+  });
+
+  it("sub-3-char multi-token query uses the LIKE fallback", async () => {
+    write(repo, "src/go.ts", "export function goMod(): number { return 1; }\n");
+    await syncCodeIndex(repo);
+    const pack = searchCodeIndex(repo, "go mod");
+    assert.ok(pack.hits.some((h) => h.name === "goMod"));
+  });
+
   it("body option widens the snippet window to endLine", async () => {
     write(repo, "src/wide.ts", "export function wide(): number {\n  const a = 1;\n  const b = 2;\n  return a + b;\n}");
     await syncCodeIndex(repo);
