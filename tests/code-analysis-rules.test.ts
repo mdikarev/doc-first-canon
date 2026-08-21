@@ -30,7 +30,7 @@ describe("code analysis rules", () => {
       const s = readEmbedded("skills", skill, "SKILL.md");
       assert.match(s, /doc-canon index/);
       assert.match(s, /code-index build/);
-      assert.match(s, /code-index search|doc-canon search/);
+      assert.match(s, /doc-canon scout/);
     }
   });
 

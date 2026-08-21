@@ -66,7 +66,7 @@ describe("managed agent assets", () => {
     assert.match(write, /sufficient|need more/i);
     assert.match(write, /after Expand|after.*Expand|following Expand/i);
     assert.match(write, /clarif/i);
-    assert.match(write, /doc-canon search/i);
+    assert.match(write, /doc-canon scout/i);
     assert.match(write, /index_stale/i);
     assert.match(write, /one-shot.*doc-canon index|doc-canon index.*one-shot/i);
 
@@ -76,7 +76,7 @@ describe("managed agent assets", () => {
     assert.match(audit, /working set/i);
     assert.match(audit, /sufficient|need more/i);
     assert.match(audit, /show|briefly|in chat/i);
-    assert.match(audit, /doc-canon search/i);
+    assert.match(audit, /doc-canon scout/i);
     assert.match(audit, /index_stale/i);
   });
 

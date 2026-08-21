@@ -21,8 +21,8 @@ Coding agents updating **behavior or public contract** must invoke this skill (o
 
 Before deep-reading canon file bodies or drafting substantial SoT changes:
 
-1. **Mandatory probe:** run `doc-canon search "<topic>"` (and `doc-canon code-index search` when covered source is in scope) and build the working-set manifest from pack paths and brief snippet stubs. Do not dump all canon markdown.
-2. **If search fails closed** (missing/corrupt index): run `doc-canon index` (and `code-index build` when covered source exists), then re-run the search. Only if building fails, continue with INDEX-first progressive disclosure (`docs/canon/INDEX.md`; select only relevant rows) and record `doc_miss: <query> -> docs:<path>` for every file read outside the pack. Search failure alone never licenses INDEX-first fallback.
+1. **Mandatory probe:** run `doc-canon scout "<topic>"` and use the returned working-set manifest (ranked paths with contract roles, snippet stubs, verdict hint); scout seeds the code pack automatically when a code index exists, else it is docs-only. The agent keeps the semantic Expand decision — `need_more` triggers Expand; `sufficient` still allows Expand on doubt. Do not dump all canon markdown.
+2. **If scout fails closed** (missing/corrupt index): run `doc-canon index` (and `code-index build` when covered source exists), then re-run scout. Only if building fails, continue with INDEX-first progressive disclosure (`docs/canon/INDEX.md`; select only relevant rows) and record `doc_miss: <query> -> docs:<path>` for every file read outside the pack. Scout/search failure alone never licenses INDEX-first fallback.
 3. **If search returns `index_stale`:** the CLI self-heals when no watch owns the index; with a live watch, surface the warning, continue with the pack, and Expand when evidence feels thin.
 4. **Expand gate:** briefly show the working set (paths + stubs) and a verdict **sufficient** or **need more** (which paths, why). Free-form brevity is fine. Doubt → expand; multiple expands are fine; silent under-read is not.
 5. Only after **sufficient**, deep-read the approved set and continue the Workflow.
