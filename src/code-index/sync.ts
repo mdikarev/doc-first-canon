@@ -3,14 +3,17 @@ import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { contentHash } from "../index/hash.js";
+import { docCanonDir } from "../paths.js";
 import { loadCodeIndexConfig } from "./config.js";
 import { discoverSourceRoots, listSourceFiles } from "./discovery.js";
 import { extractFile, grammarForFile } from "./extractors/index.js";
 import { GRAMMAR_VERSIONS } from "./grammar-versions.js";
-import { saveCodeIndexPair, tryLoadCodeIndexManifest } from "./io.js";
-import { saveCodeIndexStats, tryLoadCodeIndexStats } from "./stats.js";
+import { saveCodeIndexManifest, tryLoadCodeIndexManifest } from "./io.js";
+import { codeIndexStorePath } from "./paths.js";
 import { CROSS_FILE_RESOLVERS } from "./resolvers/index.js";
-import type { CodeAstIndex, CodeIndexManifest, CodeReference, CodeSymbol, CodeSyncResult, UnresolvedMember } from "./types.js";
+import { saveCodeIndexStats, tryLoadCodeIndexStats } from "./stats.js";
+import { computeContentFingerprint, createCodeStore, rebuildFts, storeStatements } from "./store.js";
+import type { CodeIndexManifest, CodeSymbol, CodeSyncResult, UnresolvedMember } from "./types.js";
 
 export function computeFingerprint(relHashes: Array<[string, string]>): string {
   const lines = relHashes
@@ -69,64 +72,81 @@ export async function syncCodeIndex(root: string): Promise<CodeSyncResult> {
     return { status: "fresh", indexed: files.length, changed: [] };
   }
 
-  const symbols: CodeAstIndex["symbols"] = [];
-  const references: CodeAstIndex["references"] = [];
+  const symbols: CodeSymbol[] = [];
   const unresolvedByLanguage = new Map<string, UnresolvedMember[]>();
   const knownFiles = new Set(files);
   const fileMeta: CodeIndexManifest["files"] = {};
-  for (const rel of files) {
-    const abs = path.join(vcsRoot, rel);
-    const text = fs.readFileSync(abs, "utf8");
-    const hash = hashes.get(rel)!;
-    const extracted = await extractFile(rel, text, knownFiles);
-    symbols.push(...extracted.symbols);
-    references.push(...extracted.references);
-    if (extracted.unresolvedMembers) {
-      const language = grammarForFile(rel);
-      const bucket = unresolvedByLanguage.get(language) ?? [];
-      bucket.push(...extracted.unresolvedMembers);
-      unresolvedByLanguage.set(language, bucket);
+
+  fs.mkdirSync(docCanonDir(vcsRoot), { recursive: true });
+  const storeTmp = codeIndexStorePath(vcsRoot) + ".tmp";
+  const db = createCodeStore(storeTmp);
+  const stmts = storeStatements(db);
+  db.exec("BEGIN");
+  try {
+    for (const rel of files) {
+      const abs = path.join(vcsRoot, rel);
+      const text = fs.readFileSync(abs, "utf8");
+      const hash = hashes.get(rel)!;
+      const extracted = await extractFile(rel, text, knownFiles);
+      for (const s of extracted.symbols) {
+        symbols.push(s);
+        stmts.insertSymbol.run(s.name, s.name.toLowerCase(), s.kind, s.signature, s.signature.toLowerCase(), s.file, s.line, s.endLine, s.scope);
+      }
+      for (const ref of extracted.references) {
+        stmts.insertRef.run(ref.kind, ref.from, ref.to, ref.name, ref.line);
+      }
+      if (extracted.unresolvedMembers) {
+        const language = grammarForFile(rel);
+        const bucket = unresolvedByLanguage.get(language) ?? [];
+        bucket.push(...extracted.unresolvedMembers);
+        unresolvedByLanguage.set(language, bucket);
+      }
+      fileMeta[rel] = { hash, language: grammarForFile(rel), symbols: extracted.symbols.length };
     }
-    fileMeta[rel] = {
-      hash,
-      language: grammarForFile(rel),
-      symbols: extracted.symbols.length,
+    for (const [language, resolver] of CROSS_FILE_RESOLVERS) {
+      const bucket = unresolvedByLanguage.get(language);
+      if (bucket) {
+        for (const ref of resolver(bucket, symbols)) {
+          stmts.insertRef.run(ref.kind, ref.from, ref.to, ref.name, ref.line);
+        }
+      }
+    }
+    rebuildFts(db);
+    const contentFingerprint = computeContentFingerprint(db);
+    db.exec("COMMIT");
+    db.close();
+
+    const relHashes = [...hashes.entries()].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
+    const fingerprint = computeFingerprint(relHashes);
+    const corpus = roots.map((r) => (r === "" ? "**" : `${r}/**`)).join(", ");
+    const manifest: CodeIndexManifest = {
+      schema_version: 2,
+      index_fingerprint: fingerprint,
+      content_fingerprint: contentFingerprint,
+      corpus,
+      grammar_versions: { ...GRAMMAR_VERSIONS },
+      roots,
+      files: fileMeta,
     };
-  }
 
-  for (const [language, resolver] of CROSS_FILE_RESOLVERS) {
-    const bucket = unresolvedByLanguage.get(language);
-    if (bucket) references.push(...resolver(bucket, symbols));
-  }
-
-  const relHashes = [...hashes.entries()].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
-  const fingerprint = computeFingerprint(relHashes);
-  const corpus = roots.map((r) => (r === "" ? "**" : `${r}/**`)).join(", ");
-
-  const manifest: CodeIndexManifest = {
-    schema_version: 1,
-    index_fingerprint: fingerprint,
-    corpus,
-    grammar_versions: { ...GRAMMAR_VERSIONS },
-    roots,
-    files: fileMeta,
-  };
-  const ast: CodeAstIndex = {
-    schema_version: 1,
-    index_fingerprint: fingerprint,
-    symbols,
-    references,
-  };
-  saveCodeIndexPair(vcsRoot, manifest, ast);
-  saveCodeIndexStats(vcsRoot, {
-    fingerprint,
-    files: Object.fromEntries(
-      files.map((rel) => {
+    // Rename store into place, then manifest LAST (commit marker).
+    fs.renameSync(storeTmp, codeIndexStorePath(vcsRoot));
+    saveCodeIndexManifest(vcsRoot, manifest);
+    const legacyJson = codeIndexStorePath(vcsRoot).replace(/\.sqlite$/, ".json");
+    if (fs.existsSync(legacyJson)) fs.rmSync(legacyJson);
+    saveCodeIndexStats(vcsRoot, {
+      fingerprint,
+      files: Object.fromEntries(files.map((rel) => {
         const st = fs.statSync(path.join(vcsRoot, rel));
         return [rel, { size: st.size, mtime_ms: st.mtimeMs }];
-      }),
-    ),
-  });
+      })),
+    });
+  } catch (e) {
+    try { db.exec("ROLLBACK"); } catch { /* already closed */ }
+    try { db.close(); } catch { /* ignore */ }
+    try { if (fs.existsSync(storeTmp)) fs.rmSync(storeTmp); } catch { /* ignore */ }
+    throw e;
+  }
 
   return { status: "updated", indexed: files.length, changed: [...changed].sort() };
 }

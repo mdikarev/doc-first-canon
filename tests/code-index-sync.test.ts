@@ -5,8 +5,9 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { syncCodeIndex } from "../src/code-index/sync.js";
-import { loadCodeIndexPair, tryLoadCodeIndexManifest } from "../src/code-index/io.js";
-import { openCodeIndex } from "../src/code-index/reader.js";
+import { loadCodeIndexManifest } from "../src/code-index/io.js";
+import { codeIndexStorePath } from "../src/code-index/paths.js";
+import { openCodeStore } from "../src/code-index/store.js";
 
 function makeRepo(): string {
   const repo = fs.mkdtempSync(path.join(os.tmpdir(), "code-index-sync-"));
@@ -18,6 +19,17 @@ function write(root: string, rel: string, body: string): void {
   const abs = path.join(root, rel);
   fs.mkdirSync(path.dirname(abs), { recursive: true });
   fs.writeFileSync(abs, body);
+}
+
+type StoreSymbol = { name: string; kind: string; scope: string; file: string };
+
+function storeSymbols(root: string): StoreSymbol[] {
+  const db = openCodeStore(root);
+  try {
+    return db.prepare("SELECT name, kind, scope, file FROM symbols").all() as StoreSymbol[];
+  } finally {
+    db.close();
+  }
 }
 
 const SOURCE = `export type Handle = { score(q: string): number };
@@ -33,29 +45,36 @@ describe("syncCodeIndex", () => {
   });
   afterEach(() => fs.rmSync(repo, { recursive: true, force: true }));
 
-  it("builds both artifacts and opens via reader", async () => {
+  it("builds the store and manifest, openable via the store", async () => {
     const r = await syncCodeIndex(repo);
     assert.equal(r.status, "updated");
     assert.equal(r.indexed, 1);
-    const pair = loadCodeIndexPair(repo);
-    assert.equal(pair.manifest.index_fingerprint, pair.ast.index_fingerprint);
-    assert.equal(pair.manifest.roots.length, 1);
-    assert.equal(pair.manifest.files["src/reader.ts"].language, "typescript");
-    assert.ok(pair.manifest.files["src/reader.ts"].symbols > 0);
-    const handle = openCodeIndex(repo);
-    assert.ok(handle.symbols().some((s) => s.name === "Reader"));
+    const manifest = loadCodeIndexManifest(repo);
+    assert.equal(manifest.schema_version, 2);
+    assert.match(manifest.content_fingerprint, /^sha256:[0-9a-f]{64}$/);
+    assert.equal(manifest.roots.length, 1);
+    assert.equal(manifest.files["src/reader.ts"].language, "typescript");
+    assert.ok(manifest.files["src/reader.ts"].symbols > 0);
+    assert.ok(fs.existsSync(codeIndexStorePath(repo)));
+    const symbols = storeSymbols(repo);
+    assert.ok(symbols.some((s) => s.name === "Reader"));
   });
 
-  it("is byte-deterministic across two builds on identical input", async () => {
+  it("writes a .sqlite store, not a legacy .json AST", async () => {
     await syncCodeIndex(repo);
-    const pair1 = loadCodeIndexPair(repo);
-    const manifest1 = JSON.stringify(pair1.manifest);
-    const ast1 = JSON.stringify(pair1.ast);
+    assert.ok(fs.existsSync(codeIndexStorePath(repo)));
+    assert.ok(codeIndexStorePath(repo).endsWith(".sqlite"));
+    assert.equal(fs.existsSync(codeIndexStorePath(repo).replace(/\.sqlite$/, ".json")), false);
+  });
+
+  it("produces equal content_fingerprint across two builds on identical input", async () => {
+    await syncCodeIndex(repo);
+    const manifest1 = loadCodeIndexManifest(repo);
     const r2 = await syncCodeIndex(repo);
     assert.equal(r2.status, "fresh");
-    const pair2 = loadCodeIndexPair(repo);
-    assert.equal(JSON.stringify(pair2.manifest), manifest1);
-    assert.equal(JSON.stringify(pair2.ast), ast1);
+    const manifest2 = loadCodeIndexManifest(repo);
+    assert.equal(manifest2.content_fingerprint, manifest1.content_fingerprint);
+    assert.equal(manifest2.index_fingerprint, manifest1.index_fingerprint);
   });
 
   it("returns fresh and does not rewrite when unchanged", async () => {
@@ -67,12 +86,14 @@ describe("syncCodeIndex", () => {
     assert.equal(fs.readFileSync(manifestPath, "utf8"), before);
   });
 
-  it("rebuilds on edit", async () => {
+  it("rebuilds on edit and changes the content_fingerprint", async () => {
     await syncCodeIndex(repo);
+    const before = loadCodeIndexManifest(repo).content_fingerprint;
     write(repo, "src/reader.ts", SOURCE + "\nexport const extra = 1;");
     const r = await syncCodeIndex(repo);
     assert.equal(r.status, "updated");
     assert.ok(r.changed.includes("src/reader.ts"));
+    assert.notEqual(loadCodeIndexManifest(repo).content_fingerprint, before);
   });
 
   it("rebuilds on delete", async () => {
@@ -96,8 +117,8 @@ describe("syncCodeIndex", () => {
     const statsPath = path.join(repo, ".doc-canon", "code-index-stats.json");
     assert.ok(fs.existsSync(statsPath));
     const stats = JSON.parse(fs.readFileSync(statsPath, "utf8"));
-    const pair = loadCodeIndexPair(repo);
-    assert.equal(stats.fingerprint, pair.manifest.index_fingerprint);
+    const manifest = loadCodeIndexManifest(repo);
+    assert.equal(stats.fingerprint, manifest.index_fingerprint);
     assert.equal(typeof stats.files["src/reader.ts"].size, "number");
     assert.equal(typeof stats.files["src/reader.ts"].mtime_ms, "number");
   });
@@ -134,27 +155,24 @@ describe("syncCodeIndex (go)", () => {
     const r = await syncCodeIndex(repo);
     assert.equal(r.status, "updated");
     assert.equal(r.indexed, 1);
-    const pair = loadCodeIndexPair(repo);
-    assert.equal(pair.manifest.files["reader.go"].language, "go");
-    const handle = openCodeIndex(repo);
+    const manifest = loadCodeIndexManifest(repo);
+    assert.equal(manifest.files["reader.go"].language, "go");
+    const symbols = storeSymbols(repo);
     assert.ok(
-      handle.symbols().some((s) => s.name === "Handle" && s.kind === "struct"),
+      symbols.some((s) => s.name === "Handle" && s.kind === "struct"),
     );
     assert.ok(
-      handle
-        .symbols()
-        .some((s) => s.name === "Get" && s.kind === "method" && s.scope === "Handle"),
+      symbols.some((s) => s.name === "Get" && s.kind === "method" && s.scope === "Handle"),
     );
   });
 
-  it("is byte-deterministic across two builds on identical input", async () => {
+  it("produces equal content_fingerprint across two builds on identical input", async () => {
     await syncCodeIndex(repo);
-    const pair1 = loadCodeIndexPair(repo);
-    const ast1 = JSON.stringify(pair1.ast);
+    const manifest1 = loadCodeIndexManifest(repo);
     const r2 = await syncCodeIndex(repo);
     assert.equal(r2.status, "fresh");
-    const pair2 = loadCodeIndexPair(repo);
-    assert.equal(JSON.stringify(pair2.ast), ast1);
+    const manifest2 = loadCodeIndexManifest(repo);
+    assert.equal(manifest2.content_fingerprint, manifest1.content_fingerprint);
   });
 
   it("indexes mixed TS and Go files via the dispatcher", async () => {
@@ -163,9 +181,9 @@ describe("syncCodeIndex (go)", () => {
     const r = await syncCodeIndex(repo);
     assert.equal(r.status, "updated");
     assert.equal(r.indexed, 2);
-    const pair = loadCodeIndexPair(repo);
-    assert.equal(pair.manifest.files["reader.go"].language, "go");
-    assert.equal(pair.manifest.files["src/index.ts"].language, "typescript");
+    const manifest = loadCodeIndexManifest(repo);
+    assert.equal(manifest.files["reader.go"].language, "go");
+    assert.equal(manifest.files["src/index.ts"].language, "typescript");
   });
 });
 
@@ -193,25 +211,24 @@ describe("syncCodeIndex (csharp)", () => {
     const r = await syncCodeIndex(repo);
     assert.equal(r.status, "updated");
     assert.equal(r.indexed, 1);
-    const pair = loadCodeIndexPair(repo);
-    assert.equal(pair.manifest.files["src/App/Reader.cs"].language, "c-sharp");
-    const handle = openCodeIndex(repo);
+    const manifest = loadCodeIndexManifest(repo);
+    assert.equal(manifest.files["src/App/Reader.cs"].language, "c-sharp");
+    const symbols = storeSymbols(repo);
     assert.ok(
-      handle.symbols().some((s) => s.name === "Reader" && s.kind === "class"),
+      symbols.some((s) => s.name === "Reader" && s.kind === "class"),
     );
     assert.ok(
-      handle.symbols().some((s) => s.name === "Score" && s.kind === "property"),
+      symbols.some((s) => s.name === "Score" && s.kind === "property"),
     );
   });
 
-  it("is byte-deterministic across two builds on identical input", async () => {
+  it("produces equal content_fingerprint across two builds on identical input", async () => {
     await syncCodeIndex(repo);
-    const pair1 = loadCodeIndexPair(repo);
-    const ast1 = JSON.stringify(pair1.ast);
+    const manifest1 = loadCodeIndexManifest(repo);
     const r2 = await syncCodeIndex(repo);
     assert.equal(r2.status, "fresh");
-    const pair2 = loadCodeIndexPair(repo);
-    assert.equal(JSON.stringify(pair2.ast), ast1);
+    const manifest2 = loadCodeIndexManifest(repo);
+    assert.equal(manifest2.content_fingerprint, manifest1.content_fingerprint);
   });
 
   it("indexes mixed TS, Go, and C# files via the dispatcher", async () => {
@@ -222,10 +239,10 @@ describe("syncCodeIndex (csharp)", () => {
     const r = await syncCodeIndex(repo);
     assert.equal(r.status, "updated");
     assert.equal(r.indexed, 3);
-    const pair = loadCodeIndexPair(repo);
-    assert.equal(pair.manifest.files["src/App/Reader.cs"].language, "c-sharp");
-    assert.equal(pair.manifest.files["main.go"].language, "go");
-    assert.equal(pair.manifest.files["src/index.ts"].language, "typescript");
+    const manifest = loadCodeIndexManifest(repo);
+    assert.equal(manifest.files["src/App/Reader.cs"].language, "c-sharp");
+    assert.equal(manifest.files["main.go"].language, "go");
+    assert.equal(manifest.files["src/index.ts"].language, "typescript");
   });
 });
 
@@ -259,27 +276,24 @@ describe("syncCodeIndex (rust)", () => {
     const r = await syncCodeIndex(repo);
     assert.equal(r.status, "updated");
     assert.equal(r.indexed, 1);
-    const pair = loadCodeIndexPair(repo);
-    assert.equal(pair.manifest.files["src/reader.rs"].language, "rust");
-    const handle = openCodeIndex(repo);
+    const manifest = loadCodeIndexManifest(repo);
+    assert.equal(manifest.files["src/reader.rs"].language, "rust");
+    const symbols = storeSymbols(repo);
     assert.ok(
-      handle.symbols().some((s) => s.name === "Reader" && s.kind === "struct"),
+      symbols.some((s) => s.name === "Reader" && s.kind === "struct"),
     );
     assert.ok(
-      handle
-        .symbols()
-        .some((s) => s.name === "get" && s.kind === "method" && s.scope === "Reader"),
+      symbols.some((s) => s.name === "get" && s.kind === "method" && s.scope === "Reader"),
     );
   });
 
-  it("is byte-deterministic across two builds on identical input", async () => {
+  it("produces equal content_fingerprint across two builds on identical input", async () => {
     await syncCodeIndex(repo);
-    const pair1 = loadCodeIndexPair(repo);
-    const ast1 = JSON.stringify(pair1.ast);
+    const manifest1 = loadCodeIndexManifest(repo);
     const r2 = await syncCodeIndex(repo);
     assert.equal(r2.status, "fresh");
-    const pair2 = loadCodeIndexPair(repo);
-    assert.equal(JSON.stringify(pair2.ast), ast1);
+    const manifest2 = loadCodeIndexManifest(repo);
+    assert.equal(manifest2.content_fingerprint, manifest1.content_fingerprint);
   });
 
   it("indexes mixed TS, Go, C#, and Rust files via the dispatcher", async () => {
@@ -292,11 +306,11 @@ describe("syncCodeIndex (rust)", () => {
     const r = await syncCodeIndex(repo);
     assert.equal(r.status, "updated");
     assert.equal(r.indexed, 4);
-    const pair = loadCodeIndexPair(repo);
-    assert.equal(pair.manifest.files["src/reader.rs"].language, "rust");
-    assert.equal(pair.manifest.files["main.go"].language, "go");
-    assert.equal(pair.manifest.files["src/App/Reader.cs"].language, "c-sharp");
-    assert.equal(pair.manifest.files["src/index.ts"].language, "typescript");
+    const manifest = loadCodeIndexManifest(repo);
+    assert.equal(manifest.files["src/reader.rs"].language, "rust");
+    assert.equal(manifest.files["main.go"].language, "go");
+    assert.equal(manifest.files["src/App/Reader.cs"].language, "c-sharp");
+    assert.equal(manifest.files["src/index.ts"].language, "typescript");
   });
 });
 
@@ -323,31 +337,26 @@ describe("syncCodeIndex (python)", () => {
     const r = await syncCodeIndex(repo);
     assert.equal(r.status, "updated");
     assert.equal(r.indexed, 1);
-    const pair = loadCodeIndexPair(repo);
-    assert.equal(pair.manifest.files["src/reader.py"].language, "python");
-    const handle = openCodeIndex(repo);
-    assert.ok(handle.symbols().some((s) => s.name === "reader" && s.kind === "module"));
+    const manifest = loadCodeIndexManifest(repo);
+    assert.equal(manifest.files["src/reader.py"].language, "python");
+    const symbols = storeSymbols(repo);
+    assert.ok(symbols.some((s) => s.name === "reader" && s.kind === "module"));
+    assert.ok(symbols.some((s) => s.name === "Reader" && s.kind === "class"));
     assert.ok(
-      handle.symbols().some((s) => s.name === "Reader" && s.kind === "class"),
+      symbols.some((s) => s.name === "score" && s.kind === "method" && s.scope === "Reader"),
     );
     assert.ok(
-      handle
-        .symbols()
-        .some((s) => s.name === "score" && s.kind === "method" && s.scope === "Reader"),
-    );
-    assert.ok(
-      handle.symbols().some((s) => s.name === "DEFAULT_SCORE" && s.kind === "const"),
+      symbols.some((s) => s.name === "DEFAULT_SCORE" && s.kind === "const"),
     );
   });
 
-  it("is byte-deterministic across two builds on identical input", async () => {
+  it("produces equal content_fingerprint across two builds on identical input", async () => {
     await syncCodeIndex(repo);
-    const pair1 = loadCodeIndexPair(repo);
-    const ast1 = JSON.stringify(pair1.ast);
+    const manifest1 = loadCodeIndexManifest(repo);
     const r2 = await syncCodeIndex(repo);
     assert.equal(r2.status, "fresh");
-    const pair2 = loadCodeIndexPair(repo);
-    assert.equal(JSON.stringify(pair2.ast), ast1);
+    const manifest2 = loadCodeIndexManifest(repo);
+    assert.equal(manifest2.content_fingerprint, manifest1.content_fingerprint);
   });
 
   it("indexes all five languages via the dispatcher", async () => {
@@ -362,11 +371,11 @@ describe("syncCodeIndex (python)", () => {
     const r = await syncCodeIndex(repo);
     assert.equal(r.status, "updated");
     assert.equal(r.indexed, 5);
-    const pair = loadCodeIndexPair(repo);
-    assert.equal(pair.manifest.files["src/reader.py"].language, "python");
-    assert.equal(pair.manifest.files["src/reader.rs"].language, "rust");
-    assert.equal(pair.manifest.files["main.go"].language, "go");
-    assert.equal(pair.manifest.files["src/App/Reader.cs"].language, "c-sharp");
-    assert.equal(pair.manifest.files["src/index.ts"].language, "typescript");
+    const manifest = loadCodeIndexManifest(repo);
+    assert.equal(manifest.files["src/reader.py"].language, "python");
+    assert.equal(manifest.files["src/reader.rs"].language, "rust");
+    assert.equal(manifest.files["main.go"].language, "go");
+    assert.equal(manifest.files["src/App/Reader.cs"].language, "c-sharp");
+    assert.equal(manifest.files["src/index.ts"].language, "typescript");
   });
 });

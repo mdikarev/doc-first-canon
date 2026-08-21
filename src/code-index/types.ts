@@ -52,19 +52,13 @@ export type CodeIndexFileMeta = {
 };
 
 export type CodeIndexManifest = {
-  schema_version: 1;
+  schema_version: 2;
   index_fingerprint: string;
+  content_fingerprint: string;
   corpus: string;
   grammar_versions: Record<string, string>;
   roots: string[];
   files: Record<string, CodeIndexFileMeta>;
-};
-
-export type CodeAstIndex = {
-  schema_version: 1;
-  index_fingerprint: string;
-  symbols: CodeSymbol[];
-  references: CodeReference[];
 };
 
 export type CodeIndexConfig = {
