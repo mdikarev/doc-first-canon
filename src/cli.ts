@@ -151,7 +151,7 @@ program
         json?: boolean;
         maxHits?: string;
         snippetLines?: string;
-        noCode?: boolean;
+        code?: boolean;
       },
     ) => {
       const { scoutCanonCli } = await import("./commands/scout.js");

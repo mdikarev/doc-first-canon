@@ -72,4 +72,50 @@ describe("doc-canon scout cli", () => {
     assert.match(r.stdout, /verdict: need_more/);
     assert.match(r.stdout, /docs\/canon\/a\.md/);
   });
+
+  it("rejects --max-hits below 1", () => {
+    const r = spawnSync(
+      "node",
+      [bin, "scout", "retrieval", "--root", root, "--max-hits", "0"],
+      { encoding: "utf8" },
+    );
+    assert.notEqual(r.status, 0);
+  });
+
+  it("--no-code skips the code probe (code hits present without it)", () => {
+    fs.mkdirSync(path.join(root, ".git"));
+    fs.writeFileSync(path.join(root, "package.json"), "{}");
+    fs.mkdirSync(path.join(root, "src"), { recursive: true });
+    fs.writeFileSync(path.join(root, "src", "reader.ts"), "export class Reader {}\n");
+    assert.equal(
+      spawnSync("node", [bin, "index", "--root", root], { encoding: "utf8" }).status,
+      0,
+    );
+    assert.equal(
+      spawnSync("node", [bin, "code-index", "build", "--root", root], {
+        encoding: "utf8",
+      }).status,
+      0,
+    );
+
+    const withCode = spawnSync(
+      "node",
+      [bin, "scout", "Reader", "--root", root, "--json"],
+      { encoding: "utf8" },
+    );
+    assert.equal(withCode.status, 0, withCode.stderr + withCode.stdout);
+    const manifest = JSON.parse(withCode.stdout);
+    assert.ok(Array.isArray(manifest.code));
+    assert.equal(manifest.code[0]!.file, "src/reader.ts");
+    assert.equal(manifest.code[0]!.name, "Reader");
+
+    const withoutCode = spawnSync(
+      "node",
+      [bin, "scout", "Reader", "--root", root, "--json", "--no-code"],
+      { encoding: "utf8" },
+    );
+    assert.equal(withoutCode.status, 0, withoutCode.stderr + withoutCode.stdout);
+    const manifestNoCode = JSON.parse(withoutCode.stdout);
+    assert.equal(manifestNoCode.code, undefined);
+  });
 });

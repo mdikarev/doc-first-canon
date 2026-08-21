@@ -7,7 +7,7 @@ export type ScoutCliOptions = {
   json?: boolean;
   maxHits?: string;
   snippetLines?: string;
-  noCode?: boolean;
+  code?: boolean;
 };
 
 export async function scoutCanonCli(
@@ -43,7 +43,7 @@ export async function scoutCanonCli(
     const manifest = await buildScoutManifest(root, query.trim(), {
       maxHits,
       snippetLines,
-      code: opts.noCode ? false : undefined,
+      code: opts.code === false ? false : undefined,
     });
 
     if (opts.json) {
