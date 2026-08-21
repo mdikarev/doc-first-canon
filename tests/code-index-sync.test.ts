@@ -6,7 +6,7 @@ import os from "node:os";
 import path from "node:path";
 import { syncCodeIndex } from "../src/code-index/sync.js";
 import { loadCodeIndexManifest } from "../src/code-index/io.js";
-import { codeIndexStorePath } from "../src/code-index/paths.js";
+import { codeIndexManifestPath, codeIndexStorePath } from "../src/code-index/paths.js";
 import { openCodeStore } from "../src/code-index/store.js";
 
 function makeRepo(): string {
@@ -30,6 +30,11 @@ function storeSymbols(root: string): StoreSymbol[] {
   } finally {
     db.close();
   }
+}
+
+function forceRebuild(repo: string): void {
+  fs.rmSync(codeIndexStorePath(repo), { force: true });
+  fs.rmSync(codeIndexManifestPath(repo), { force: true });
 }
 
 const SOURCE = `export type Handle = { score(q: string): number };
@@ -67,11 +72,12 @@ describe("syncCodeIndex", () => {
     assert.equal(fs.existsSync(codeIndexStorePath(repo).replace(/\.sqlite$/, ".json")), false);
   });
 
-  it("produces equal content_fingerprint across two builds on identical input", async () => {
+  it("produces equal content_fingerprint across a genuine rebuild on identical input", async () => {
     await syncCodeIndex(repo);
     const manifest1 = loadCodeIndexManifest(repo);
+    forceRebuild(repo);
     const r2 = await syncCodeIndex(repo);
-    assert.equal(r2.status, "fresh");
+    assert.equal(r2.status, "updated");
     const manifest2 = loadCodeIndexManifest(repo);
     assert.equal(manifest2.content_fingerprint, manifest1.content_fingerprint);
     assert.equal(manifest2.index_fingerprint, manifest1.index_fingerprint);
@@ -166,11 +172,12 @@ describe("syncCodeIndex (go)", () => {
     );
   });
 
-  it("produces equal content_fingerprint across two builds on identical input", async () => {
+  it("produces equal content_fingerprint across a genuine rebuild on identical input", async () => {
     await syncCodeIndex(repo);
     const manifest1 = loadCodeIndexManifest(repo);
+    forceRebuild(repo);
     const r2 = await syncCodeIndex(repo);
-    assert.equal(r2.status, "fresh");
+    assert.equal(r2.status, "updated");
     const manifest2 = loadCodeIndexManifest(repo);
     assert.equal(manifest2.content_fingerprint, manifest1.content_fingerprint);
   });
@@ -222,11 +229,12 @@ describe("syncCodeIndex (csharp)", () => {
     );
   });
 
-  it("produces equal content_fingerprint across two builds on identical input", async () => {
+  it("produces equal content_fingerprint across a genuine rebuild on identical input", async () => {
     await syncCodeIndex(repo);
     const manifest1 = loadCodeIndexManifest(repo);
+    forceRebuild(repo);
     const r2 = await syncCodeIndex(repo);
-    assert.equal(r2.status, "fresh");
+    assert.equal(r2.status, "updated");
     const manifest2 = loadCodeIndexManifest(repo);
     assert.equal(manifest2.content_fingerprint, manifest1.content_fingerprint);
   });
@@ -287,11 +295,12 @@ describe("syncCodeIndex (rust)", () => {
     );
   });
 
-  it("produces equal content_fingerprint across two builds on identical input", async () => {
+  it("produces equal content_fingerprint across a genuine rebuild on identical input", async () => {
     await syncCodeIndex(repo);
     const manifest1 = loadCodeIndexManifest(repo);
+    forceRebuild(repo);
     const r2 = await syncCodeIndex(repo);
-    assert.equal(r2.status, "fresh");
+    assert.equal(r2.status, "updated");
     const manifest2 = loadCodeIndexManifest(repo);
     assert.equal(manifest2.content_fingerprint, manifest1.content_fingerprint);
   });
@@ -350,11 +359,12 @@ describe("syncCodeIndex (python)", () => {
     );
   });
 
-  it("produces equal content_fingerprint across two builds on identical input", async () => {
+  it("produces equal content_fingerprint across a genuine rebuild on identical input", async () => {
     await syncCodeIndex(repo);
     const manifest1 = loadCodeIndexManifest(repo);
+    forceRebuild(repo);
     const r2 = await syncCodeIndex(repo);
-    assert.equal(r2.status, "fresh");
+    assert.equal(r2.status, "updated");
     const manifest2 = loadCodeIndexManifest(repo);
     assert.equal(manifest2.content_fingerprint, manifest1.content_fingerprint);
   });

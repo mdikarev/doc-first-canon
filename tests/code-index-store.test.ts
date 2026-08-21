@@ -14,18 +14,35 @@ describe("code-index store", () => {
 
   const storePath = () => codeIndexStorePath(dir);
 
-  function seed(): void {
-    fs.mkdirSync(path.dirname(storePath()), { recursive: true });
-    const db = createCodeStore(storePath());
+  const SYMBOL_ROWS = [
+    { name: "Reader", name_lower: "reader", kind: "class", signature: "class Reader {}", signature_lower: "class reader {}", file: "src/reader.ts", line: 1, end_line: 1, scope: "" },
+    { name: "openCanonIndex", name_lower: "opencanonindex", kind: "function", signature: "function openCanonIndex(root: string)", signature_lower: "function opencanonindex(root: string)", file: "src/reader.ts", line: 5, end_line: 9, scope: "" },
+  ];
+  const REF_ROWS = [
+    { kind: "import", from_file: "src/main.ts", to_file: "src/reader.ts", name: "Reader", line: 1 },
+    { kind: "binding", from_file: "src/reader.ts", to_file: "src/reader.ts", name: "root", line: 7 },
+  ];
+
+  function buildStore(target: string, symbolOrder: number[], refOrder: number[]): void {
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    const db = createCodeStore(target);
     const st = storeStatements(db);
     db.exec("BEGIN");
-    st.insertSymbol.run("Reader", "reader", "class", "class Reader {}", "class reader {}", "src/reader.ts", 1, 1, "");
-    st.insertSymbol.run("openCanonIndex", "opencanonindex", "function", "function openCanonIndex(root: string)", "function opencanonindex(root: string)", "src/reader.ts", 5, 9, "");
-    st.insertRef.run("import", "src/main.ts", "src/reader.ts", "Reader", 1);
-    st.insertRef.run("binding", "src/reader.ts", "src/reader.ts", "root", 7);
+    for (const i of symbolOrder) {
+      const s = SYMBOL_ROWS[i];
+      st.insertSymbol.run(s.name, s.name_lower, s.kind, s.signature, s.signature_lower, s.file, s.line, s.end_line, s.scope);
+    }
+    for (const i of refOrder) {
+      const r = REF_ROWS[i];
+      st.insertRef.run(r.kind, r.from_file, r.to_file, r.name, r.line);
+    }
     rebuildFts(db);
     db.exec("COMMIT");
     db.close();
+  }
+
+  function seed(): void {
+    buildStore(storePath(), [0, 1], [0, 1]);
   }
 
   it("round-trips symbols and refs with JS-folded search columns", () => {
@@ -44,12 +61,22 @@ describe("code-index store", () => {
     db.close();
   });
 
-  it("content_fingerprint is stable across reads", () => {
-    seed();
-    const a = computeContentFingerprint(new DatabaseSync(storePath()));
-    const b = computeContentFingerprint(new DatabaseSync(storePath()));
-    assert.equal(a, b);
-    assert.match(a, /^sha256:[0-9a-f]{64}$/);
+  it("content_fingerprint is independent of insertion order", () => {
+    const a = path.join(dir, "a.sqlite");
+    const b = path.join(dir, "b.sqlite");
+    buildStore(a, [0, 1], [0, 1]);
+    buildStore(b, [1, 0], [1, 0]);
+    const dbA = new DatabaseSync(a);
+    const dbB = new DatabaseSync(b);
+    try {
+      const fa = computeContentFingerprint(dbA);
+      const fb = computeContentFingerprint(dbB);
+      assert.equal(fa, fb);
+      assert.match(fa, /^sha256:[0-9a-f]{64}$/);
+    } finally {
+      dbA.close();
+      dbB.close();
+    }
   });
 
   it("openCodeStore fails closed on a wrong application_id", () => {
