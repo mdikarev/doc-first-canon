@@ -14,42 +14,17 @@ Never silently pick a side. Never edit application code from canon skills.
 
 ## Open
 
-### D-018: Always-on guidance (AGENTS.md / CLAUDE.md / pointer rule) still prescribes search-first, while the P10 Scout protocol is scout-first
-- **status:** open
-- **decision:** code_stale
-- **canon_paths:** `docs/canon/SKILLS.md` (Scout retrieval protocol steps 1-3, always-on description in the Pointer-rule paragraph), `docs/canon/GLOSSARY.md` (Working set)
-- **code_paths:** `embedded/agents/AGENTS.block.md`, `embedded/rules/doc-canon.mdc`, and the shipped `AGENTS.md` / `CLAUDE.md` copies (managed assets, refreshed by `upgrade-skills`)
-- **evidence:** P10 absorbed a scout-first Scout protocol (SKILLS.md:63-68: "Scout runs
-  `doc-canon scout "<topic>"` … generated manifest"; GLOSSARY.md:52 Working set: "Discover via
-  `doc-canon scout`"), but the always-on guidance still prescribes the older search-first
-  hand-built-manifest flow: SKILLS.md:50 ("always-on … search first, **mandatory** …
-  `doc-canon search` … build a small working set"), `embedded/agents/AGENTS.block.md`
-  ("**Search first — it is mandatory** … run `doc-canon search "<topic>"`"),
-  `embedded/rules/doc-canon.mdc` (search-first mandatory), and the shipped `AGENTS.md` /
-  `CLAUDE.md` copies. search-first is a strict subset of scout-first (scout composes search;
-  nothing in the always-on text is false), so agents following the always-on block do more
-  manual work, not wrong work — but the always-on surface lags the shipped protocol and should
-  be caught up (embedded template update + `SKILLS_STAMP` bump + `upgrade-skills`).
-- **finding_ids:** `F-014`
-- **coding_agent_prompt:** Update the always-on managed templates to the scout-first protocol
-  shipped by P10 (doc-canon 0.10.0, SKILLS_STAMP 0.17.0), so agents following `AGENTS.md` /
-  `CLAUDE.md` / the pointer rule probe with `doc-canon scout` instead of hand-building the
-  working-set manifest from `doc-canon search`. Study first: `docs/canon/SKILLS.md` "Scout
-  retrieval protocol" steps 1-3 (scout-first, generated manifest, agent keeps the Expand
-  decision) and `docs/canon/GLOSSARY.md` Working set / Scout terms; the current always-on text
-  in `embedded/agents/AGENTS.block.md` ("Search first — it is mandatory … run `doc-canon
-  search "<topic>"` … Build a small working set") and `embedded/rules/doc-canon.mdc`. Change:
-  replace the search-first probe sentence with the scout-first one (run `doc-canon scout
-  "<topic>"`, use the returned manifest — ranked paths, contract roles, snippet stubs, verdict
-  hint; scout seeds the code pack automatically when a code index exists, docs-only otherwise;
-  fall back to `doc-canon search` / INDEX only when scout fails closed, noting `doc_miss` /
-  `code_miss` for reads outside the pack); update the shipped `AGENTS.md` / `CLAUDE.md`
-  copies and bump `SKILLS_STAMP` (managed-content change → `upgrade-skills` propagates).
-  Do not change the search engine, `search`/scout command behavior, or canon prose. Verify:
-  `npm run build`, `npm test` (except the pre-existing sandbox `pack-files.test.ts` npm-cache
-  failure), `doc-canon validate --json` exit 0 with zero `error`-severity issues.
+
 
 ## Resolved
+
+### D-018: Always-on guidance now uses the P10 Scout-first protocol
+- **status:** resolved
+- **decision:** code_stale
+- **canon_paths:** `docs/canon/SKILLS.md`, `docs/canon/ARCHITECTURE.md`, `docs/canon/INDEXING.md`
+- **code_paths:** `embedded/agents/AGENTS.block.md`, `embedded/rules/doc-canon.mdc`, `AGENTS.md`, `CLAUDE.md`, `.cursor/rules/doc-canon.mdc`
+- **evidence:** Updated the always-on managed templates to run `doc-canon scout`, consume its generated working-set manifest, build and retry on fail-closed indexes, and retain code-index-first analysis guidance. Refreshed shipped copies through `upgrade-skills`; `SKILLS_STAMP` is now 0.18.0. Focused P14 tests pass and canon validation is clean.
+- **finding_ids:** `F-014`
 
 ### D-017: SKILLS.md skills-table rows omit `--json` from the validate success gate
 - **status:** resolved

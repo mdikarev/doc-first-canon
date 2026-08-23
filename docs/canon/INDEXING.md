@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Indexing and retrieval give agents a search-first path into both the canon and the code: a local BM25 index over `docs/canon/**/*.md` and a deterministic AST index over discovered source roots, consumed through bounded context packs / code packs instead of whole-corpus dumps.
+Indexing and retrieval give agents a Scout-first path into both the canon and the code: a local BM25 index over `docs/canon/**/*.md` and a deterministic AST index over discovered source roots, consumed through bounded context packs / code packs instead of whole-corpus dumps. `doc-canon scout` composes the available packs into a bounded working-set manifest; direct search remains available for targeted retrieval.
 
 ## Scope
 

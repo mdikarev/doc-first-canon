@@ -1,12 +1,12 @@
 # P14 — Always-on guidance: propagate scout-first to managed templates
 
-- **Status:** draft
+- **Status:** absorbed
 - **Focus:** Bring the always-on managed templates (`AGENTS.md` / `CLAUDE.md` / pointer rule)
   up to the scout-first protocol shipped by P10, so agents without canon skills probe with
   `doc-canon scout` instead of hand-building the working-set manifest from `doc-canon search`.
 - **Depends on:** P10 (absorbed; scout-first protocol in `SKILLS.md` + `embedded/skills/**`),
   P7 (absorbed; introduced the search-first always-on wording this initiative updates).
-- **Tracks:** `DISCREPANCIES.md` D-018 (open, `decision: code_stale`, finding `F-014`).
+- **Tracks:** `DISCREPANCIES.md` D-018 (resolved, `decision: code_stale`, finding `F-014`).
 - **Unblocks:** Consistent scout-first guidance across the whole agent surface — skills, always-on
   blocks, and pointer rule — and closing D-018.
 

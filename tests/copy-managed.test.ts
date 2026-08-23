@@ -90,11 +90,16 @@ describe("copyManagedAssets", () => {
       const agents = readFileSync(join(root, "AGENTS.md"), "utf8");
       assert.match(agents, /<!-- doc-canon:start -->/);
       assert.match(agents, /For design and development, treat `docs\/canon\/`/);
+      assert.match(agents, /doc-canon scout \"<topic>\"/);
+      assert.doesNotMatch(agents, /Search first — it is mandatory/);
 
       const claude = readFileSync(join(root, "CLAUDE.md"), "utf8");
       assert.match(claude, /<!-- doc-canon:start -->/);
       assert.match(claude, /# doc-canon context rule/);
       assert.match(claude, /Feature-change order \(canon-first\)/);
+      assert.match(claude, /doc-canon scout \"<topic>\"/);
+      assert.match(claude, /## Code analysis order/);
+      assert.doesNotMatch(claude, /## Search-first is mandatory/);
       assert.doesNotMatch(claude, /^---$/m);
       assert.doesNotMatch(claude, /alwaysApply/);
 

@@ -80,25 +80,25 @@ describe("managed agent assets", () => {
     assert.match(audit, /index_stale/i);
   });
 
-  it("documents search-first retrieval in pointer rule and AGENTS block", () => {
+  it("documents scout-first retrieval in pointer rule and AGENTS block", () => {
     const rule = readEmbedded("rules", "doc-canon.mdc");
-    assert.match(rule, /doc-canon search/i);
-    assert.match(rule, /fail-closed|fail closed/i);
+    assert.match(rule, /doc-canon scout/i);
+    assert.match(rule, /fail(?:s)?-closed|fail(?:s)? closed/i);
 
     const block = readEmbedded("agents", "AGENTS.block.md");
-    assert.match(block, /doc-canon search/i);
+    assert.match(block, /doc-canon scout/i);
   });
 
-  it("documents working-set discipline in pointer rule and search-first gate in AGENTS block", () => {
+  it("documents working-set discipline in pointer rule and scout-first gate in AGENTS block", () => {
     const rule = readEmbedded("rules", "doc-canon.mdc");
     assert.match(rule, /working set/i);
     assert.match(rule, /expand/i);
     assert.match(rule, /INDEX\.md/);
 
     const block = readEmbedded("agents", "AGENTS.block.md");
-    assert.match(block, /working set/i);
+    assert.match(block, /working-set manifest/i);
     assert.match(block, /expand/i);
-    assert.match(block, /Search first/i);
+    assert.match(block, /Scout first/i);
     assert.match(block, /doc_miss/i);
   });
 
@@ -255,15 +255,15 @@ describe("managed agent assets", () => {
 });
 
 describe("P7 strict search discipline phrases", () => {
-  it("AGENTS block makes search first mandatory", () => {
+  it("AGENTS block makes scout first mandatory", () => {
     const block = readEmbedded("agents", "AGENTS.block.md");
-    assert.match(block, /Search first — it is mandatory when the index is available/);
+    assert.match(block, /Scout first — it is mandatory when the index is available/);
     assert.match(block, /doc_miss/);
   });
 
-  it("pointer rule carries the mandatory gate and miss formats", () => {
+  it("pointer rule carries the scout gate and miss formats", () => {
     const rule = readEmbedded("rules", "doc-canon.mdc");
-    assert.match(rule, /## Search-first is mandatory/);
+    assert.match(rule, /## Scout-first is mandatory/);
     assert.match(rule, /doc_miss: <query> -> docs:<path>/);
     assert.match(rule, /code_miss: <query> -> source:<path>/);
   });

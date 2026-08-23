@@ -2,6 +2,7 @@
 
 ## 0.10.0
 
+- **feat:** propagate the P10 Scout-first protocol to always-on `AGENTS.md` / `CLAUDE.md` / Cursor pointer guidance; managed overlays now use `doc-canon scout` with generated working-set manifests, explicit build-and-retry fallback, and preserved code-index-first analysis guidance; `SKILLS_STAMP` 0.18.0
 - **feat:** new `doc-canon scout "<topic>"` command — emits a generated working-set manifest (docs hits ranked by search, each annotated with its contract role and snippet stubs, plus a deterministic `sufficient` / `need_more` verdict hint and an optional code pack) in one call, replacing the hand-built Scout step in the managed skills; `--json`, `--max-hits`, `--snippet-lines`, `--no-code`; self-heals stale indexes like `search`, records doc/code probes in `.doc-canon/probe-log.jsonl`, code probe runs automatically when a code index exists (docs-only otherwise); `SKILLS_STAMP` 0.17.0 — managed skills' Scout step now calls `doc-canon scout`
 
 ## 0.9.0

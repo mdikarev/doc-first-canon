@@ -50,7 +50,7 @@ Design rationale: [`docs/superpowers/specs/2026-08-09-production-path-roadmap-de
 | 11 | CLI fix mechanical repairs | draft | [p11-cli-fix-mechanical-repairs.md](p11-cli-fix-mechanical-repairs.md) |
 | 12 | Report JSON filter flags | draft | [p12-report-json-filter-flags.md](p12-report-json-filter-flags.md) |
 | 13 | Search paths-only mode | draft | [p13-search-paths-only-mode.md](p13-search-paths-only-mode.md) |
-| 14 | Always-on scout-first propagation | draft | [p14-always-on-scout-first.md](p14-always-on-scout-first.md) |
+| 14 | Always-on scout-first propagation | absorbed | [p14-always-on-scout-first.md](p14-always-on-scout-first.md) |
 
 P0, P0c, P0b, P1, and P3 are absorbed. P2 split into three sequential initiatives — P2a (code AST
 index construction), P2b (code search tools), P2c (code analysis rules); P2a is fully absorbed (all

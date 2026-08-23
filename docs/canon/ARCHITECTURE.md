@@ -11,13 +11,13 @@ Two layers: a deterministic **CLI** (`doc-canon`) and an **agent layer**.
   discovers skills under `.dsh/skills/`) owns interview, authorship, semantic audit, discrepancy
   dialogue, and the Scout → Expand retrieval protocol.
 
-Skills must call the CLI and must not invent structure outside the local contract. Agents search for
-a small working set before deep reads and fall back to INDEX-first Scout when search fails closed —
-quality over thrift. Search-first is mandatory when the index is available: `doc-canon search` /
-`code-index search` self-heal a stale index at the CLI layer (rebuild then serve) and record every
-successful search in `.doc-canon/probe-log.jsonl`; `doc-canon discipline` reports probe currency and
-gates on un-probed state. `doc-canon scout` composes both packs into a working-set manifest
-(contract-role annotations + verdict hint) for the Scout step.
+Skills must call the CLI and must not invent structure outside the local contract. Agents run
+`doc-canon scout` when the index is available to obtain a small working-set manifest before deep reads;
+if scout fails closed, they build the index and retry, then use INDEX-first only when building fails —
+quality over thrift. `doc-canon search` / `code-index search` self-heal a stale index at the CLI layer
+(rebuild then serve) and record every successful search in `.doc-canon/probe-log.jsonl`; `doc-canon
+discipline` reports probe currency and gates on un-probed state. `doc-canon scout` composes both packs
+into a working-set manifest (contract-role annotations + verdict hint) for the Scout step.
 
 ## System context
 

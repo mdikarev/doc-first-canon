@@ -47,16 +47,20 @@ Coding agents follow feature-change order for new or changed behavior and public
 
 **Absorb split:** once an initiative ships, `canon-write` merges outcomes into the relevant living sections; `canon-future-plan` then sets the initiative's status to `absorbed` and updates `future_plans/INDEX.md`.
 
-Pointer rule / `AGENTS.md` / `CLAUDE.md`: always-on context priority — search first, **mandatory when
-the index is available** (`doc-canon search`; `doc-canon code-index search` for covered languages);
-fall back to `docs/canon/INDEX.md` only when the index is missing and building failed, noting every
-read outside a pack (`doc_miss` / `code_miss`); build a small working set and expand if unsure before
-deep reads (no mandatory chat ritual); for new/changed behavior use **canon-first** (`canon-write` →
-optional project-local spec/plan → code → closing `canon-audit`; substantial canon waits for user
-go-ahead; coding agents do not edit canon themselves); escalate docs↔code divergence; do not silently
-pick a side. Cursor loads the `.mdc` pointer rule; Claude Code loads the same policy body from
-`CLAUDE.md` (not `.cursor/rules`); DSH loads the same always-on guidance from both `AGENTS.md` and
-`CLAUDE.md` and runs managed skills from `.dsh/skills/`.
+Pointer rule / `AGENTS.md` / `CLAUDE.md`: always-on context priority — run `doc-canon scout "<topic>"`
+first when the index is available and use its generated working-set manifest (ranked paths, contract
+roles, snippet stubs, verdict hint); scout seeds the code pack automatically when a code index exists,
+docs-only otherwise.
+If scout fails closed, build the missing index and retry; only if building fails, fall back to
+`doc-canon search` / `docs/canon/INDEX.md`, noting every read outside a pack (`doc_miss` / `code_miss`).
+Expand when unsure before deep reads (no mandatory chat ritual); for new/changed behavior use
+**canon-first** (`canon-write` → optional project-local spec/plan → code → closing `canon-audit`;
+substantial canon waits for user go-ahead; coding agents do not edit canon themselves); escalate
+docs↔code divergence; do not silently pick a side. For code analysis in TypeScript/JavaScript, Go,
+C#, Rust, or Python, try `doc-canon code-index search` before whole-file reads; on empty or thin results,
+read source as evidence and note `code_miss`. Cursor loads the `.mdc` pointer rule; Claude Code loads
+the same policy body from `CLAUDE.md` (not `.cursor/rules`); DSH loads the same always-on guidance from
+`AGENTS.md` and `CLAUDE.md` and runs managed skills from `.dsh/skills/`.
 
 ### Scout retrieval protocol
 
