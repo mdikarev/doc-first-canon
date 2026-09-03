@@ -185,6 +185,20 @@ doc-canon code-index build --watch --interval 500  # custom poll interval (ms, m
 doc-canon code-index build --stop                  # stop a running watch process
 ```
 
+**Limiting the indexed folders.** By default the index scope is auto-discovered from the repo's source roots (`package.json`, `go.mod`, `Cargo.toml`, `pyproject.toml`/`setup.py`/`setup.cfg`, `*.csproj`/`*.sln`) and falls back to the whole repository. To restrict which folders get indexed, create `.doc-canon/code-index.json` at the repo root:
+
+```json
+{
+  "roots": ["src", "packages/core"],
+  "ignore": ["**/generated/**", "vendor/**", "**/*.test.ts"]
+}
+```
+
+- `roots` — optional repo-relative directories to index (`"."` means the whole repo). When present, it replaces manifest-based discovery entirely: only files under these roots are indexed. Omit for auto-discovery.
+- `ignore` — optional micromatch globs matched against repo-relative file and directory paths. A matching directory is pruned together with its whole subtree; a matching file is skipped. They apply on top of the always-on defaults (`.git`, `node_modules`, `dist`, `build`, `.doc-canon`, `.worktrees`).
+
+Scope changes take effect on the next `code-index build` or `--watch` poll — files that leave the scope are dropped from the index — and the same config drives the self-healing auto-rebuild behind `code-index search`.
+
 ### code-index search
 
 Search the code AST index and print a bounded code pack (symbol or syntactic-reference hits with live-file snippets). A stale index is self-healed at the CLI layer when no watch owns it (rebuild then serve, `auto_reindexed` warning); with a live watch, stale is served with exit 0 and a `code_index_stale` warning. Missing/corrupt index → exit ≠0 with a hint to run `doc-canon code-index build`. Every successful search appends a line to `.doc-canon/probe-log.jsonl`.
@@ -437,6 +451,20 @@ doc-canon code-index build --watch                 # опрос и поддер�
 doc-canon code-index build --watch --interval 500  # свой интервал опроса (мс, мин. 200)
 doc-canon code-index build --stop                  # остановить запущенный watch
 ```
+
+**Ограничение индексируемых папок.** По умолчанию область индексации определяется автоматически по source-roots репозитория (`package.json`, `go.mod`, `Cargo.toml`, `pyproject.toml`/`setup.py`/`setup.cfg`, `*.csproj`/`*.sln`), а если их нет — индексируется весь репозиторий. Чтобы ограничить папки, по которым строится индекс, создайте `.doc-canon/code-index.json` в корне репозитория:
+
+```json
+{
+  "roots": ["src", "packages/core"],
+  "ignore": ["**/generated/**", "vendor/**", "**/*.test.ts"]
+}
+```
+
+- `roots` — опциональный список repo-relative папок для индексации (`"."` — весь репозиторий). Когда задан, полностью заменяет обнаружение по манифестам: индексируются только файлы внутри этих папок. Если ключ опущен — автообнаружение.
+- `ignore` — опциональные micromatch-глобы против repo-relative путей файлов и папок. Совпавшая папка вырезается вместе со всем поддеревом, совпавший файл пропускается. Применяются поверх постоянных исключений по умолчанию (`.git`, `node_modules`, `dist`, `build`, `.doc-canon`, `.worktrees`).
+
+Изменения области вступают в силу при следующем `code-index build` или опросе `--watch` — файлы, вышедшие из области, удаляются из индекса; тот же конфиг использует self-healing auto-rebuild за `code-index search`.
 
 ### code-index search
 
