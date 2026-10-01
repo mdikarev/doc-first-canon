@@ -2,7 +2,7 @@
 
 [English](#doc-canon) · [Русский](#doc-canon-ru)
 
-Deterministic CLI for agent documentation canon: scaffold, validate, report, index, and search structured docs under `docs/canon` with managed skills for **Cursor** and **Claude Code**.
+Deterministic CLI for agent documentation canon: scaffold, validate, report, index, and retrieve structured docs under `docs/canon` — a one-call `scout` working set plus targeted `search` — with managed skills for **Cursor**, **Claude Code**, and **DSH**.
 
 ## Why
 
@@ -14,7 +14,7 @@ Ad-hoc agent docs drift from code, contradict each other, and diverge in shape w
 2. Treat `docs/canon/` as the source of truth for agent context; when docs and code disagree, the user decides which is stale.
 3. Let skills edit documentation automatically; never patch application code — emit tasks for coding agents instead.
 4. Keep document structure stable across LLMs via in-repo templates and a per-project contract.
-5. Ship Cursor and Claude Code overlays by default; keep the CLI IDE-agnostic so additional agents can plug in later.
+5. Ship Cursor, Claude Code, and DSH overlays by default; keep the CLI IDE-agnostic so additional agents can plug in later.
 
 MVP does not include IDE UIs, automatic code patches, or CI/git hooks as the everyday sync trigger. Details: [`docs/canon/OVERVIEW.md`](docs/canon/OVERVIEW.md).
 
@@ -43,7 +43,7 @@ Short recipes. Full walkthroughs: [`docs/guides/usage-flows.md`](docs/guides/usa
 
 1. Install and ensure `doc-canon` is on `PATH`
 2. `doc-canon init --yes` (or interactive `doc-canon init`)
-3. In Cursor or Claude Code, run skill `canon-bootstrap` (purpose/scope interview, fill canon)
+3. In Cursor, Claude Code, or DSH, run skill `canon-bootstrap` (purpose/scope interview, fill canon)
 4. `doc-canon validate` (must pass)
 
 ### Existing project
@@ -58,7 +58,7 @@ Short recipes. Full walkthroughs: [`docs/guides/usage-flows.md`](docs/guides/usa
 1. After meaningful code or canon edits, run `canon-write` to sync affected sections (skills reindex with `doc-canon index` after substantive canon writes)
 2. `doc-canon check` — inventory + `.doc-canon/report.json`
 3. On docs↔code drift, run `canon-audit` (`docs_stale` or `code_stale`)
-4. Optionally `doc-canon report` to print the last report; agents/skills use `doc-canon search` for a bounded working set
+4. Optionally `doc-canon report` to print the last report; agents/skills start retrieval with `doc-canon scout` (working-set manifest: ranked paths, contract roles, snippet stubs, verdict hint) and fall back to `doc-canon search` for targeted queries
 
 ## Usage
 
@@ -173,6 +173,18 @@ doc-canon search "BM25" --max-hits 5 --snippet-lines 6
 doc-canon search "topic" --root /path/to/repo
 ```
 
+### scout
+
+One call that emits a generated **working-set manifest** for a topic: docs hits ranked by the BM25 index, each annotated with its contract role and snippet stubs, plus a deterministic `sufficient` / `need_more` verdict hint and an optional code pack (seeded automatically when a code index exists; `--no-code` skips it). Stale indexes self-heal exactly like `search` (`auto_reindexed` / `index_stale` warnings); a missing/corrupt docs index fails closed with the `doc-canon index` hint, while a missing code index degrades to docs-only without an error. `need_more` is a valid result (exit 0) — the agent decides to expand. Every probe is recorded in `.doc-canon/probe-log.jsonl`. In a fresh clone, build the indexes first (`doc-canon index`, plus `doc-canon code-index build` when covered source exists).
+
+```bash
+doc-canon scout "retrieval working set"
+doc-canon scout "code index storage" --json
+doc-canon scout "BM25 scoring" --max-hits 5 --snippet-lines 6
+doc-canon scout "cli surface" --no-code        # docs-only probe
+doc-canon scout "topic" --root /path/to/repo
+```
+
 ### code-index build
 
 Build or refresh the local AST index over the project's discovered source roots (writes `.doc-canon/code-index-manifest.json` and `.doc-canon/code-ast-index.sqlite`). Covers TypeScript/JavaScript, Go, C#, Rust, and Python via pinned tree-sitter WASM grammars. One-shot exits non-zero if a watch process is already running. Same `--watch` / `--interval` / `--stop` discipline as `index`, with a separate watch pid.
@@ -197,7 +209,7 @@ doc-canon code-index build --stop                  # stop a running watch proces
 - `roots` — optional repo-relative directories to index (`"."` means the whole repo). When present, it replaces manifest-based discovery entirely: only files under these roots are indexed. Omit for auto-discovery.
 - `ignore` — optional micromatch globs matched against repo-relative file and directory paths. A matching directory is pruned together with its whole subtree; a matching file is skipped. They apply on top of the always-on defaults (`.git`, `node_modules`, `dist`, `build`, `.doc-canon`, `.worktrees`).
 
-Scope changes take effect on the next `code-index build` or `--watch` poll — files that leave the scope are dropped from the index — and the same config drives the self-healing auto-rebuild behind `code-index search`.
+Scope changes take effect on the next `code-index build` or `--watch` poll — files that leave the scope are dropped from the index — and the same config drives the self-healing auto-rebuild behind `code-index search` and the code probe of `scout`.
 
 ### code-index search
 
@@ -205,7 +217,7 @@ Search the code AST index and print a bounded code pack (symbol or syntactic-ref
 
 **Symbol mode** (positional query): every query token must be a case-insensitive substring of the symbol `name` (or, falling back, the `signature`). Ordering: exact name > name prefix > name tokens > signature tokens, tie-break file then line. Filters `--kind <type>` and `--file <glob>` narrow the scan; `--body` widens the snippet window to the symbol's `endLine` (symbol mode only).
 
-**Refs mode** (`--refs <name>`): exact, case-sensitive match over syntactic references — `anchor` (same-file usage), `import` (cross-file edges, incl. call-site edges and `Class.method` member-access edges for `new Type()`-initialized bindings), and `binding` (in-scope locals).
+**Refs mode** (`--refs <name>`): exact, case-sensitive match over syntactic references — `anchor` (same-file usage), `import` (cross-file edges, incl. call-site edges and `Class.method` member-access edges for per-language constructor bindings: `new Type()` in TS/JS and C# — same-file, same-namespace, and `using`-imported/aliased types — Go composite/pointer literals, Rust `Type::new()` / `Type::default()`, and Python bare `Type(...)` calls, each resolved within its language's syntactic model), and `binding` (in-scope locals).
 
 ```bash
 doc-canon code-index search "searchCanon"               # symbol mode: find the declaration
@@ -269,7 +281,7 @@ DRY_RUN=1 npm run release    # test, build, validate, pack-check; no publish
 
 [English](#doc-canon) · [Русский](#doc-canon-ru)
 
-Детерминированный CLI для канона агентской документации: создание каркаса, валидация, отчёты, индекс и поиск по структурированным документам в `docs/canon` с управляемыми skills для **Cursor** и **Claude Code**.
+Детерминированный CLI для канона агентской документации: создание каркаса, валидация, отчёты, индекс и извлечение контекста из структурированных документов в `docs/canon` — рабочий набор одной командой `scout` плюс точечный `search` — с управляемыми skills для **Cursor**, **Claude Code** и **DSH**.
 
 ## Зачем
 
@@ -281,7 +293,7 @@ Ad-hoc документация для агентов устаревает от�
 2. Считать `docs/canon/` источником истины для агентского контекста; при расхождении docs и кода пользователь решает, что устарело.
 3. Дать skills автоматически править документацию; никогда не патчить код приложения — вместо этого писать задачи для coding-агентов.
 4. Держать структуру документов стабильной между разными LLM через шаблоны в репозитории и per-project контракт.
-5. Поставлять оверлеи Cursor и Claude Code по умолчанию; CLI оставить IDE-agnostic, чтобы позже подключать других агентов.
+5. Поставлять оверлеи Cursor, Claude Code и DSH по умолчанию; CLI оставить IDE-agnostic, чтобы позже подключать других агентов.
 
 В MVP нет IDE UI, автоматических патчей кода и CI/git hooks как повседневного триггера синхронизации. Подробности: [`docs/canon/OVERVIEW.md`](docs/canon/OVERVIEW.md).
 
@@ -310,7 +322,7 @@ npm link   # опционально: добавить doc-canon в PATH для �
 
 1. Установите и убедитесь, что `doc-canon` есть в `PATH`
 2. `doc-canon init --yes` (или интерактивный `doc-canon init`)
-3. В Cursor или Claude Code запустите skill `canon-bootstrap` (интервью purpose/scope, заполнение канона)
+3. В Cursor, Claude Code или DSH запустите skill `canon-bootstrap` (интервью purpose/scope, заполнение канона)
 4. `doc-canon validate` (должно пройти)
 
 ### Существующий проект
@@ -325,7 +337,7 @@ npm link   # опционально: добавить doc-canon в PATH для �
 1. После заметных правок кода или канона запустите `canon-write`, чтобы синхронизировать затронутые секции (после substantive-правок канона skills делают `doc-canon index`)
 2. `doc-canon check` — inventory + `.doc-canon/report.json`
 3. При drift docs↔code запустите `canon-audit` (`docs_stale` или `code_stale`)
-4. Опционально `doc-canon report`, чтобы напечатать последний отчёт; агенты/skills используют `doc-canon search` для ограниченного working set
+4. Опционально `doc-canon report`, чтобы напечатать последний отчёт; агенты/skills начинают извлечение контекста с `doc-canon scout` (манифест рабочего набора: ранжированные пути, роли из контракта, заготовки сниппетов, verdict hint) и переходят к `doc-canon search` для точечных запросов
 
 ## Использование
 
@@ -440,6 +452,18 @@ doc-canon search "BM25" --max-hits 5 --snippet-lines 6
 doc-canon search "topic" --root /path/to/repo
 ```
 
+### scout
+
+Один вызов, который печатает сгенерированный **манифест рабочего набора** по теме: хиты по документам, ранжированные BM25-индексом, каждый с ролью из контракта и заготовками сниппетов, плюс детерминированный verdict hint `sufficient` / `need_more` и опциональный code pack (подсевается автоматически, когда есть кодовый индекс; `--no-code` его отключает). Устаревшие индексы самовосстанавливаются так же, как в `search` (предупреждения `auto_reindexed` / `index_stale`); отсутствующий/битый индекс документов завершается fail-closed с подсказкой `doc-canon index`, а отсутствующий кодовый индекс деградирует до docs-only без ошибки. `need_more` — валидный результат (exit 0): решение о расширении принимает агент. Каждый probe пишется в `.doc-canon/probe-log.jsonl`. В свежем клоне сначала соберите индексы (`doc-canon index`, плюс `doc-canon code-index build`, если есть покрытый исходный код).
+
+```bash
+doc-canon scout "retrieval working set"
+doc-canon scout "code index storage" --json
+doc-canon scout "BM25 scoring" --max-hits 5 --snippet-lines 6
+doc-canon scout "cli surface" --no-code        # только docs-probe
+doc-canon scout "topic" --root /path/to/repo
+```
+
 ### code-index build
 
 Сборка или обновление локального AST-индекса по обнаруженным source-roots проекта (пишет `.doc-canon/code-index-manifest.json` и `.doc-canon/code-ast-index.sqlite`). Покрывает TypeScript/JavaScript, Go, C#, Rust и Python через закреплённые tree-sitter WASM-грамматики. One-shot завершается с ненулевым кодом, если уже запущен watch. Та же дисциплина `--watch` / `--interval` / `--stop`, что и у `index`, но с отдельным watch-pid.
@@ -464,7 +488,7 @@ doc-canon code-index build --stop                  # остановить зап
 - `roots` — опциональный список repo-relative папок для индексации (`"."` — весь репозиторий). Когда задан, полностью заменяет обнаружение по манифестам: индексируются только файлы внутри этих папок. Если ключ опущен — автообнаружение.
 - `ignore` — опциональные micromatch-глобы против repo-relative путей файлов и папок. Совпавшая папка вырезается вместе со всем поддеревом, совпавший файл пропускается. Применяются поверх постоянных исключений по умолчанию (`.git`, `node_modules`, `dist`, `build`, `.doc-canon`, `.worktrees`).
 
-Изменения области вступают в силу при следующем `code-index build` или опросе `--watch` — файлы, вышедшие из области, удаляются из индекса; тот же конфиг использует self-healing auto-rebuild за `code-index search`.
+Изменения области вступают в силу при следующем `code-index build` или опросе `--watch` — файлы, вышедшие из области, удаляются из индекса; тот же конфиг использует self-healing auto-rebuild за `code-index search` и за кодовым probe `scout`.
 
 ### code-index search
 
@@ -472,7 +496,7 @@ doc-canon code-index build --stop                  # остановить зап
 
 **Symbol-режим** (позиционный запрос): каждый токен запроса должен быть case-insensitive подстрокой имени символа `name` (или, как запасной вариант, `signature`). Ранжирование: точное имя > префикс имени > токены в имени > токены в сигнатуре, tie-break по файлу, затем строке. Фильтры `--kind <type>` и `--file <glob>` сужают сканирование; `--body` расширяет сниппет-окно до `endLine` символа (только symbol-режим).
 
-**Refs-режим** (`--refs <name>`): точное, case-sensitive совпадение по синтаксическим ссылкам — `anchor` (использование в том же файле), `import` (межфайловые эджи, включая call-site эджи и member-access эджи `Class.method` для привязок из `new Type()`), и `binding` (локальные переменные в области видимости).
+**Refs-режим** (`--refs <name>`): точное, case-sensitive совпадение по синтаксическим ссылкам — `anchor` (использование в том же файле), `import` (межфайловые эджи, включая call-site эджи и member-access эджи `Class.method` для привязок из конструкторов по языкам: `new Type()` в TS/JS и C# — same-file, same-namespace и `using`-импортированные/алиасы, композитные/указательные литералы в Go, `Type::new()` / `Type::default()` в Rust и вызовы `Type(...)` в Python, каждый в рамках синтаксической модели своего языка), и `binding` (локальные переменные в области видимости).
 
 ```bash
 doc-canon code-index search "searchCanon"               # symbol-режим: найти объявление
