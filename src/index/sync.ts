@@ -19,28 +19,38 @@ export type SyncResult = {
 export async function syncCanonIndex(root: string): Promise<SyncResult> {
   const paths = listCanonMarkdown(root);
 
-  // The manifest is the freshness source of truth. The bm25 artifact is only
-  // parsed when a rebuild is required or when it was rewritten after the
-  // manifest commit marker (external tampering → deep-validate and repair).
-  // saveIndexPair validates index_id equality before writing, so an untouched
-  // bm25 (mtime ≤ manifest mtime) can be trusted without parsing it — the
-  // common watch/idempotent tick skips a full bm25 JSON parse.
+  // The manifest is the freshness source of truth. The bm25 artifact is trusted
+  // without parsing only when its live stat still matches the manifest commit:
+  // the recorded byte size equals the live size AND it was not rewritten after
+  // the manifest (mtime ordering). Anything else — size drift, a later mtime, or
+  // an old manifest without a recorded size — is deep-validated by parsing.
+  // Comparing size (not only mtime) catches corruption that lands in the same
+  // mtime tick as the manifest write on 1 ms-granularity filesystems, while the
+  // common watch/idempotent tick still skips the full bm25 JSON parse.
   const previousManifest = tryLoadManifest(root);
   const tokenizerChanged = previousManifest?.tokenizer_version !== TOKENIZER_VERSION;
 
   let validPair = false;
+  let pairTrustedByStat = false;
   if (previousManifest !== null) {
     try {
       const manifestMtime = fs.statSync(indexManifestPath(root)).mtimeMs;
       const bm25Stat = fs.statSync(bm25IndexPath(root));
-      if (bm25Stat.mtimeMs > manifestMtime) {
-        validPair = loadBm25(root).index_id === previousManifest.index_id;
-      } else {
+      const recordedSize = previousManifest.bm25_size;
+      if (
+        typeof recordedSize === "number" &&
+        bm25Stat.size === recordedSize &&
+        bm25Stat.mtimeMs <= manifestMtime
+      ) {
         validPair = true;
+        pairTrustedByStat = true;
+      } else {
+        validPair = loadBm25(root).index_id === previousManifest.index_id;
       }
     } catch {
       // Missing manifest/bm25 artifact → rebuild from the current corpus.
       validPair = false;
+      pairTrustedByStat = false;
     }
   }
 
@@ -88,31 +98,38 @@ export async function syncCanonIndex(root: string): Promise<SyncResult> {
     !tokenizerChanged &&
     changed.length === 0
   ) {
-    // Upgrade path: a manifest written before stat snapshots forced full
-    // hashing to confirm freshness. Persist the snapshot once so subsequent
-    // ticks (watch/idempotent) skip reading and hashing unchanged docs. The
+    // Upgrade path: persist per-doc stat snapshots once (manifests written before
+    // them forced full hashing) and refresh the recorded bm25 size whenever the
+    // pair had to be deep-validated instead of stat-trusted. Subsequent ticks
+    // (watch/idempotent) then skip reading, hashing, and parsing entirely. The
     // bm25 artifact is untouched, so the pair stays trusted.
     const needsStatsUpgrade = Object.values(previousManifest.docs).some(
       (meta) => typeof meta.size !== "number" || typeof meta.mtime_ms !== "number",
     );
-    if (needsStatsUpgrade) {
+    const liveBm25Size = fs.statSync(bm25IndexPath(root)).size;
+    const needsPairUpgrade =
+      !pairTrustedByStat || previousManifest.bm25_size !== liveBm25Size;
+    if (needsStatsUpgrade || needsPairUpgrade) {
       saveManifestOnly(root, {
         ...previousManifest,
-        docs: Object.fromEntries(
-          paths.map((docPath) => {
-            const stat = stats.get(docPath)!;
-            const prev = previousManifest.docs[docPath];
-            return [
-              docPath,
-              {
-                hash: prev.hash,
-                token_count: prev.token_count,
-                size: stat.size,
-                mtime_ms: stat.mtime_ms,
-              },
-            ];
-          }),
-        ),
+        bm25_size: liveBm25Size,
+        docs: needsStatsUpgrade
+          ? Object.fromEntries(
+              paths.map((docPath) => {
+                const stat = stats.get(docPath)!;
+                const prev = previousManifest.docs[docPath];
+                return [
+                  docPath,
+                  {
+                    hash: prev.hash,
+                    token_count: prev.token_count,
+                    size: stat.size,
+                    mtime_ms: stat.mtime_ms,
+                  },
+                ];
+              }),
+            )
+          : previousManifest.docs,
       });
     }
     return { status: "fresh", indexed: paths.length, changed: [] };

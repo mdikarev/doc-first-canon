@@ -4,10 +4,18 @@ import { docCanonDir } from "../paths.js";
 import { bm25IndexPath, indexManifestPath } from "./paths.js";
 import type { Bm25State, IndexManifest } from "./types.js";
 
-function writeJsonAtomic(file: string, data: unknown): void {
+function serializeJson(data: unknown): string {
+  return `${JSON.stringify(data, null, 2)}\n`;
+}
+
+function writeTextAtomic(file: string, text: string): void {
   const tmp = file + ".tmp";
-  fs.writeFileSync(tmp, `${JSON.stringify(data, null, 2)}\n`, "utf8");
+  fs.writeFileSync(tmp, text, "utf8");
   fs.renameSync(tmp, file);
+}
+
+function writeJsonAtomic(file: string, data: unknown): void {
+  writeTextAtomic(file, serializeJson(data));
 }
 
 function readJson(file: string): unknown {
@@ -47,6 +55,9 @@ function parseManifest(raw: unknown): IndexManifest {
     ) {
       throw new Error("invalid manifest");
     }
+  }
+  if (raw.bm25_size !== undefined && !isNumber(raw.bm25_size)) {
+    throw new Error("invalid manifest");
   }
   return raw as IndexManifest;
 }
@@ -96,8 +107,16 @@ export function saveIndexPair(
     );
   }
   fs.mkdirSync(docCanonDir(path.resolve(root)), { recursive: true });
-  writeJsonAtomic(bm25IndexPath(root), bm25);
-  writeJsonAtomic(indexManifestPath(root), manifest);
+  // The bm25 payload is serialized once and its byte size is recorded in the manifest, so the
+  // fresh path can prove the artifact is untouched from a single stat (size + mtime ordering)
+  // instead of parsing it on every tick.
+  const bm25Payload = serializeJson(bm25);
+  const committed: IndexManifest = {
+    ...manifest,
+    bm25_size: Buffer.byteLength(bm25Payload, "utf8"),
+  };
+  writeTextAtomic(bm25IndexPath(root), bm25Payload);
+  writeTextAtomic(indexManifestPath(root), serializeJson(committed));
 }
 
 export function saveManifestOnly(root: string, manifest: IndexManifest): void {

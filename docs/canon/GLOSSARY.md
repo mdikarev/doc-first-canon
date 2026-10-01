@@ -137,7 +137,7 @@ Canon subtree `docs/canon/future_plans/` for initiatives describing the **future
 Validate behavior for `future_plans/*.md` other than `INDEX.md`: exempt from the "not listed in contract" orphan check; instead checked against `future_plans/INDEX.md`'s Initiatives table (INDEX↔disk agreement) and required `FUTURE_PLAN` headings. Replaces per-initiative `future-p*` contract rows.
 
 ### index-manifest
-`.doc-canon/index-manifest.json`: BM25 index manifest artifact (`schema_version`, opaque `index_id`, `built_at`, per-doc `hash`/`token_count`, optional per-doc stat snapshot `size`/`mtime_ms`, `tokenizer_version`) written last as the commit marker after a successful `bm25-index` write.
+`.doc-canon/index-manifest.json`: BM25 index manifest artifact (`schema_version`, opaque `index_id`, `built_at`, per-doc `hash`/`token_count`, optional per-doc stat snapshot `size`/`mtime_ms`, `tokenizer_version`, and the commit-time `bm25_size` byte count of its companion artifact) written last as the commit marker after a successful `bm25-index` write.
 
 ### bm25-index
 `.doc-canon/bm25-index.json`: serialized Okapi BM25 data (postings/df/doc-length) for the current corpus, `schema_version: 2`, sharing `index_id` with its companion `index-manifest`. An optional per-doc `heading_terms` field carries the tokens of heading lines (`#`–`######`); the reader treats a missing field as no heading terms.
@@ -146,7 +146,8 @@ Validate behavior for `future_plans/*.md` other than `INDEX.md`: exempt from the
 Opaque string shared by one `index-manifest` + `bm25-index` pair from the same rebuild; a mismatch between the two makes the `openCanonIndex` reader facade fail closed.
 
 ### doc_hash
-Per-document `sha256:<hex>` content hash recorded in `index-manifest`. Freshness is stat-first: an unchanged per-doc `size`/`mtime_ms` snapshot proves the doc is unchanged (content neither read nor hashed); a stat change is content-hash-confirmed, and confirmed create/update/delete triggers a full BM25 rebuild. On the fresh path the `bm25-index` pair is trusted by mtime ordering — it is parsed only when rewritten after the manifest commit marker, so external corruption is still repaired.
+Per-document `sha256:<hex>` content hash recorded in `index-manifest`. Freshness is stat-first: an unchanged per-doc `size`/`mtime_ms` snapshot proves the doc is unchanged (content neither read nor hashed); a stat change is content-hash-confirmed, and confirmed create/update/delete triggers a full BM25 rebuild.
+On the fresh path the `bm25-index` pair is trusted from its stat against the manifest commit — the live byte size must equal the manifest's recorded `bm25_size` and the artifact must not be newer than the manifest (mtime ordering). Size drift, a later mtime, or a manifest without `bm25_size` forces a deep parse, so corruption or truncation that lands in the same mtime tick as the manifest commit is still repaired.
 
 ### tokenizer_version
 A constant in `index-manifest.json` identifying the tokenizer semantics (lowercase/split + stemming). A mismatch vs. the current value at build time forces a full BM25 rebuild — `doc_hash` is a content hash and cannot detect a tokenizer change alone. Mirrors `grammar_versions` for the code index.

@@ -12,7 +12,7 @@ Excludes per-language extraction details (see [CODE_INDEX.md](CODE_INDEX.md)), t
 
 ## Current state
 
-Both indexes ship in `doc-canon` 0.7.0. Each writes a deterministic manifest + bulk store under
+Both indexes ship in `doc-canon` 0.10.1. Each writes a deterministic manifest + bulk store under
 `.doc-canon/` (BM25: `index-manifest.json` + `bm25-index.json`; code: `code-index-manifest.json` +
 `code-ast-index.sqlite`), uses stat-first freshness (size/mtime snapshot, content-hash-confirmed) so
 unchanged files are neither read nor hashed, and self-heals a stale index at the CLI layer when no
@@ -24,7 +24,7 @@ currency and exits ≠0 on un-probed or corrupt state.
 - **Index sync** (`src/index/*`) — stat-first, hash-confirmed logical rebuild of a local BM25 index over `docs/canon/**/*.md`:
   - per-doc `size`/`mtime_ms` stat snapshots in the manifest prove unchanged docs (content neither read nor hashed); stat changes are content-hash-confirmed; unchanged content hashes are a no-op
   - any create/update/delete triggers a full rebuild from all current docs (no posting-level incremental updates)
-  - on the fresh path the `bm25-index.json` pair is trusted by mtime ordering (parsed only when rewritten after the manifest commit marker, so external corruption is still repaired)
+  - on the fresh path the `bm25-index.json` pair is trusted from its stat against the manifest commit — the live byte size must equal the manifest's recorded `bm25_size` and the artifact must not be newer than the manifest (mtime ordering); size drift, a later mtime, or a manifest without `bm25_size` forces a deep parse, so corruption that lands in the same mtime tick is still repaired without parsing on the common watch/idempotent tick
   - tokenization applies a light EN/RU stemmer inside `tokenize` (index and query tokenize identically) and a `tokenizer_version` in the manifest forces a full rebuild when it diverges (a content hash alone cannot detect a tokenizer change)
   - `bm25-index.json` is `schema_version: 2` with an optional per-doc `heading_terms` field
   - poll-based watch (`doc-canon index --watch`, default 2000 ms, `--interval`) with a pid-locked single instance and `--stop`

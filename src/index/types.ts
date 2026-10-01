@@ -13,6 +13,13 @@ export type IndexManifest = {
   corpus: "docs/canon/**";
   docs: Record<string, IndexDocMeta>;
   tokenizer_version?: string;
+  /**
+   * Byte size of the paired `bm25-index.json` at write time. The fresh path trusts the pair only
+   * when the live size matches, so corruption/truncation that lands in the same mtime tick as the
+   * manifest commit is detected without parsing the bm25 on every tick (optional; absent in
+   * manifests written before 0.10.1).
+   */
+  bm25_size?: number;
 };
 
 export type Bm25State = {

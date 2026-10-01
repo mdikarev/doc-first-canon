@@ -84,6 +84,51 @@ describe("syncCanonIndex", () => {
     assert.ok(loadIndexPair(root).manifest.index_id);
   });
 
+  it("repairs corruption that lands in the same mtime tick as the manifest", async () => {
+    await syncCanonIndex(root);
+    fs.writeFileSync(bm25IndexPath(root), "{not-json");
+    // Pin the manifest mtime to the corrupt artifact's own mtime: the pair is no
+    // longer "rewritten after the manifest", so only the recorded size can prove
+    // tampering (before the size check this exact state was trusted as fresh).
+    const bm25Stat = fs.statSync(bm25IndexPath(root));
+    fs.utimesSync(indexManifestPath(root), bm25Stat.atime, bm25Stat.mtime);
+    const r = await syncCanonIndex(root);
+    assert.equal(r.status, "updated");
+    assert.ok(loadIndexPair(root).manifest.index_id);
+  });
+
+  it("records the bm25 artifact size in the manifest", async () => {
+    await syncCanonIndex(root);
+    const raw = JSON.parse(fs.readFileSync(indexManifestPath(root), "utf8"));
+    assert.equal(raw.bm25_size, fs.statSync(bm25IndexPath(root)).size);
+  });
+
+  it("stays fresh when the bm25 is touched but its size still matches", async () => {
+    await syncCanonIndex(root);
+    const id = loadIndexPair(root).manifest.index_id;
+    const future = new Date(Date.now() + 60_000);
+    fs.utimesSync(bm25IndexPath(root), future, future);
+    const r = await syncCanonIndex(root);
+    assert.equal(r.status, "fresh");
+    assert.equal(loadIndexPair(root).manifest.index_id, id);
+  });
+
+  it("upgrades a bm25_size-less manifest once, then trusts it by stat", async () => {
+    await syncCanonIndex(root);
+    const manifestPath = indexManifestPath(root);
+    const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+    delete manifest.bm25_size;
+    fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+    const first = await syncCanonIndex(root);
+    assert.equal(first.status, "fresh");
+    const upgraded = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+    assert.equal(upgraded.bm25_size, fs.statSync(bm25IndexPath(root)).size);
+    const before = fs.readFileSync(manifestPath, "utf8");
+    const second = await syncCanonIndex(root);
+    assert.equal(second.status, "fresh");
+    assert.equal(fs.readFileSync(manifestPath, "utf8"), before);
+  });
+
   it("tokenizer_version bump forces rebuild with unchanged files", async () => {
     await syncCanonIndex(root);
     const manifestPath = indexManifestPath(root);

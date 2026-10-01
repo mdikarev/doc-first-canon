@@ -24,7 +24,7 @@ with the same poll `--watch`/`--stop` discipline and a separate watch pid; searc
 
 ## Current state
 
-Package `doc-canon@0.10.0` (Node ≥22.16, ESM — the `node:sqlite` floor for the code-index
+Package `doc-canon@0.10.1` (Node ≥22.16, ESM — the `node:sqlite` floor for the code-index
 SQLite store). Entry: `bin/doc-canon.js` → compiled `dist/`. Commands: `init`, `validate`, `check`,
 `report`, `upgrade-skills`, `migrate`, `index`, `search`, `scout`, `discipline`, plus the `code-index`
 subcommands `build` (tree-sitter WASM extraction over discovered source roots) and `search` (search

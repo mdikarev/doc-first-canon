@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.10.1
+
+- **fix:** the `bm25-index.json` pair is no longer trusted from mtime ordering alone — `saveIndexPair` records the artifact's byte size (`bm25_size`) in `index-manifest.json` and the fresh path deep-parses unless the live size matches and the artifact is not newer than the manifest; corruption or truncation landing in the same mtime tick as the manifest commit is now repaired instead of reported `fresh` (D-019)
+- **fix:** version drift — `package-lock.json` (0.7.0) and the canon's "current state" package-version references (0.7.0) now match `package.json`; `version-consistency` also guards the lockfile and canon mentions against future drift
+
 ## 0.10.0
 
 - **feat:** propagate the P10 Scout-first protocol to always-on `AGENTS.md` / `CLAUDE.md` / Cursor pointer guidance; managed overlays now use `doc-canon scout` with generated working-set manifests, explicit build-and-retry fallback, and preserved code-index-first analysis guidance; `SKILLS_STAMP` 0.18.0

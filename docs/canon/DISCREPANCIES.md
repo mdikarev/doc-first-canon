@@ -14,9 +14,24 @@ Never silently pick a side. Never edit application code from canon skills.
 
 ## Open
 
-
-
 ## Resolved
+
+### D-019: `syncCanonIndex` trusts a corrupt `bm25-index.json` when its mtime equals the manifest's
+- **status:** resolved
+- **decision:** code_stale
+- **canon_paths:** `docs/canon/INDEXING.md`, `docs/canon/GLOSSARY.md`
+- **code_paths:** `src/index/sync.ts`, `src/index/io.ts`, `src/index/types.ts`, `tests/index-sync.test.ts`
+- **evidence:**
+  - Original conflict: `syncCanonIndex` deep-validated the pair only when `bm25Stat.mtimeMs > manifestMtime`, so corruption landing in the same mtime tick as the manifest commit was trusted and reported `fresh` while `search` failed closed (see the `F-015` finding history).
+  - Fix: `saveIndexPair` now records the exact serialized `bm25_size` in the manifest, and the fresh path trusts the pair only when the live size matches that value and the artifact is not newer than the manifest; otherwise it deep-parses. A one-time manifest upgrade persists `bm25_size` for pre-0.11 manifests and after a deep-validated tick.
+  - Verification: `tests/index-sync.test.ts` 15/15 pass, including a new deterministic same-tick regression test; a scratch repo now reports `index updated: 1 docs` and `search "alpha"` exits 0 after same-tick corruption.
+  - Canon aligned: `INDEXING.md` (Index sync bullet) and `GLOSSARY.md` (`index-manifest`, `doc_hash`) now describe the size+mtime trust rule; `validate --json` is clean.
+- **finding_ids:** `F-015`
+- **coding_agent_prompt:** |
+  Resolved. The artifact-size trust rule shipped; no further code work is required. Residual
+  limitation to keep in mind: in-place tampering that preserves BOTH byte length and mtime is still
+  trusted by the stat path (detecting it would need a per-tick hash read, which the fast path exists
+  to avoid). Revisit only if a cheap content signal becomes available.
 
 ### D-018: Always-on guidance now uses the P10 Scout-first protocol
 - **status:** resolved

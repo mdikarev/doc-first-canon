@@ -79,7 +79,7 @@ into a working-set manifest (contract-role annotations + verdict hint) for the S
 
 ## Tech & constraints
 
-- Node.js ≥22.16 (the `node:sqlite` floor), TypeScript ESM package `doc-canon` 0.7.0
+- Node.js ≥22.16 (the `node:sqlite` floor), TypeScript ESM package `doc-canon` 0.10.1
 - Dependencies: `commander`, `yaml`, `micromatch`, `@vscode/tree-sitter-wasm` (code-index extraction), `node:sqlite` (built-in code-index store)
 - Unknown/incompatible major `schema_version` or too-old `skills_stamp` → validate fails closed
 - Extra template headings allowed; missing required headings fail validate
